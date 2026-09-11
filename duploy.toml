@@ -117,7 +117,7 @@ RABBITMQ_DEFAULT_VHOST = "plane"
 data = { path = "/var/lib/rabbitmq" }
 
 [services.minio]
-source = { image = "minio/minio:latest" }
+source = { image = "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z" }
 port = 9000
 domains = [{ host = "plane.duploy.dev", path = "/uploads" }]
 command = ["minio", "server", "/export"]
