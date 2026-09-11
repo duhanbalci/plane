@@ -1,0 +1,145 @@
+version = 1
+
+# Plane (community) Duploy uzerinde. Tek host, path bazli yonlendirme
+# (upstream Caddy proxy'sinin karsiligi): /spaces -> space, /god-mode -> admin,
+# /live -> live, /api, /auth, /static -> api, /uploads -> minio, geri kalani -> web.
+# Secret'lar: duploy secret set api SECRET_KEY=… LIVE_SERVER_SECRET_KEY=…
+#             duploy secret set minio MINIO_ROOT_USER=… MINIO_ROOT_PASSWORD=…
+#             duploy secret set mq RABBITMQ_DEFAULT_PASS=…
+
+# ----------------------------------------------------------------- web
+
+[services.web]
+source = { path = ".", dockerfile = "apps/web/Dockerfile.web" }
+port = 3000
+domains = [{ host = "plane.duploy.dev", path = "/" }]
+health = { http = "/" }
+
+[services.space]
+source = { path = ".", dockerfile = "apps/space/Dockerfile.space" }
+port = 3000
+domains = [{ host = "plane.duploy.dev", path = "/spaces" }]
+health = { http = "/spaces/" }
+
+[services.admin]
+source = { path = ".", dockerfile = "apps/admin/Dockerfile.admin" }
+port = 3000
+domains = [{ host = "plane.duploy.dev", path = "/god-mode" }]
+health = { http = "/god-mode" }
+
+[services.live]
+source = { path = ".", dockerfile = "apps/live/Dockerfile.live" }
+port = 3000
+domains = [{ host = "plane.duploy.dev", path = "/live" }]
+health = { http = "/live/health" }
+
+[services.live.env]
+API_BASE_URL = "http://api:8000"
+LIVE_BASE_PATH = "/live"
+CORS_ALLOWED_ORIGINS = "https://plane.duploy.dev"
+LIVE_SERVER_SECRET_KEY = { from_service = "api", key = "LIVE_SERVER_SECRET_KEY" }
+REDIS_URL = { from_database = "redis", property = "url" }
+
+# ----------------------------------------------------------------- api
+
+[services.api]
+source = { path = "apps/api", dockerfile = "Dockerfile.api" }
+port = 8000
+domains = [
+  { host = "plane.duploy.dev", path = "/api" },
+  { host = "plane.duploy.dev", path = "/auth" },
+  { host = "plane.duploy.dev", path = "/static" },
+]
+# Ayri migrator container'i yok: migrasyon api acilisinda kosar (tek replika).
+command = ["sh", "-c", "python manage.py migrate && exec ./bin/docker-entrypoint-api.sh"]
+health = { http = "/api/instances/", interval = "15s", retries = 10 }
+resources = { memory = "1G" }
+
+[services.api.env]
+DEBUG = "0"
+SECRET_KEY = { secret = true }
+LIVE_SERVER_SECRET_KEY = { secret = true }
+GUNICORN_WORKERS = "2"
+WEB_URL = "https://plane.duploy.dev"
+CORS_ALLOWED_ORIGINS = "https://plane.duploy.dev"
+APP_BASE_URL = "https://plane.duploy.dev"
+APP_BASE_PATH = ""
+ADMIN_BASE_URL = "https://plane.duploy.dev"
+ADMIN_BASE_PATH = "/god-mode"
+SPACE_BASE_URL = "https://plane.duploy.dev"
+SPACE_BASE_PATH = "/spaces"
+LIVE_BASE_URL = "https://plane.duploy.dev"
+LIVE_BASE_PATH = "/live"
+DATABASE_URL = { from_database = "db", property = "url" }
+REDIS_URL = { from_database = "redis", property = "url" }
+RABBITMQ_HOST = "mq"
+RABBITMQ_PORT = "5672"
+RABBITMQ_USER = { from_service = "mq", key = "RABBITMQ_DEFAULT_USER" }
+RABBITMQ_PASSWORD = { from_service = "mq", key = "RABBITMQ_DEFAULT_PASS" }
+RABBITMQ_VHOST = { from_service = "mq", key = "RABBITMQ_DEFAULT_VHOST" }
+USE_MINIO = "1"
+AWS_REGION = ""
+AWS_S3_ENDPOINT_URL = "http://minio:9000"
+AWS_S3_BUCKET_NAME = "uploads"
+AWS_ACCESS_KEY_ID = { from_service = "minio", key = "MINIO_ROOT_USER" }
+AWS_SECRET_ACCESS_KEY = { from_service = "minio", key = "MINIO_ROOT_PASSWORD" }
+FILE_SIZE_LIMIT = "5242880"
+MINIO_ENDPOINT_SSL = "0"
+API_KEY_RATE_LIMIT = "60/minute"
+HARD_DELETE_AFTER_DAYS = "60"
+
+[services.worker]
+type = "worker"
+source = { image_of = "api" }
+command = ["./bin/docker-entrypoint-worker.sh"]
+inherit_env = "api"
+resources = { memory = "1G" }
+
+[services.beat]
+type = "worker"
+source = { image_of = "api" }
+command = ["./bin/docker-entrypoint-beat.sh"]
+inherit_env = "api"
+
+# ----------------------------------------------------------------- altyapi
+
+[services.mq]
+type = "worker"
+source = { image = "rabbitmq:3.13-alpine" }
+health = { cmd = ["rabbitmq-diagnostics", "-q", "ping"], interval = "15s", retries = 10 }
+
+[services.mq.env]
+RABBITMQ_DEFAULT_USER = "plane"
+RABBITMQ_DEFAULT_PASS = { secret = true }
+RABBITMQ_DEFAULT_VHOST = "plane"
+
+[services.mq.volumes]
+data = { path = "/var/lib/rabbitmq" }
+
+[services.minio]
+source = { image = "minio/minio:latest" }
+port = 9000
+domains = [{ host = "plane.duploy.dev", path = "/uploads" }]
+command = ["minio", "server", "/export"]
+health = { http = "/minio/health/live" }
+
+[services.minio.env]
+MINIO_ROOT_USER = { secret = true }
+MINIO_ROOT_PASSWORD = { secret = true }
+
+[services.minio.volumes]
+data = { path = "/export", size = "20G" }
+
+# ----------------------------------------------------------------- veritabanlari
+
+[databases.db]
+engine = "postgres"
+version = "18"
+
+[databases.db.backup]
+schedule = "0 3 * * *"
+retain = 7
+
+[databases.redis]
+engine = "redis"
+version = "7"
