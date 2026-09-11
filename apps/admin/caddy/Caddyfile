@@ -25,6 +25,10 @@
 		X-XSS-Protection "1; mode=block"
 	}
 
+	# The router basename is /god-mode/; the upstream proxy used to add the
+	# trailing slash, do it here so a bare /god-mode works behind any proxy.
+	redir /god-mode /god-mode/ permanent
+
 	# SPA fallback: the admin build is served from /god-mode
 	try_files {path} /god-mode/index.html
 	file_server

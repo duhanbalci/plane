@@ -52,7 +52,8 @@ domains = [
 ]
 # Ayri migrator container'i yok: migrasyon api acilisinda kosar (tek replika).
 command = ["sh", "-c", "python manage.py migrate && exec ./bin/docker-entrypoint-api.sh"]
-health = { http = "/api/instances/", interval = "15s", retries = 10 }
+# Ilk kurulumda migrate dakikalar surer; saglik penceresi genis (15 s x 60).
+health = { http = "/api/instances/", interval = "15s", retries = 60 }
 resources = { memory = "1G" }
 
 [services.api.env]
