@@ -92,15 +92,18 @@ HARD_DELETE_AFTER_DAYS = "60"
 [services.worker]
 type = "worker"
 source = { image_of = "api" }
-command = ["./bin/docker-entrypoint-worker.sh"]
+# Entrypoint concurrency'yi cekirdek sayisina esitler (20 prefork x Django
+# bellek limitini asip OOM'a dusuyordu); ayni adimlar, sabit concurrency.
+command = ["sh", "-c", "python manage.py wait_for_db && python manage.py wait_for_migrations && exec celery -A plane worker -l info --concurrency 4"]
 inherit_env = "api"
-resources = { memory = "1G" }
+resources = { cpu = 2.0, memory = "1G" }
 
 [services.beat]
 type = "worker"
 source = { image_of = "api" }
 command = ["./bin/docker-entrypoint-beat.sh"]
 inherit_env = "api"
+resources = { memory = "512M" }
 
 # ----------------------------------------------------------------- altyapi
 
