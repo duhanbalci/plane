@@ -15,16 +15,16 @@ Kod tarandı; dört özellik için iskelet büyük ölçüde CE'de kalmış. Bu 
 temel taktiği **boş bırakılmış EE dikiş yerlerine (seam) yazmak**, upstream
 merge'lerini kolay tutmak.
 
-| Özellik | CE'de var | Eksik |
-|---|---|---|
-| Work item types | `IssueType` + `ProjectIssueType` modelleri ve migration'ları, `Issue.type` FK, `Project.is_issue_type_enabled`, public API'de `type_id`, FE `TIssue.type_id`, `TIssueTypeIdentifier`, i18n `work-item-type.json` (en + tr-TR dolu) | App API (serializer/view/url), `type_id` liste serializer'larında yok, activity handler yok, filter/group/order allowlist'te yok, FE store/service/dropdown/settings sayfası yok |
-| Custom properties | `EstimatePoint` örüntüsü, `TIssuePropertyValues` stub tipi, issue modal context'inde `issuePropertyValues`/`handleCreateUpdatePropertyValues` hook'ları (no-op), form'da ayrılmış layout slotu | Üç model (property / option / value), API, FE her şey |
-| Epics | `IssueType.is_epic`, `EIssueServiceType.EPICS`, `epicDetail` store, `IssueService`'te `/epics/` URL dalları, `TEpicAnalytics`, `CreateUpdateEpicModal` (boş fragment) | Backend tamamen: `/epics/` endpoint'leri, `is_epic_enabled` kolonu, ana listeden epic dışlama; FE route + modal gövdesi |
-| Templates | `DraftIssue` + `Description` örüntüsü, modal context'te `workItemTemplateId`/`handleTemplateChange`, i18n `template.json` (project/work_item/page üçü de) | Model, API, store, settings sayfası, modal picker |
-| Gantt dependencies | `start_before`/`finish_before` relation tipleri DB'de, `expand=issue_relation,issue_related` yolu, `IssueBulkUpdateDateEndpoint`, `enableDependency` prop'u 7 katman aşağı kadar iletilmiş, `getUpdatedPositionAfterDrag(..., ignoreDependencies)` imzası, `ENABLE_ISSUE_DEPENDENCIES=false` kill-switch | Ok çizimi (SVG yok), sürükle-bağla tutamaçları, tarih yayılımı, `TIssueRelationTypes`'a SS/FF tipleri |
-| Nested pages | `Page.parent` FK, recursive CTE ile arşiv, silmede çocukları yetim bırakma, PATCH ile `parent` doğrulaması, `PageVersion.sub_pages_data` (hep `{}`) | Liste `parent__isnull=True` ile çocukları gizliyor, `TPage`'de `parent` yok, taşıma endpoint'i + cycle guard yok, ağaç UI/store yok |
-| Wiki + Collections | `Page.workspace` doğrudan FK, `projects` M2M (sıfır proje yasal), `Page.is_global` (kullanılmıyor), `documentType: "workspace_page"` tipi, wiki empty-state görselleri | Workspace-scoped URL/view/permission, live `WorkspacePageService`, `EPageStoreType.WORKSPACE`, route + sidebar, Collection modeli hiç yok |
-| Page comments | Entity-bağımsız `CommentsWrapper` + `TCommentsOperations`, `IssueComment` modeli, `plugins/highlight.ts` decoration örneği, `UniqueID` blok id'leri, navigation pane extension seam'i | `PageComment` model/API/store, editörde comment mark'ı, comments paneli |
+| Özellik            | CE'de var                                                                                                                                                                                                                                                                                                | Eksik                                                                                                                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Work item types    | `IssueType` + `ProjectIssueType` modelleri ve migration'ları, `Issue.type` FK, `Project.is_issue_type_enabled`, public API'de `type_id`, FE `TIssue.type_id`, `TIssueTypeIdentifier`, i18n `work-item-type.json` (en + tr-TR dolu)                                                                       | App API (serializer/view/url), `type_id` liste serializer'larında yok, activity handler yok, filter/group/order allowlist'te yok, FE store/service/dropdown/settings sayfası yok |
+| Custom properties  | `EstimatePoint` örüntüsü, `TIssuePropertyValues` stub tipi, issue modal context'inde `issuePropertyValues`/`handleCreateUpdatePropertyValues` hook'ları (no-op), form'da ayrılmış layout slotu                                                                                                           | Üç model (property / option / value), API, FE her şey                                                                                                                            |
+| Epics              | `IssueType.is_epic`, `EIssueServiceType.EPICS`, `epicDetail` store, `IssueService`'te `/epics/` URL dalları, `TEpicAnalytics`, `CreateUpdateEpicModal` (boş fragment)                                                                                                                                    | Backend tamamen: `/epics/` endpoint'leri, `is_epic_enabled` kolonu, ana listeden epic dışlama; FE route + modal gövdesi                                                          |
+| Templates          | `DraftIssue` + `Description` örüntüsü, modal context'te `workItemTemplateId`/`handleTemplateChange`, i18n `template.json` (project/work_item/page üçü de)                                                                                                                                                | Model, API, store, settings sayfası, modal picker                                                                                                                                |
+| Gantt dependencies | `start_before`/`finish_before` relation tipleri DB'de, `expand=issue_relation,issue_related` yolu, `IssueBulkUpdateDateEndpoint`, `enableDependency` prop'u 7 katman aşağı kadar iletilmiş, `getUpdatedPositionAfterDrag(..., ignoreDependencies)` imzası, `ENABLE_ISSUE_DEPENDENCIES=false` kill-switch | Ok çizimi (SVG yok), sürükle-bağla tutamaçları, tarih yayılımı, `TIssueRelationTypes`'a SS/FF tipleri                                                                            |
+| Nested pages       | `Page.parent` FK, recursive CTE ile arşiv, silmede çocukları yetim bırakma, PATCH ile `parent` doğrulaması, `PageVersion.sub_pages_data` (hep `{}`)                                                                                                                                                      | Liste `parent__isnull=True` ile çocukları gizliyor, `TPage`'de `parent` yok, taşıma endpoint'i + cycle guard yok, ağaç UI/store yok                                              |
+| Wiki + Collections | `Page.workspace` doğrudan FK, `projects` M2M (sıfır proje yasal), `Page.is_global` (kullanılmıyor), `documentType: "workspace_page"` tipi, wiki empty-state görselleri                                                                                                                                   | Workspace-scoped URL/view/permission, live `WorkspacePageService`, `EPageStoreType.WORKSPACE`, route + sidebar, Collection modeli hiç yok                                        |
+| Page comments      | Entity-bağımsız `CommentsWrapper` + `TCommentsOperations`, `IssueComment` modeli, `plugins/highlight.ts` decoration örneği, `UniqueID` blok id'leri, navigation pane extension seam'i                                                                                                                    | `PageComment` model/API/store, editörde comment mark'ı, comments paneli                                                                                                          |
 
 ### Wiki nedir, neden ayrı iş
 
@@ -90,7 +90,7 @@ G  Page comments                          (bağımsız; E/F'den sonra daha anlam
 - `IssueProperty(WorkspaceBaseModel)`: `issue_type` FK
   (`related_name="properties"`), `name`, `display_name`, `description`,
   `property_type` (TextChoices: `text | decimal | option | boolean |
-  datetime | relation`), `relation_type` (`user`; ileride `issue`),
+datetime | relation`), `relation_type` (`user`; ileride `issue`),
   `is_required`, `is_active` (default True), `is_multi`, `default_value`
   (ArrayField[str]), `settings` (JSONField: text `display_format`
   single/multi/readonly, date `display_format`, decimal `precision`),
@@ -216,7 +216,7 @@ FE zaten `/epics/` URL'lerine gidiyor, biz de o sözleşmeye uyalım.
   ve `IssueManager`'a değil, viewset seviyesine
   `.exclude(type__is_epic=True)`; cycle/module/view/spreadsheet/search
   issue listeleri de bu queryset'ten geçiyor mu tek tek kontrol (`grep
-  Issue.issue_objects` app/views). Draft ve intake'e dokunma.
+Issue.issue_objects` app/views). Draft ve intake'e dokunma.
 - **Epic endpoint'leri** `app/views/epic/base.py`, `app/urls/epic.py`:
   ```
   GET/POST  workspaces/<slug>/projects/<pid>/epics/            (type__is_epic=True; aynı filter/grouper)
@@ -262,10 +262,18 @@ alt work item'lar; create modal'da şablon ikonu → dropdown.
   `created_by`. Unique `(workspace, project, template_type, name)`.
 - `template_data` şeması (workitem):
   ```json
-  { "name": "", "description_html": "", "type_id": null, "state_id": null,
-    "priority": "none", "label_ids": [], "assignee_ids": [], "module_ids": [],
+  {
+    "name": "",
+    "description_html": "",
+    "type_id": null,
+    "state_id": null,
+    "priority": "none",
+    "label_ids": [],
+    "assignee_ids": [],
+    "module_ids": [],
     "properties": { "<property_id>": ["…"] },
-    "sub_work_items": [ { "name": "", "type_id": null, "priority": "", "label_ids": [], "assignee_ids": [] } ] }
+    "sub_work_items": [{ "name": "", "type_id": null, "priority": "", "label_ids": [], "assignee_ids": [] }]
+  }
   ```
   Saklanan id'ler silinmiş olabilir; uygulama anında var olmayanlar
   düşürülür (serializer `resolve()` yardımcısı).
@@ -324,7 +332,7 @@ gerekli.
     sonrasına, `itemsContainerWidth` genişliğinde `position:absolute` SVG.
     Kenar listesi = `relationMap`'ten görünür `blockIds` çiftleri
     (karşı uç yüklü değilse atla). Koordinat: x = `block.position.marginLeft
-    (+width)`, y = `blockIds.indexOf(id) * BLOCK_HEIGHT + 22`. DOM ölçme
+(+width)`, y = `blockIds.indexOf(id) * BLOCK_HEIGHT + 22`. DOM ölçme
     yok, store'dan.
   - Path: FS = A.sağ → B.sol (ortogonal, 3 kırılma), SS = sol→sol, FF =
     sağ→sağ; `<marker>` ok ucu. İhlal (B.start < A.target vb.) →
@@ -334,7 +342,7 @@ gerekli.
     observer'ıyla anlık.
 - **Sürükle-bağla** `helpers/draggable.tsx`: `enableDependency` ile sol/sağ
   uçta hover'da küçük daire; mousedown → store `dependencyDrag =
-  {fromId, side}` (`getIsCurrentDependencyDragging` gerçek olur, `block.tsx`
+{fromId, side}` (`getIsCurrentDependencyDragging` gerçek olur, `block.tsx`
   `forceRender` zaten bağlı), geçici çizgi imleci takip eder, hedef bloğun
   ucuna bırakınca `createRelation(from, to, side kombinasyonuna göre tip)`.
 - **Tarih yayılımı** `base-timeline.store.ts`: `getUpdatedPositionAfterDrag`
@@ -358,7 +366,7 @@ gerekli.
   `?parent=<id|root|all>` parametresine bağla (varsayılan `all`; liste
   ağaç kurmak için düz liste + parent id yeterli).
 - `POST .../pages/<id>/move/ { parent: <id|null>, sort_order?: float,
-  project_id?: uuid }`: cycle guard (recursive CTE ile hedef, kaynağın
+project_id?: uuid }`: cycle guard (recursive CTE ile hedef, kaynağın
   torunu mu), aynı workspace, arşivli parent'a taşıma yasak; `sort_order`
   kardeşler arası (65535 aralıklı).
 - Silme: mevcut "çocukları yetim bırak" davranışı kalsın; `?cascade=true`
@@ -371,7 +379,7 @@ gerekli.
 ### 7.2 Frontend
 
 - `TPageExtended` → `{ parent_id: string|null; sort_order: number;
-  sub_pages_count: number }`.
+sub_pages_count: number }`.
 - `project-page.store.ts`: `getChildPageIds(parentId)` computedFn,
   `movePageInTree(pageId, parentId, index)`, `fetchSubPages(parentId)`.
 - Liste `components/pages/list/`: satırlar ağaç (▶ collapse, indent),
@@ -446,7 +454,7 @@ Doküman: metin seç → toolbar'da yorum ikonu → sağ panel; thread, reply,
 
 - Migration `0127_page_comments`: `PageComment(WorkspaceBaseModel)`
   (`IssueComment` kalıbı, proje yok): `page` FK, `actor`, `comment_html /
-  json / stripped`, `attachments`, `parent` (reply), `anchor` JSONField
+json / stripped`, `attachments`, `parent` (reply), `anchor` JSONField
   `{ mark_id, block_id, quoted_text }`, `is_resolved`, `resolved_by`,
   `resolved_at`, `edited_at`. `PageCommentReaction`.
 - API `workspaces/<slug>/[projects/<pid>/]pages/<page_id>/comments/`
@@ -466,7 +474,7 @@ Doküman: metin seç → toolbar'da yorum ikonu → sağ panel; thread, reply,
   vurgusu `plugins/highlight.ts` decoration'ı ile.
 - Panel: `usePagesPaneExtensions` → `navigationPaneExtensions`'a
   `{ id: "comments", triggerParam: "comments", component:
-  PageCommentsPane }`; içinde `CommentsWrapper` (`TCommentsOperations`'ı
+PageCommentsPane }`; içinde `CommentsWrapper` (`TCommentsOperations`'ı
   page servisine bağlayan `usePageCommentOperations`), thread kartı
   başında `quoted_text`, resolve butonu, filtre. Karta tıkla → editörde
   mark'a scroll + highlight; mark'a tıkla → panelde thread.
@@ -477,15 +485,15 @@ Doküman: metin seç → toolbar'da yorum ikonu → sağ panel; thread, reply,
 
 ## 10. Kaba iş yükü ve sıra
 
-| Faz | Backend | Frontend | Not |
-|---|---|---|---|
-| A | 3 gün | 5 gün | En büyük; B ve C'nin temeli |
-| B | 1.5 gün | 2 gün | Dışlama kontrolü dikkatli |
-| C | 1 gün | 2 gün | |
-| D | 0.5 gün | 3 gün | Yayılım algoritması + SVG |
-| E | 1 gün | 2.5 gün | page-embed düğümü şemaya girer |
-| F | 2 gün | 3 gün | Permission + live service |
-| G | 1 gün | 3 gün | Mark şemaya girer, live/PDF etkilenir |
+| Faz | Backend | Frontend | Not                                   |
+| --- | ------- | -------- | ------------------------------------- |
+| A   | 3 gün   | 5 gün    | En büyük; B ve C'nin temeli           |
+| B   | 1.5 gün | 2 gün    | Dışlama kontrolü dikkatli             |
+| C   | 1 gün   | 2 gün    |                                       |
+| D   | 0.5 gün | 3 gün    | Yayılım algoritması + SVG             |
+| E   | 1 gün   | 2.5 gün  | page-embed düğümü şemaya girer        |
+| F   | 2 gün   | 3 gün    | Permission + live service             |
+| G   | 1 gün   | 3 gün    | Mark şemaya girer, live/PDF etkilenir |
 
 Önerilen başlangıç: **A** (Hat 1) ve **E** (Hat 2) paralel; A bittikten
 sonra B→C, E bittikten sonra F→G; D boşluklara.
@@ -503,3 +511,27 @@ sonra B→C, E bittikten sonra F→G; D boşluklara.
   doldurmaz; ama `PageViewSet`, `IssueViewSet`, `form.tsx` gibi çekirdek
   dosyalarda çakışma olacak. Değişiklikleri küçük, konu başına tut.
 - **Prod veri:** her faz ayrı migration; enable akışları idempotent.
+
+## 12. Faz H: Editör dosya eki (attachment) bloğu + external embed
+
+CE'de iskelet var: `packages/editor/src/plugins/drop.ts` `fileType ===
+"attachment"` dalı boş, `ACCEPTED_ATTACHMENT_MIME_TYPES` ve `TEditorCommands`
+`"attachment"` mevcut, i18n `editor.json` `attachmentComponent.*` hazır.
+Düğüm, node view ve upload akışı yok.
+
+- `packages/editor/src/extensions/attachment/`: atom blok düğümü
+  `attachment` (attrs `src`, `id` (asset id), `name`, `size`, `mime`),
+  HTML `<attachment-component …>`; node view = kart (mime ikonu, ad, boyut,
+  indir/aç, silme), yükleme sırasında progress; upload `fileHandler.upload`
+  (custom-image ile aynı yol, sayfa/issue asset endpoint'i zaten var),
+  `fileHandler.delete` düğüm silinince. `insertAttachmentComponent` komutu;
+  drop/paste dalı doldurulur; `/attachment` slash komutu ("File").
+  Çekirdek extension listesine (live/PDF şeması). PDF export'ta bağlantı
+  olarak render.
+- `page_transaction_task` `COMPONENT_MAP`'e `attachment-component` →
+  `PageLog` (asset back-link), asset GC mevcut image akışıyla aynı.
+- **External embed** (opsiyonel, i18n `externalEmbedComponent.*` hazır):
+  `externalEmbed` düğümü, link yapıştırınca "Link / Rich card / Embed"
+  seçeneği; YouTube/Figma/Google Docs için iframe allowlist'i; oEmbed
+  yok, sabit sağlayıcı kalıpları.
+- Yük: attachment 2 gün, external embed 1.5 gün. Sıra: G'den sonra.
