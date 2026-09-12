@@ -4,6 +4,8 @@
 
 # Django imports
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 
 # Third party imports
 from rest_framework import status
@@ -28,6 +30,9 @@ from plane.authentication.utils.host import base_host
 class CSRFTokenEndpoint(APIView):
     permission_classes = [AllowAny]
 
+    # Tarayici bu yaniti disk cache'inden verirse eski token guncel
+    # cookie ile eslesmez ve form POST'lari CSRF hatasi alir.
+    @method_decorator(never_cache)
     def get(self, request):
         # Generate a CSRF token
         csrf_token = get_token(request)
