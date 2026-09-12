@@ -41,14 +41,14 @@ export const MoveToProjectModal = observer(function MoveToProjectModal(props: Pr
   const [projectId, setProjectId] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // store hooks
-  const { joinedProjectIds, getPartialProjectById } = useProject();
+  const { workspaceProjectIds, getPartialProjectById } = useProject();
   const { removePage } = usePageStore(EPageStoreType.WORKSPACE);
   const { t } = useTranslation();
 
-  // joined projects; the API rejects targets the user cannot write pages in
+  // workspace projects (the lite list has no member role); the API rejects targets the user cannot write pages in
   const options = useMemo(
     () =>
-      joinedProjectIds
+      (workspaceProjectIds ?? [])
         .map((id) => {
           const project = getPartialProjectById(id);
           return {
@@ -62,7 +62,7 @@ export const MoveToProjectModal = observer(function MoveToProjectModal(props: Pr
             ),
           };
         }),
-    [joinedProjectIds, getPartialProjectById]
+    [workspaceProjectIds, getPartialProjectById]
   );
 
   useEffect(() => {
