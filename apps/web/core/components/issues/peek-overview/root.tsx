@@ -16,6 +16,7 @@ import type { IWorkItemPeekOverview, TIssue } from "@plane/types";
 import { EIssueServiceType, EIssuesStoreType } from "@plane/types";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { usePeekServiceType } from "@/hooks/use-peek-service-type";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
@@ -25,6 +26,7 @@ import type { TIssueOperations } from "../issue-detail";
 import { IssueView } from "./view";
 
 export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWorkItemPeekOverview) {
+  const peekServiceType = usePeekServiceType();
   const {
     embedIssue = false,
     embedRemoveCurrentNotification,
@@ -45,7 +47,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
     setPeekIssue,
     issue: { fetchIssue },
     fetchActivities,
-  } = useIssueDetail();
+  } = useIssueDetail(peekServiceType);
   const issueStoreType = useIssueStoreType();
   const storeType = issueStoreFromProps ?? issueStoreType;
   const { issues } = useIssues(storeType);

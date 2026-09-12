@@ -17,7 +17,7 @@ import { useOutsideClickDetector } from "@plane/hooks";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssue, IIssueDisplayProperties, IIssueMap } from "@plane/types";
-import { EIssueServiceType } from "@plane/types";
+import { EIssueServiceType, EIssuesStoreType } from "@plane/types";
 // ui
 import { ControlLink, DropIndicator } from "@plane/ui";
 import { cn, generateWorkItemLink } from "@plane/utils";
@@ -27,6 +27,7 @@ import { HIGHLIGHT_CLASS, getIssueBlockId } from "@/components/issues/issue-layo
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
 import { useProject } from "@/hooks/store/use-project";
 import useIssuePeekOverviewRedirection from "@/hooks/use-issue-peek-overview-redirection";
@@ -153,7 +154,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
     canEditProperties,
     scrollableContainerRef,
     shouldRenderByDefault,
-    isEpic = false,
+    isEpic: isEpicProp = false,
   } = props;
 
   const cardRef = useRef<HTMLAnchorElement | null>(null);
@@ -161,6 +162,8 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
   const { workspaceSlug: routerWorkspaceSlug } = useParams();
   const workspaceSlug = routerWorkspaceSlug?.toString();
   // hooks
+  const layoutStoreType = useIssueStoreType();
+  const isEpic = isEpicProp || layoutStoreType === EIssuesStoreType.EPIC;
   const { getProjectIdentifierById } = useProject();
   const { getIsIssuePeeked } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
   const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);

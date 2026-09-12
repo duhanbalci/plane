@@ -16,6 +16,7 @@ import { DescriptionVersionsRoot } from "@/components/core/description-versions"
 import { DescriptionInput } from "@/components/editor/rich-text/description-input";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { usePeekServiceType } from "@/hooks/use-peek-service-type";
 import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
 import useReloadConfirmations from "@/hooks/use-reload-confirmation";
@@ -49,9 +50,10 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
     props;
   // store hooks
   const { data: currentUser } = useUser();
+  const peekServiceType = usePeekServiceType();
   const {
     issue: { getIssueById },
-  } = useIssueDetail();
+  } = useIssueDetail(peekServiceType);
 
   const { getUserDetails } = useMember();
   // reload confirmation

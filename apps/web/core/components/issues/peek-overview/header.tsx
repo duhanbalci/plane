@@ -25,6 +25,7 @@ import { CustomSelect } from "@plane/ui";
 import { copyUrlToClipboard, generateWorkItemLink } from "@plane/utils";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { usePeekServiceType } from "@/hooks/use-peek-service-type";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
 import { useUser } from "@/hooks/store/user";
@@ -74,6 +75,7 @@ export type PeekOverviewHeaderProps = {
 };
 
 export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader(props: PeekOverviewHeaderProps) {
+  const peekServiceType = usePeekServiceType();
   const {
     peekMode,
     setPeekMode,
@@ -102,7 +104,7 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
     removeIssue,
     archiveIssue,
     getIsIssuePeeked,
-  } = useIssueDetail();
+  } = useIssueDetail(peekServiceType);
   const { isMobile } = usePlatformOS();
   const { getProjectIdentifierById } = useProject();
   // derived values

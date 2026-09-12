@@ -32,6 +32,7 @@ import { StateDropdown } from "@/components/dropdowns/state/dropdown";
 import { SidebarPropertyListItem } from "@/components/common/layout/sidebar/property-list-item";
 // helpers
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { usePeekServiceType } from "@/hooks/use-peek-service-type";
 import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
@@ -56,9 +57,10 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
   const { t } = useTranslation();
   // store hooks
   const { getProjectById } = useProject();
+  const peekServiceType = usePeekServiceType();
   const {
     issue: { getIssueById },
-  } = useIssueDetail();
+  } = useIssueDetail(peekServiceType);
   const { getStateById } = useProjectState();
   const { getUserDetails } = useMember();
   // derived values

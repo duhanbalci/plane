@@ -14,6 +14,7 @@ import { EIssueServiceType } from "@plane/types";
 import { cn } from "@plane/utils";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { usePeekServiceType } from "@/hooks/use-peek-service-type";
 import useKeypress from "@/hooks/use-keypress";
 import usePeekOverviewOutsideClickDetector from "@/hooks/use-peek-overview-outside-click";
 // local imports
@@ -41,6 +42,7 @@ interface IIssueView {
 }
 
 export const IssueView = observer(function IssueView(props: IIssueView) {
+  const peekServiceType = usePeekServiceType();
   const {
     workspaceSlug,
     projectId,
@@ -68,7 +70,7 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
     setPeekIssue,
     isAnyModalOpen,
     issue: { getIssueById },
-  } = useIssueDetail();
+  } = useIssueDetail(peekServiceType);
   const { isAnyModalOpen: isAnyEpicModalOpen } = useIssueDetail(EIssueServiceType.EPICS);
   const issue = getIssueById(issueId);
   // remove peek id
@@ -193,7 +195,7 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
                         projectId={projectId}
                         issueId={issueId}
                         disabled={disabled || is_archived}
-                        issueServiceType={EIssueServiceType.ISSUES}
+                        issueServiceType={peekServiceType}
                       />
                     </div>
 
@@ -234,7 +236,7 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
                             projectId={projectId}
                             issueId={issueId}
                             disabled={disabled}
-                            issueServiceType={EIssueServiceType.ISSUES}
+                            issueServiceType={peekServiceType}
                           />
                         </div>
 

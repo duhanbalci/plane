@@ -7,9 +7,11 @@
 import { observer } from "mobx-react";
 import { IssuePeekOverview } from "@/components/issues/peek-overview";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { usePeekServiceType } from "@/hooks/use-peek-service-type";
 
 export const HomePeekOverviewsRoot = observer(function HomePeekOverviewsRoot() {
-  const { peekIssue } = useIssueDetail();
+  const peekServiceType = usePeekServiceType();
+  const { peekIssue } = useIssueDetail(peekServiceType);
 
   return peekIssue ? <IssuePeekOverview /> : null;
 });

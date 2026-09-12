@@ -15,7 +15,7 @@ import { ChevronRightOutline } from "@makeplane/propel/icons";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssue, IIssueDisplayProperties, TIssueMap } from "@plane/types";
-import { EIssueServiceType } from "@plane/types";
+import { EIssueServiceType, EIssuesStoreType } from "@plane/types";
 // ui
 import { Spinner, ControlLink, Row } from "@plane/ui";
 import { cn, generateWorkItemLink } from "@plane/utils";
@@ -26,6 +26,7 @@ import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifi
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useProject } from "@/hooks/store/use-project";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -68,7 +69,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     isCurrentBlockDragging,
     setIsCurrentBlockDragging,
     canDrag,
-    isEpic = false,
+    isEpic: isEpicProp = false,
   } = props;
   // ref
   const issueRef = useRef<HTMLDivElement | null>(null);
@@ -77,6 +78,8 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   const workspaceSlug = routerWorkspaceSlug?.toString();
   const projectId = routerProjectId?.toString();
   // hooks
+  const layoutStoreType = useIssueStoreType();
+  const isEpic = isEpicProp || layoutStoreType === EIssuesStoreType.EPIC;
   const { sidebarCollapsed: isSidebarCollapsed } = useAppTheme();
   const { getProjectIdentifierById, currentProjectNextSequenceId } = useProject();
   const {
