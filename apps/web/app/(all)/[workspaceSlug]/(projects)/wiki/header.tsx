@@ -17,7 +17,7 @@ import { SwitcherIcon } from "@/components/common/switcher-label";
 import { PageHeaderActions } from "@/components/pages/header/actions";
 import { PageSyncingBadge } from "@/components/pages/header/syncing-badge";
 // hooks
-import { EPageStoreType, usePage, usePageStore } from "@/hooks/store";
+import { EPageStoreType, usePageStore } from "@/hooks/store";
 
 const storeType = EPageStoreType.WORKSPACE;
 
@@ -27,10 +27,8 @@ export const WikiHeader = observer(function WikiHeader() {
   const { workspaceSlug, pageId } = useParams();
   // store hooks
   const { getPageById, getCollectionById } = usePageStore(storeType);
-  const page = usePage({
-    pageId: pageId?.toString() ?? "",
-    storeType,
-  });
+  // index route has no pageId; usePage() would throw there
+  const page = pageId ? getPageById(pageId.toString()) : undefined;
   const { t } = useTranslation();
   // derived values
   const collection = page?.collection ? getCollectionById(page.collection) : undefined;
