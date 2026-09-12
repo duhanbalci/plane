@@ -63,7 +63,9 @@ class IssueActivityEndpoint(BaseAPIView):
             )
         )
 
-        if request.GET.get("activity_type", None) == "issue-property":
+        activity_type = request.GET.get("activity_type", None)
+        # epics reuse this endpoint with their own activity type names
+        if activity_type in ("issue-property", "epic-property"):
             issue_activities = issue_activities.prefetch_related(
                 Prefetch(
                     "issue__issue_intake",
@@ -74,7 +76,7 @@ class IssueActivityEndpoint(BaseAPIView):
             issue_activities = IssueActivitySerializer(issue_activities, many=True).data
             return Response(issue_activities, status=status.HTTP_200_OK)
 
-        if request.GET.get("activity_type", None) == "issue-comment":
+        if activity_type in ("issue-comment", "epic-comment"):
             issue_comments = IssueCommentSerializer(issue_comments, many=True).data
             return Response(issue_comments, status=status.HTTP_200_OK)
 
