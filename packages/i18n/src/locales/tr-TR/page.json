@@ -125,5 +125,37 @@
       "only_this_page": "Sadece bu sayfayi sil (alt sayfalar bir ust seviyeye tasinir)",
       "with_sub_pages": "Bu sayfayi ve tum alt sayfalarini sil"
     }
+  },
+  "page_comments": {
+    "title": "Yorumlar",
+    "open": "Yorumlar",
+    "add": "Yorum",
+    "empty": "Henüz yorum yok",
+    "empty_resolved": "Çözülmüş yorum yok",
+    "placeholder": "Yorum ekle",
+    "reply_placeholder": "Yanıtla",
+    "submit": "Yorum yap",
+    "reply": "Yanıtla",
+    "cancel": "Vazgeç",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "save": "Kaydet",
+    "resolve": "Çözüldü olarak işaretle",
+    "unresolve": "Yeniden aç",
+    "resolved": "Çözüldü",
+    "unanchored": "Bağlantısız",
+    "edited": "düzenlendi",
+    "filters": {
+      "active": "Açık",
+      "resolved": "Çözüldü",
+      "all": "Tümü"
+    },
+    "toasts": {
+      "create_error": "Yorum eklenemedi. Lütfen tekrar deneyin.",
+      "update_error": "Yorum güncellenemedi. Lütfen tekrar deneyin.",
+      "delete_error": "Yorum silinemedi. Lütfen tekrar deneyin.",
+      "resolve_error": "Yorum çözüldü olarak işaretlenemedi. Lütfen tekrar deneyin.",
+      "fetch_error": "Yorumlar yüklenemedi. Lütfen tekrar deneyin."
+    }
   }
 }

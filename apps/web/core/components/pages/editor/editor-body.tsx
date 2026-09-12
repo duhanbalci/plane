@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { observer } from "mobx-react";
+import { v4 as uuidv4 } from "uuid";
 // plane imports
 import { LIVE_BASE_PATH, LIVE_BASE_URL } from "@plane/constants";
 import { CollaborativeDocumentEditorWithRef } from "@plane/editor";
@@ -38,6 +39,7 @@ import { useRealtimePageEvents } from "@/hooks/use-realtime-page-events";
 import type { TExtendedEditorExtensionsConfig } from "@/hooks/pages";
 import type { EPageStoreType } from "@/hooks/store";
 import { usePageStore } from "@/hooks/store";
+import { usePageComments } from "@/hooks/store/use-page-comments";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { useEditorFlagging } from "@/hooks/use-editor-flagging";
 // store
@@ -62,6 +64,7 @@ type Props = {
   editorReady: boolean;
   editorForwardRef: React.RefObject<EditorRefApi | null>;
   handleEditorReady: (status: boolean) => void;
+  handleOpenCommentsPane: () => void;
   handleOpenNavigationPane: () => void;
   handlers: TEditorBodyHandlers;
   isNavigationPaneOpen: boolean;
@@ -81,6 +84,7 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     config,
     editorForwardRef,
     handleEditorReady,
+    handleOpenCommentsPane,
     handleOpenNavigationPane,
     handlers,
     isNavigationPaneOpen,
@@ -100,6 +104,7 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
   const { getWorkspaceBySlug } = useWorkspace();
   const { getUserDetails } = useMember();
   const { getPageById, createPage } = usePageStore(storeType);
+  const commentsStore = usePageComments();
   const router = useAppRouter();
   // derived values
   const {
@@ -222,6 +227,30 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     }
   }, [webhookConnectionParams]);
 
+  // inline comments: the bubble menu asks for a mark id, the pane composes the thread
+  const pageCommentConfig = useMemo(
+    () => ({
+      onCreate: async ({ text }: { from: number; to: number; text: string }) => {
+        if (!pageId) return undefined;
+        const markId = uuidv4();
+        commentsStore.setPendingComment({ pageId, markId, quotedText: text, blockId: null });
+        commentsStore.setActiveThreadId(null);
+        handleOpenCommentsPane();
+        return markId;
+      },
+      onClick: (ids: string[]) => {
+        if (!pageId) return;
+        const comment = commentsStore
+          .getCommentsByPageId(pageId)
+          .find((item) => !item.parent && item.anchor?.mark_id && ids.includes(item.anchor.mark_id));
+        if (!comment) return;
+        commentsStore.setActiveThreadId(comment.id);
+        handleOpenCommentsPane();
+      },
+    }),
+    [commentsStore, handleOpenCommentsPane, pageId]
+  );
+
   const userConfig = useMemo(
     () => ({
       id: currentUser?.id ?? "",
@@ -309,6 +338,7 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
                 return createdPage?.id ? { id: createdPage.id } : undefined;
               },
             }}
+            pageCommentConfig={pageCommentConfig}
             updatePageProperties={updatePageProperties}
             realtimeConfig={realtimeConfig}
             serverHandler={serverHandler}

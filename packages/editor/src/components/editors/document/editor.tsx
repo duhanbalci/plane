@@ -41,6 +41,7 @@ function DocumentEditor(props: IDocumentEditorProps) {
     id,
     isTouchDevice,
     mentionHandler,
+    pageCommentConfig,
     pageEmbedConfig,
     onChange,
     user,
@@ -60,6 +61,7 @@ function DocumentEditor(props: IDocumentEditorProps) {
         flaggedExtensions,
         isEditable: editable,
         fileHandler,
+        pageCommentConfig,
         pageEmbedConfig,
         userDetails: user ?? {
           id: "",
@@ -69,7 +71,7 @@ function DocumentEditor(props: IDocumentEditorProps) {
       })
     );
     return additionalExtensions;
-  }, [disabledExtensions, editable, extendedEditorProps, fileHandler, flaggedExtensions, pageEmbedConfig, user]);
+  }, [disabledExtensions, editable, extendedEditorProps, fileHandler, flaggedExtensions, pageCommentConfig, pageEmbedConfig, user]);
 
   const editor = useEditor({
     disabledExtensions,
@@ -86,6 +88,7 @@ function DocumentEditor(props: IDocumentEditorProps) {
     id,
     initialValue: value,
     mentionHandler,
+    pageCommentConfig,
     pageEmbedConfig,
     onChange,
   });

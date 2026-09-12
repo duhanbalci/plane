@@ -48,7 +48,16 @@ from .issue import (
 )
 from .module import Module, ModuleIssue, ModuleLink, ModuleMember, ModuleUserProperties
 from .notification import EmailNotificationLog, Notification, UserNotificationPreference
-from .page import Page, PageCollection, PageLabel, PageLog, ProjectPage, PageVersion
+from .page import (
+    Page,
+    PageCollection,
+    PageComment,
+    PageCommentReaction,
+    PageLabel,
+    PageLog,
+    ProjectPage,
+    PageVersion,
+)
 from .project import (
     Project,
     ProjectBaseModel,

@@ -14,6 +14,8 @@ from plane.app.views import (
     PageCollectionViewSet,
     PageMoveToWikiEndpoint,
     WorkspacePageFavoriteViewSet,
+    PageCommentViewSet,
+    PageCommentReactionViewSet,
 )
 
 # Wiki (workspace scoped) pages reuse the project page views with scope="workspace".
@@ -165,5 +167,57 @@ urlpatterns = [
         "workspaces/<str:slug>/page-collections/<uuid:pk>/",
         PageCollectionViewSet.as_view({"patch": "partial_update", "delete": "destroy"}),
         name="workspace-page-collections",
+    ),
+    # ------------------------------------------------------- page comments
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/comments/",
+        PageCommentViewSet.as_view({"get": "list", "post": "create"}),
+        name="project-page-comments",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/comments/<uuid:pk>/",
+        PageCommentViewSet.as_view({"patch": "partial_update", "delete": "destroy"}),
+        name="project-page-comments",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/comments/<uuid:pk>/resolve/",
+        PageCommentViewSet.as_view({"post": "resolve", "delete": "unresolve"}),
+        name="project-page-comment-resolve",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/comments/<uuid:comment_id>/reactions/",
+        PageCommentReactionViewSet.as_view({"post": "create"}),
+        name="project-page-comment-reactions",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/comments/"
+        "<uuid:comment_id>/reactions/<str:reaction_code>/",
+        PageCommentReactionViewSet.as_view({"delete": "destroy"}),
+        name="project-page-comment-reactions",
+    ),
+    path(
+        "workspaces/<str:slug>/pages/<uuid:page_id>/comments/",
+        PageCommentViewSet.as_view({"get": "list", "post": "create"}, **WORKSPACE_SCOPE),
+        name="workspace-page-comments",
+    ),
+    path(
+        "workspaces/<str:slug>/pages/<uuid:page_id>/comments/<uuid:pk>/",
+        PageCommentViewSet.as_view({"patch": "partial_update", "delete": "destroy"}, **WORKSPACE_SCOPE),
+        name="workspace-page-comments",
+    ),
+    path(
+        "workspaces/<str:slug>/pages/<uuid:page_id>/comments/<uuid:pk>/resolve/",
+        PageCommentViewSet.as_view({"post": "resolve", "delete": "unresolve"}, **WORKSPACE_SCOPE),
+        name="workspace-page-comment-resolve",
+    ),
+    path(
+        "workspaces/<str:slug>/pages/<uuid:page_id>/comments/<uuid:comment_id>/reactions/",
+        PageCommentReactionViewSet.as_view({"post": "create"}, **WORKSPACE_SCOPE),
+        name="workspace-page-comment-reactions",
+    ),
+    path(
+        "workspaces/<str:slug>/pages/<uuid:page_id>/comments/<uuid:comment_id>/reactions/<str:reaction_code>/",
+        PageCommentReactionViewSet.as_view({"delete": "destroy"}, **WORKSPACE_SCOPE),
+        name="workspace-page-comment-reactions",
     ),
 ]

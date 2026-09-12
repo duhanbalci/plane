@@ -8,6 +8,7 @@ import base64
 
 # Module imports
 from .base import BaseSerializer
+from .user import UserLiteSerializer
 from plane.utils.content_validator import (
     validate_binary_data,
     validate_html_content,
@@ -15,6 +16,8 @@ from plane.utils.content_validator import (
 from plane.db.models import (
     Page,
     PageCollection,
+    PageComment,
+    PageCommentReaction,
     PageLabel,
     Label,
     ProjectPage,
@@ -276,3 +279,64 @@ class PageBinaryUpdateSerializer(serializers.Serializer):
 
         instance.save()
         return instance
+
+
+class PageCommentReactionSerializer(BaseSerializer):
+    actor_detail = UserLiteSerializer(read_only=True, source="actor")
+
+    class Meta:
+        model = PageCommentReaction
+        fields = ["id", "comment", "actor", "actor_detail", "reaction", "workspace", "created_at"]
+        read_only_fields = ["workspace", "comment", "actor"]
+
+
+class PageCommentSerializer(BaseSerializer):
+    actor_detail = UserLiteSerializer(read_only=True, source="actor")
+    reactions = PageCommentReactionSerializer(read_only=True, many=True, source="page_comment_reactions")
+
+    class Meta:
+        model = PageComment
+        fields = [
+            "id",
+            "page",
+            "actor",
+            "actor_detail",
+            "comment_html",
+            "comment_json",
+            "comment_stripped",
+            "attachments",
+            "parent",
+            "anchor",
+            "is_resolved",
+            "resolved_by",
+            "resolved_at",
+            "edited_at",
+            "reactions",
+            "workspace",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+        ]
+        read_only_fields = [
+            "workspace",
+            "page",
+            "actor",
+            "is_resolved",
+            "resolved_by",
+            "resolved_at",
+            "edited_at",
+            "created_by",
+            "updated_by",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate(self, attrs):
+        if attrs.get("comment_html"):
+            is_valid, _error_msg, sanitized_html = validate_html_content(attrs["comment_html"])
+            if not is_valid:
+                raise serializers.ValidationError({"comment_html": "HTML content is not valid"})
+            if sanitized_html is not None:
+                attrs["comment_html"] = sanitized_html
+        return attrs

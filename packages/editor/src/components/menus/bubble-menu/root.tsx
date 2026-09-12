@@ -8,7 +8,8 @@ import { isNodeSelection } from "@tiptap/core";
 import type { Editor } from "@tiptap/core";
 import { BubbleMenu, useEditorState } from "@tiptap/react";
 import type { BubbleMenuProps } from "@tiptap/react";
-import { useEffect, useState, useRef } from "react";
+import { MessageSquare } from "lucide-react";
+import { useCallback, useEffect, useState, useRef } from "react";
 // plane utils
 import { cn } from "@plane/utils";
 // components
@@ -29,6 +30,7 @@ import {
 import { COLORS_LIST } from "@/constants/common";
 import { CORE_EXTENSIONS } from "@/constants/extension";
 // extensions
+import { getPageCommentConfig } from "@/extensions/comment-mark";
 import { isCellSelection } from "@/extensions/table/table/utilities/helpers";
 // types
 import type { IEditorPropsExtended, TEditorCommands, TExtensions } from "@/types";
@@ -105,6 +107,18 @@ export function EditorBubbleMenu(props: Props) {
       backgroundColor: COLORS_LIST.find((c) => BackgroundColorItem(editor).isActive({ color: c.key })),
     }),
   });
+
+  const pageCommentConfig = getPageCommentConfig(editor);
+
+  const handleComment = useCallback(async () => {
+    if (!pageCommentConfig) return;
+    const { from, to } = editor.state.selection;
+    if (from === to) return;
+    const text = editor.state.doc.textBetween(from, to, " ");
+    const markId = await pageCommentConfig.onCreate({ from, to, text });
+    if (!markId) return;
+    editor.chain().focus().setTextSelection({ from, to }).setCommentMark(markId).run();
+  }, [editor, pageCommentConfig]);
 
   const basicFormattingOptions = editorState.code
     ? [formattingItems.code]
@@ -227,6 +241,20 @@ export function EditorBubbleMenu(props: Props) {
             ))}
           </div>
           <TextAlignmentSelector editor={editor} editorState={editorState} />
+          {pageCommentConfig && (
+            <div className="px-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void handleComment();
+                }}
+                className="grid size-7 place-items-center rounded-sm text-tertiary transition-colors hover:bg-layer-1 active:bg-layer-1"
+              >
+                <MessageSquare className="size-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </BubbleMenu>

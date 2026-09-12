@@ -20,6 +20,8 @@ import type { EditorRefApi, IEditorProps, TEditorCommands } from "@/types";
 // local imports
 import { getParagraphCount } from "./common";
 import { insertContentAtSavedSelection } from "./insert-content-at-cursor-position";
+// extensions
+import { getCommentMarkRange } from "@/extensions/comment-mark";
 import { scrollSummary, scrollToNodeViaDOMCoordinates } from "./scroll-to-node";
 
 type TArgs = Pick<IEditorProps, "getEditorMetaData"> & {
@@ -251,6 +253,16 @@ export const getEditorRefHelpers = (args: TArgs): EditorRefApi => {
       };
     },
     redo: () => editor?.commands.redo(),
+    setActiveCommentMark: (markId) => {
+      editor?.commands.setActiveCommentMark(markId);
+    },
+    unsetCommentMark: (markId) => {
+      editor?.commands.unsetCommentMark(markId);
+    },
+    getCommentMarkPosition: (markId) => {
+      if (!editor) return undefined;
+      return getCommentMarkRange(editor.state, markId)?.from;
+    },
     scrollToNodeViaDOMCoordinates({ pos, behavior = "smooth" }) {
       const resolvedPos = pos ?? editor?.state.selection.from;
       if (!editor || !resolvedPos) return;

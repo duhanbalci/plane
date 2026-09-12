@@ -8,6 +8,7 @@ from django.conf import settings
 from django.utils import timezone
 
 # Django imports
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 # Module imports
@@ -149,6 +150,7 @@ class PageLog(BaseModel):
         ("page_mention", "Page Mention"),
         ("user_mention", "User Mention"),
         ("page_embed", "Page Embed"),
+        ("attachment", "Attachment"),
     )
     transaction = models.UUIDField(default=uuid.uuid4)
     page = models.ForeignKey(Page, related_name="page_log", on_delete=models.CASCADE)
@@ -238,3 +240,87 @@ class PageVersion(BaseModel):
             else strip_tags(self.description_html)
         )
         super(PageVersion, self).save(*args, **kwargs)
+
+
+class PageComment(BaseModel):
+    """An inline comment thread anchored to a range of a page's document."""
+
+    workspace = models.ForeignKey("db.Workspace", on_delete=models.CASCADE, related_name="page_comments")
+    page = models.ForeignKey("db.Page", on_delete=models.CASCADE, related_name="comments")
+    # System generated comments have no actor.
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="page_comments",
+        null=True,
+        blank=True,
+    )
+    comment_stripped = models.TextField(verbose_name="Comment", blank=True)
+    comment_json = models.JSONField(blank=True, default=dict)
+    comment_html = models.TextField(blank=True, default="<p></p>")
+    attachments = ArrayField(models.URLField(), size=10, blank=True, default=list)
+    # Replies point at the thread root.
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
+    )
+    # {"mark_id": str, "block_id": str | None, "quoted_text": str}
+    anchor = models.JSONField(default=dict, blank=True)
+    is_resolved = models.BooleanField(default=False)
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="resolved_page_comments",
+        null=True,
+        blank=True,
+    )
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    edited_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Page Comment"
+        verbose_name_plural = "Page Comments"
+        db_table = "page_comments"
+        ordering = ("created_at",)
+        indexes = [models.Index(fields=["page", "created_at"], name="page_comment_page_created_idx")]
+
+    def save(self, *args, **kwargs):
+        self.comment_stripped = strip_tags(self.comment_html) if self.comment_html else ""
+        super(PageComment, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.page.name} <{self.id}>"
+
+
+class PageCommentReaction(BaseModel):
+    workspace = models.ForeignKey("db.Workspace", on_delete=models.CASCADE, related_name="page_comment_reactions")
+    comment = models.ForeignKey(
+        "db.PageComment",
+        on_delete=models.CASCADE,
+        related_name="page_comment_reactions",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="page_comment_reactions",
+    )
+    reaction = models.CharField(max_length=20)
+
+    class Meta:
+        verbose_name = "Page Comment Reaction"
+        verbose_name_plural = "Page Comment Reactions"
+        db_table = "page_comment_reactions"
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["comment", "actor", "reaction"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="page_comment_reaction_unique_when_deleted_at_null",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.comment_id} {self.reaction}"

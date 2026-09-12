@@ -506,3 +506,14 @@ span[data-name][data-type="emoji"] img {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* inline page comments */
+.editor-comment-mark {
+  background-color: --alpha(var(--background-color-accent-primary) / 15%);
+  border-bottom: 2px solid --alpha(var(--background-color-accent-primary) / 45%);
+  cursor: pointer;
+}
+
+.editor-comment-mark-active {
+  background-color: --alpha(var(--background-color-accent-primary) / 30%);
+}

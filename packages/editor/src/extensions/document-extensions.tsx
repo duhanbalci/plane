@@ -8,6 +8,7 @@ import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { AnyExtension } from "@tiptap/core";
 import { SlashCommands } from "@/extensions";
 // local imports
+import { CommentMarkExtension } from "./comment-mark/extension";
 import { PageEmbedExtension } from "./page-embed/extension";
 import { pageEmbedSlashCommandOption } from "./page-embed/slash-command";
 // types
@@ -15,7 +16,12 @@ import type { IEditorProps, TExtensions, TUserDetails } from "@/types";
 
 export type TDocumentEditorAdditionalExtensionsProps = Pick<
   IEditorProps,
-  "disabledExtensions" | "flaggedExtensions" | "fileHandler" | "extendedEditorProps" | "pageEmbedConfig"
+  | "disabledExtensions"
+  | "flaggedExtensions"
+  | "fileHandler"
+  | "extendedEditorProps"
+  | "pageCommentConfig"
+  | "pageEmbedConfig"
 > & {
   isEditable: boolean;
   provider?: HocuspocusProvider;
@@ -41,6 +47,11 @@ const extensionRegistry: TDocumentEditorAdditionalExtensionsRegistry[] = [
     // the sub page embed node; the schema-only twin lives in core-without-props
     isEnabled: () => true,
     getExtension: ({ pageEmbedConfig }) => PageEmbedExtension(pageEmbedConfig),
+  },
+  {
+    // the inline comment mark; the schema-only twin lives in core-without-props
+    isEnabled: () => true,
+    getExtension: ({ pageCommentConfig }) => CommentMarkExtension(pageCommentConfig),
   },
 ];
 

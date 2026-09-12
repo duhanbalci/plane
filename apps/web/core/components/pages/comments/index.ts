@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
-export * from "./comment";
-export * from "./core";
-export * from "./extended";
+export * from "./composer";
+export * from "./pane";
+export * from "./reactions";
+export * from "./thread-card";

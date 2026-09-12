@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
-export * from "./comment";
-export * from "./core";
-export * from "./extended";
+export * from "./extension";
+export * from "./extension-config";
+export * from "./plugin";
+export * from "./types";

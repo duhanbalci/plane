@@ -125,5 +125,37 @@
       "only_this_page": "Delete only this page (sub pages move up one level)",
       "with_sub_pages": "Delete this page and all its sub pages"
     }
+  },
+  "page_comments": {
+    "title": "Comments",
+    "open": "Comments",
+    "add": "Comment",
+    "empty": "No comments yet",
+    "empty_resolved": "No resolved comments",
+    "placeholder": "Add a comment",
+    "reply_placeholder": "Reply",
+    "submit": "Comment",
+    "reply": "Reply",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "resolve": "Resolve",
+    "unresolve": "Reopen",
+    "resolved": "Resolved",
+    "unanchored": "Unanchored",
+    "edited": "edited",
+    "filters": {
+      "active": "Active",
+      "resolved": "Resolved",
+      "all": "All"
+    },
+    "toasts": {
+      "create_error": "The comment could not be added. Please try again.",
+      "update_error": "The comment could not be updated. Please try again.",
+      "delete_error": "The comment could not be deleted. Please try again.",
+      "resolve_error": "The comment could not be resolved. Please try again.",
+      "fetch_error": "Comments could not be loaded. Please try again."
+    }
   }
 }

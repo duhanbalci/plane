@@ -6,6 +6,7 @@
 
 import { observer } from "mobx-react";
 import { RightSidePaneOutline } from "@makeplane/propel/icons";
+import { MessageSquare } from "lucide-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -18,13 +19,14 @@ import { usePageFilters } from "@/hooks/use-page-filters";
 import type { TPageInstance } from "@/store/pages/base-page";
 
 type Props = {
+  handleOpenCommentsPane: () => void;
   handleOpenNavigationPane: () => void;
   isNavigationPaneOpen: boolean;
   page: TPageInstance;
 };
 
 export const PageEditorToolbarRoot = observer(function PageEditorToolbarRoot(props: Props) {
-  const { handleOpenNavigationPane, isNavigationPaneOpen, page } = props;
+  const { handleOpenCommentsPane, handleOpenNavigationPane, isNavigationPaneOpen, page } = props;
   // translation
   const { t } = useTranslation();
   // derived values
@@ -56,6 +58,16 @@ export const PageEditorToolbarRoot = observer(function PageEditorToolbarRoot(pro
           <div className="flex w-full max-w-full items-center justify-between">
             <div className="flex-1">{editorRef && <PageToolbar editorRef={editorRef} />}</div>
             <div className="flex items-center gap-2">
+              <Tooltip label={t("page_comments.open")}>
+                <button
+                  type="button"
+                  className="grid size-6 shrink-0 place-items-center rounded-sm text-secondary transition-colors hover:bg-layer-transparent-hover hover:text-primary"
+                  onClick={handleOpenCommentsPane}
+                  aria-label={t("page_comments.open")}
+                >
+                  <MessageSquare className="size-3.5" />
+                </button>
+              </Tooltip>
               {!isNavigationPaneOpen && (
                 <button
                   type="button"
@@ -70,7 +82,17 @@ export const PageEditorToolbarRoot = observer(function PageEditorToolbarRoot(pro
         </div>
       </div>
       {shouldHideToolbar && (
-        <div className="absolute top-0 right-0 z-10 flex h-[52px] items-center px-page-x">
+        <div className="absolute top-0 right-0 z-10 flex h-[52px] items-center gap-2 px-page-x">
+          <Tooltip label={t("page_comments.open")}>
+            <button
+              type="button"
+              className="grid size-6 shrink-0 place-items-center rounded-sm text-secondary transition-colors hover:bg-layer-transparent-hover hover:text-primary"
+              onClick={handleOpenCommentsPane}
+              aria-label={t("page_comments.open")}
+            >
+              <MessageSquare className="size-3.5" />
+            </button>
+          </Tooltip>
           {!isNavigationPaneOpen && (
             <Tooltip label={t("page_navigation_pane.open_button")}>
               <button

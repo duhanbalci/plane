@@ -4,5 +4,6 @@
  * See the LICENSE file for details.
  */
 
+export * from "./use-page-comments";
 export * from "./use-page-store";
 export * from "./use-page";

@@ -30,6 +30,7 @@ import type {
   TExtensions,
   TFileHandler,
   TMentionHandler,
+  TPageCommentConfig,
   TPageEmbedConfig,
   TRealtimeConfig,
   TServerHandler,
@@ -61,6 +62,7 @@ export type TEditorCommands =
   | "link"
   | "issue-embed"
   | "page-embed"
+  | "comment"
   | "text-color"
   | "background-color"
   | "text-align"
@@ -139,6 +141,12 @@ export type CoreEditorRefApi = {
   onHeadingChange: (callback: (headings: IMarking[]) => void) => () => void;
   onStateChange: (callback: () => void) => () => void;
   redo: () => void;
+  /** highlight an inline comment thread, or clear the highlight with null */
+  setActiveCommentMark: (markId: string | null) => void;
+  /** drop one inline comment thread from the document */
+  unsetCommentMark: (markId: string) => void;
+  /** first document position of an inline comment thread, if it is still anchored */
+  getCommentMarkPosition: (markId: string) => number | undefined;
   scrollSummary: (marking: IMarking) => void;
 
   scrollToNodeViaDOMCoordinates: ({ pos, behavior }: { pos?: number; behavior?: ScrollBehavior }) => void;
@@ -173,6 +181,7 @@ export type IEditorProps = {
   initialValue: string;
   isTouchDevice?: boolean;
   mentionHandler: TMentionHandler;
+  pageCommentConfig?: TPageCommentConfig;
   pageEmbedConfig?: TPageEmbedConfig;
   onAssetChange?: (assets: TEditorAsset[]) => void;
   onEditorFocus?: () => void;

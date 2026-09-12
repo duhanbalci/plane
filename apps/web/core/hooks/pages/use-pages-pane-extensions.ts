@@ -17,12 +17,16 @@ import { useAppRouter } from "@/hooks/use-app-router";
 import { useQueryParams } from "@/hooks/use-query-params";
 import type { TPageNavigationPaneTab } from "@/components/pages/navigation-pane/tab-panels";
 import type { INavigationPaneExtension } from "@/components/pages/navigation-pane";
+import { PageCommentsPane } from "@/components/pages/comments";
 import type { TPageInstance } from "@/store/pages/base-page";
 
 export type TPageExtensionHookParams = {
   page: TPageInstance;
   editorRef: RefObject<EditorRefApi | null>;
 };
+
+/** Query param value that opens the inline comments pane. */
+export const PAGE_COMMENTS_PANE_PARAM = "comments";
 
 export const usePagesPaneExtensions = (_params: TPageExtensionHookParams) => {
   const router = useAppRouter();
@@ -34,8 +38,22 @@ export const usePagesPaneExtensions = (_params: TPageExtensionHookParams) => {
     PAGE_NAVIGATION_PANE_TABS_QUERY_PARAM
   ) as TPageNavigationPaneTab | null;
 
+  const navigationPaneExtensions: INavigationPaneExtension[] = useMemo(
+    () => [
+      {
+        id: "comments",
+        triggerParam: PAGE_COMMENTS_PANE_PARAM,
+        component: PageCommentsPane,
+        width: 360,
+      },
+    ],
+    []
+  );
+
   const isNavigationPaneOpen =
-    !!navigationPaneQueryParam && PAGE_NAVIGATION_PANE_TAB_KEYS.includes(navigationPaneQueryParam);
+    !!navigationPaneQueryParam &&
+    (PAGE_NAVIGATION_PANE_TAB_KEYS.includes(navigationPaneQueryParam) ||
+      navigationPaneExtensions.some((extension) => extension.triggerParam === navigationPaneQueryParam));
 
   const handleOpenNavigationPane = useCallback(() => {
     const updatedRoute = updateQueryParams({
@@ -49,7 +67,12 @@ export const usePagesPaneExtensions = (_params: TPageExtensionHookParams) => {
     return map;
   }, []);
 
-  const navigationPaneExtensions: INavigationPaneExtension[] = [];
+  const handleOpenCommentsPane = useCallback(() => {
+    const updatedRoute = updateQueryParams({
+      paramsToAdd: { [PAGE_NAVIGATION_PANE_TABS_QUERY_PARAM]: PAGE_COMMENTS_PANE_PARAM },
+    });
+    router.push(updatedRoute);
+  }, [router, updateQueryParams]);
 
   const handleCloseNavigationPane = useCallback(() => {
     const updatedRoute = updateQueryParams({
@@ -62,6 +85,7 @@ export const usePagesPaneExtensions = (_params: TPageExtensionHookParams) => {
     editorExtensionHandlers,
     navigationPaneExtensions,
     handleOpenNavigationPane,
+    handleOpenCommentsPane,
     isNavigationPaneOpen,
     handleCloseNavigationPane,
   };

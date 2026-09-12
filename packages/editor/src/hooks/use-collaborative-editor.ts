@@ -56,6 +56,7 @@ export const useCollaborativeEditor = (props: UseCollaborativeEditorArgs) => {
     handleEditorReady,
     id,
     mentionHandler,
+    pageCommentConfig,
     pageEmbedConfig,
     dragDropEnabled = true,
     isTouchDevice,
@@ -89,6 +90,7 @@ export const useCollaborativeEditor = (props: UseCollaborativeEditorArgs) => {
         fileHandler,
         flaggedExtensions,
         isEditable: editable,
+        pageCommentConfig,
         pageEmbedConfig,
         provider,
         userDetails: user,
@@ -106,6 +108,7 @@ export const useCollaborativeEditor = (props: UseCollaborativeEditorArgs) => {
       editable,
       user,
       mainNavigationExtension,
+      pageCommentConfig,
       pageEmbedConfig,
     ]
   );
