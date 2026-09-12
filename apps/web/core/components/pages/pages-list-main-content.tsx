@@ -33,10 +33,12 @@ export const PagesListMainContent = observer(function PagesListMainContent(props
   const { t } = useTranslation();
   // store hooks
   const { currentProjectDetails } = useProject();
-  const { isAnyPageAvailable, getCurrentProjectFilteredPageIdsByTab, getCurrentProjectPageIdsByTab, loader } =
-    usePageStore(storeType);
+  const { isAnyPageAvailable, loader } = usePageStore(storeType);
   const { allowPermissions } = useUserPermissions();
-  const { createPage } = usePageStore(EPageStoreType.PROJECT);
+  // the empty states of this view are project specific
+  const { createPage, getCurrentProjectFilteredPageIdsByTab, getCurrentProjectPageIdsByTab } = usePageStore(
+    EPageStoreType.PROJECT
+  );
   // states
   const [isCreatingPage, setIsCreatingPage] = useState(false);
   // router

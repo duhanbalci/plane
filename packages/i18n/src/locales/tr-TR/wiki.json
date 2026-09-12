@@ -108,6 +108,22 @@
     },
     "nested_pages_download_banner": {
       "title": "İç içe sayfalar ücretli bir plan gerektirir. Açmak için yükseltin."
+    },
+    "tabs": {
+      "public": "Herkese acik",
+      "private": "Ozel",
+      "archived": "Arsivlenmis"
+    },
+    "empty_state": {
+      "title": "Henuz wiki sayfasi yok",
+      "description": "Calisma alani wiki'sine baslamak icin bir koleksiyonda sayfa olusturun."
+    },
+    "move_to_wiki": {
+      "title": "Wiki'ye tasi",
+      "description": "Sayfa ve alt sayfalari projeden cikar, calisma alani wiki sayfasi olur.",
+      "submit": "Wiki'ye tasi",
+      "success": "Sayfa wiki'ye tasindi.",
+      "error": "Sayfa wiki'ye tasinamadi. Lutfen tekrar deneyin."
     }
   }
 }

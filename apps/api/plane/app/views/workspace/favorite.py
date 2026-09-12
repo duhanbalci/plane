@@ -12,7 +12,7 @@ from django.db import IntegrityError
 
 # Module imports
 from plane.app.views.base import BaseAPIView
-from plane.db.models import UserFavorite, Workspace
+from plane.db.models import Page, UserFavorite, Workspace
 from plane.app.serializers import UserFavoriteSerializer
 from plane.app.permissions import allow_permission, ROLE
 
@@ -23,8 +23,10 @@ class WorkspaceFavoriteEndpoint(BaseAPIView):
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def get(self, request, slug):
         # the second filter is to check if the user is a member of the project
+        # Wiki pages are project-less but still favoritable, unlike project pages.
+        wiki_page_ids = Page.objects.filter(workspace__slug=slug, is_global=True).values("id")
         favorites = UserFavorite.objects.filter(user=request.user, workspace__slug=slug, parent__isnull=True).filter(
-            Q(project__isnull=True) & ~Q(entity_type="page")
+            Q(project__isnull=True) & (~Q(entity_type="page") | Q(entity_identifier__in=wiki_page_ids))
             | (
                 Q(project__isnull=False)
                 & Q(project__project_projectmember__member=request.user)

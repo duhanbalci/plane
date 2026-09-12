@@ -14,6 +14,7 @@ from plane.utils.content_validator import (
 )
 from plane.db.models import (
     Page,
+    PageCollection,
     PageLabel,
     Label,
     ProjectPage,
@@ -60,8 +61,10 @@ class PageSerializer(BaseSerializer):
             "project_ids",
             "sort_order",
             "sub_pages_count",
+            "collection",
+            "is_global",
         ]
-        read_only_fields = ["workspace", "owned_by"]
+        read_only_fields = ["workspace", "owned_by", "is_global"]
 
     def get_sub_pages_count(self, obj) -> int:
         count = getattr(obj, "sub_pages_count", None)
@@ -71,14 +74,26 @@ class PageSerializer(BaseSerializer):
 
     def create(self, validated_data):
         labels = validated_data.pop("labels", None)
-        project_id = self.context["project_id"]
+        # Project scope passes `project_id`, workspace (wiki) scope passes
+        # `workspace_id`; the latter creates a global page with no ProjectPage row.
+        project_id = self.context.get("project_id")
+        workspace_id = self.context.get("workspace_id")
         owned_by_id = self.context["owned_by_id"]
         description_json = self.context["description_json"]
         description_binary = self.context["description_binary"]
         description_html = self.context["description_html"]
 
-        # Get the workspace id from the project
-        project = Project.objects.get(pk=project_id)
+        if project_id:
+            # Get the workspace id from the project
+            workspace_id = Project.objects.get(pk=project_id).workspace_id
+            # A collection only applies to wiki pages.
+            validated_data.pop("collection", None)
+        else:
+            collection = validated_data.get("collection")
+            if collection is None or collection.workspace_id != workspace_id:
+                validated_data["collection"] = PageCollection.objects.filter(
+                    workspace_id=workspace_id, is_default=True
+                ).first()
 
         # Create the page
         page = Page.objects.create(
@@ -87,17 +102,19 @@ class PageSerializer(BaseSerializer):
             description_binary=description_binary,
             description_html=description_html,
             owned_by_id=owned_by_id,
-            workspace_id=project.workspace_id,
+            workspace_id=workspace_id,
+            is_global=not project_id,
         )
 
-        # Create the project page
-        ProjectPage.objects.create(
-            workspace_id=page.workspace_id,
-            project_id=project_id,
-            page_id=page.id,
-            created_by_id=page.created_by_id,
-            updated_by_id=page.updated_by_id,
-        )
+        if project_id:
+            # Create the project page
+            ProjectPage.objects.create(
+                workspace_id=page.workspace_id,
+                project_id=project_id,
+                page_id=page.id,
+                created_by_id=page.created_by_id,
+                updated_by_id=page.updated_by_id,
+            )
 
         # Create page labels
         if labels is not None:
@@ -142,6 +159,31 @@ class PageDetailSerializer(PageSerializer):
 
     class Meta(PageSerializer.Meta):
         fields = PageSerializer.Meta.fields + ["description_html"]
+
+
+class PageCollectionSerializer(BaseSerializer):
+    # Annotated in PageCollectionViewSet.get_queryset.
+    page_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = PageCollection
+        fields = [
+            "id",
+            "name",
+            "description",
+            "logo_props",
+            "access",
+            "owned_by",
+            "sort_order",
+            "is_default",
+            "page_count",
+            "workspace",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+        ]
+        read_only_fields = ["workspace", "owned_by", "is_default"]
 
 
 class PageVersionSerializer(BaseSerializer):

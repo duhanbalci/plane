@@ -148,6 +148,7 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
           "archive-restore",
           "delete",
           "toggle-access",
+          "move-to-wiki",
           "export",
         ]}
         page={page}

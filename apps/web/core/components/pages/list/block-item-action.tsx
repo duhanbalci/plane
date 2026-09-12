@@ -88,6 +88,7 @@ export const BlockItemAction = observer(function BlockItemAction(props: Props) {
           "toggle-lock",
           "toggle-access",
           "archive-restore",
+          "move-to-wiki",
           "delete",
         ]}
         page={page}

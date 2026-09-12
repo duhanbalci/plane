@@ -20,6 +20,51 @@ def get_view_props():
     return {"full_width": False}
 
 
+class PageCollection(BaseModel):
+    """A folder grouping workspace (wiki) pages."""
+
+    PRIVATE_ACCESS = 1
+    PUBLIC_ACCESS = 0
+
+    ACCESS_CHOICES = ((PRIVATE_ACCESS, "Private"), (PUBLIC_ACCESS, "Public"))
+    DEFAULT_SORT_ORDER = 65535
+
+    workspace = models.ForeignKey("db.Workspace", on_delete=models.CASCADE, related_name="page_collections")
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    logo_props = models.JSONField(default=dict)
+    access = models.PositiveSmallIntegerField(choices=ACCESS_CHOICES, default=PUBLIC_ACCESS)
+    owned_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="page_collections")
+    sort_order = models.FloatField(default=DEFAULT_SORT_ORDER)
+    is_default = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Page Collection"
+        verbose_name_plural = "Page Collections"
+        db_table = "page_collections"
+        ordering = ("sort_order",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace", "name"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="page_collection_unique_workspace_name_when_deleted_at_null",
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            # Label-style auto bump so a new collection lands at the end.
+            last_order = PageCollection.objects.filter(workspace=self.workspace).aggregate(
+                largest=models.Max("sort_order")
+            )["largest"]
+            if last_order is not None:
+                self.sort_order = last_order + 10000
+        super(PageCollection, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.workspace.name} <{self.name}>"
+
+
 class Page(BaseModel):
     PRIVATE_ACCESS = 1
     PUBLIC_ACCESS = 0
@@ -49,6 +94,14 @@ class Page(BaseModel):
     view_props = models.JSONField(default=get_view_props)
     logo_props = models.JSONField(default=dict)
     is_global = models.BooleanField(default=False)
+    # Wiki pages (is_global=True) live in a collection; project pages keep it null.
+    collection = models.ForeignKey(
+        "db.PageCollection",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pages",
+    )
     projects = models.ManyToManyField("db.Project", related_name="pages", through="db.ProjectPage")
     moved_to_page = models.UUIDField(null=True, blank=True)
     moved_to_project = models.UUIDField(null=True, blank=True)

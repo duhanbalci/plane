@@ -29,10 +29,11 @@ import { ContextMenu, CustomMenu } from "@plane/ui";
 // components
 import { cn } from "@plane/utils";
 import { DeletePageModal } from "@/components/pages/modals/delete-page-modal";
+import { MoveToWikiModal } from "@/components/wiki/move-to-wiki-modal";
 // hooks
 import { usePageOperations } from "@/hooks/use-page-operations";
 // plane web hooks
-import type { EPageStoreType } from "@/hooks/store";
+import { EPageStoreType } from "@/hooks/store";
 import { usePageFlag } from "@/hooks/use-page-flag";
 // store types
 import type { TPageInstance } from "@/store/pages/base-page";
@@ -50,7 +51,8 @@ export type TPageActions =
   | "delete"
   | "version-history"
   | "export"
-  | "move";
+  | "move"
+  | "move-to-wiki";
 
 type Props = {
   extraOptions?: (TContextMenuItem & { key: TPageActions })[];
@@ -65,6 +67,7 @@ export const PageActions = observer(function PageActions(props: Props) {
   // states
   const [deletePageModal, setDeletePageModal] = useState(false);
   const [movePageModal, setMovePageModal] = useState(false);
+  const [moveToWikiModal, setMoveToWikiModal] = useState(false);
   // params
   const { workspaceSlug } = useParams();
   // page flag
@@ -75,6 +78,8 @@ export const PageActions = observer(function PageActions(props: Props) {
   const { pageOperations } = usePageOperations({
     page,
   });
+  // derived values
+  const isProjectPage = storeType === EPageStoreType.PROJECT;
   // derived values
   const {
     access,
@@ -157,6 +162,14 @@ export const PageActions = observer(function PageActions(props: Props) {
           icon: ExportOutline,
           shouldRender: canCurrentUserMovePage && isMovePageEnabled,
         },
+        {
+          key: "move-to-wiki",
+          action: () => setMoveToWikiModal(true),
+          title: "Move to Wiki",
+          icon: ExportOutline,
+          // only a project page can leave its project for the workspace wiki
+          shouldRender: isProjectPage && canCurrentUserMovePage && !archived_at,
+        },
       ];
       if (extraOptions) {
         menuItems.push(...extraOptions);
@@ -165,6 +178,7 @@ export const PageActions = observer(function PageActions(props: Props) {
     },
     [
       extraOptions,
+      isProjectPage,
       is_locked,
       canCurrentUserLockPage,
       access,
@@ -195,6 +209,9 @@ export const PageActions = observer(function PageActions(props: Props) {
         page={page}
         storeType={storeType}
       />
+      {isProjectPage && (
+        <MoveToWikiModal isOpen={moveToWikiModal} onClose={() => setMoveToWikiModal(false)} page={page} />
+      )}
       {parentRef && <ContextMenu parentRef={parentRef} items={arrangedOptions} />}
       <CustomMenu placement="bottom-end" optionsClassName="max-h-[90vh]" ellipsis closeOnSelect>
         {arrangedOptions.map((item) => {

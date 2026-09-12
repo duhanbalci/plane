@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
+import { useParams } from "next/navigation";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
@@ -51,6 +52,7 @@ export const PageListBlock = observer(function PageListBlock(props: TPageListBlo
   const [isCreateSubPageModalOpen, setIsCreateSubPageModalOpen] = useState(false);
   // hooks
   const { t } = useTranslation();
+  const { workspaceSlug: routerWorkspaceSlug } = useParams();
   const page = usePage({ pageId, storeType });
   const { getChildPageIds, movePageInTree } = usePageStore(storeType);
   const { isMobile } = usePlatformOS();
@@ -58,7 +60,7 @@ export const PageListBlock = observer(function PageListBlock(props: TPageListBlo
   const childPageIds = getChildPageIds(pageId);
   const subPagesCount = page?.sub_pages_count ?? 0;
   const hasSubPages = subPagesCount > 0 || childPageIds.length > 0;
-  const workspaceSlug = page?.workspace;
+  const workspaceSlug = routerWorkspaceSlug?.toString();
   const projectId = page?.project_ids?.[0];
 
   const handleDrop = (sourceId: string, dropInstruction: InstructionType | undefined) => {
@@ -115,13 +117,14 @@ export const PageListBlock = observer(function PageListBlock(props: TPageListBlo
 
   return (
     <>
-      {workspaceSlug && projectId && (
+      {workspaceSlug && (
         <CreatePageModal
           workspaceSlug={workspaceSlug}
           projectId={projectId}
           isModalOpen={isCreateSubPageModalOpen}
           handleModalClose={() => setIsCreateSubPageModalOpen(false)}
           parentId={pageId}
+          collectionId={page?.collection ?? undefined}
           redirectionEnabled
           storeType={storeType}
         />

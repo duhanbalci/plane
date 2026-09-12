@@ -13,14 +13,14 @@ import { EModalPosition, EModalWidth, ModalCore } from "@plane/ui";
 // hooks
 import { useAppRouter } from "@/hooks/use-app-router";
 // plane web hooks
-import type { EPageStoreType } from "@/hooks/store";
-import { usePageStore } from "@/hooks/store";
+import { EPageStoreType, usePageStore } from "@/hooks/store";
 // local imports
 import { PageForm } from "./page-form";
 
 type Props = {
   workspaceSlug: string;
-  projectId: string;
+  /** absent for wiki pages, which are not bound to a project */
+  projectId?: string;
   isModalOpen: boolean;
   pageAccess?: EPageAccess;
   handleModalClose: () => void;
@@ -28,6 +28,8 @@ type Props = {
   storeType: EPageStoreType;
   /** when set, the created page becomes a sub page of this page */
   parentId?: string;
+  /** wiki only: the collection the page is created in */
+  collectionId?: string;
 };
 
 export function CreatePageModal(props: Props) {
@@ -40,6 +42,7 @@ export function CreatePageModal(props: Props) {
     redirectionEnabled = false,
     storeType,
     parentId,
+    collectionId,
   } = props;
   // states
   const [pageFormData, setPageFormData] = useState<Partial<TPage>>({
@@ -47,6 +50,7 @@ export function CreatePageModal(props: Props) {
     name: "",
     logo_props: undefined,
     parent: parentId ?? null,
+    collection: collectionId,
   });
   // router
   const router = useAppRouter();
@@ -60,25 +64,30 @@ export function CreatePageModal(props: Props) {
     setPageFormData((prev) => ({ ...prev, access: pageAccess }));
   }, [pageAccess]);
 
-  // keep the parent in sync with the block the modal was opened from
+  // keep the parent and the collection in sync with the block the modal was opened from
   useEffect(() => {
-    setPageFormData((prev) => ({ ...prev, parent: parentId ?? null }));
-  }, [parentId]);
+    setPageFormData((prev) => ({ ...prev, parent: parentId ?? null, collection: collectionId }));
+  }, [parentId, collectionId]);
 
   const handleStateClear = () => {
-    setPageFormData({ id: undefined, name: "", access: pageAccess, parent: parentId ?? null });
+    setPageFormData({ id: undefined, name: "", access: pageAccess, parent: parentId ?? null, collection: collectionId });
     handleModalClose();
   };
 
+  const isWikiPage = storeType === EPageStoreType.WORKSPACE;
+
   const handleFormSubmit = async () => {
-    if (!workspaceSlug || !projectId) return;
+    if (!workspaceSlug || (!isWikiPage && !projectId)) return;
 
     try {
       const pageData = await createPage(pageFormData);
-      if (pageData) {
-        handleStateClear();
-        if (redirectionEnabled) router.push(`/${workspaceSlug}/projects/${projectId}/pages/${pageData.id}`);
+      if (pageData && redirectionEnabled) {
+        const href = isWikiPage
+          ? `/${workspaceSlug}/wiki/${pageData.id}`
+          : `/${workspaceSlug}/projects/${projectId}/pages/${pageData.id}`;
+        router.push(href);
       }
+      if (pageData) handleStateClear();
     } catch (error) {
       console.error(error);
     }

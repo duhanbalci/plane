@@ -40,9 +40,8 @@ export class PdfExportService extends Effect.Service<PdfExportService>()("PdfExp
     /**
      * Determines document type
      */
-    getDocumentType: (_input: PdfExportInput): TDocumentTypes => {
-      return "project_page";
-    },
+    getDocumentType: (input: PdfExportInput): TDocumentTypes =>
+      input.projectId ? "project_page" : "workspace_page",
 
     /**
      * Extracts image asset IDs from document content

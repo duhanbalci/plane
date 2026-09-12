@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
-from plane.db.models import ProjectMember, Page
+from plane.db.models import ProjectMember, Page, WorkspaceMember
 from plane.app.permissions import ROLE
 
 
@@ -136,3 +136,52 @@ class ProjectPagePermission(BasePermission):
         if not project_member_exists:
             return False
         return True
+
+
+class WorkspacePagePermission(BasePermission):
+    """
+    Access control for workspace (wiki) pages.
+
+    Every active workspace member may read public pages. Writing a public page
+    needs ADMIN or MEMBER; a private page is visible and writable only to its
+    owner and to workspace admins. Guests never write a page they do not own.
+    """
+
+    def has_permission(self, request, view):
+        if request.user.is_anonymous:
+            return False
+
+        slug = view.kwargs.get("slug")
+        page_id = view.kwargs.get("page_id")
+
+        role = (
+            WorkspaceMember.objects.filter(member=request.user, workspace__slug=slug, is_active=True)
+            .values_list("role", flat=True)
+            .first()
+        )
+        if not role:
+            return False
+
+        if page_id:
+            # Wiki pages only; a project page must not be reachable through the
+            # workspace routes.
+            page = Page.objects.filter(id=page_id, workspace__slug=slug, is_global=True).first()
+            if page is None:
+                return False
+
+            is_owner = page.owned_by_id == request.user.id
+            if page.access == Page.PRIVATE_ACCESS and not is_owner and role != ADMIN:
+                return False
+
+            if request.method in SAFE_METHODS:
+                return True
+            if is_owner or role == ADMIN:
+                return True
+            if role == MEMBER:
+                return page.access == Page.PUBLIC_ACCESS
+            return False
+
+        # Collection level / list level.
+        if request.method in SAFE_METHODS:
+            return True
+        return role in [ADMIN, MEMBER]

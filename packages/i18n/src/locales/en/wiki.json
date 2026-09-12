@@ -108,6 +108,22 @@
     },
     "nested_pages_download_banner": {
       "title": "Nested pages require a paid plan. Upgrade to unlock."
+    },
+    "tabs": {
+      "public": "Public",
+      "private": "Private",
+      "archived": "Archived"
+    },
+    "empty_state": {
+      "title": "No wiki pages yet",
+      "description": "Create a page in a collection to start your workspace wiki."
+    },
+    "move_to_wiki": {
+      "title": "Move to Wiki",
+      "description": "The page and its sub pages leave the project and become workspace wiki pages.",
+      "submit": "Move to Wiki",
+      "success": "Page moved to the wiki.",
+      "error": "Page could not be moved to the wiki. Please try again."
     }
   }
 }
