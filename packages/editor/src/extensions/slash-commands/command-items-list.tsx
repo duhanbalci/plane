@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { Smile } from "lucide-react";
+import { Globe, Paperclip, Smile } from "lucide-react";
 import {
   ChatOutline,
   CodeOutline,
@@ -36,6 +36,8 @@ import {
   toggleTextColor,
   toggleBackgroundColor,
   insertImage,
+  insertAttachment,
+  insertExternalEmbed,
   insertCallout,
   setText,
   openEmojiPicker,
@@ -300,6 +302,28 @@ export const getSlashCommandFilteredSections =
         pushAfter: "code",
       });
     }
+    internalAdditionalOptions.push({
+      commandKey: "attachment",
+      key: "attachment",
+      title: "File",
+      icon: <Paperclip className="size-3.5" />,
+      description: "Upload a file",
+      searchTerms: ["file", "attachment", "upload", "document", "pdf"],
+      command: ({ editor, range }: CommandProps) => insertAttachment(editor, range),
+      section: "general",
+      pushAfter: "image",
+    });
+    internalAdditionalOptions.push({
+      commandKey: "external-embed",
+      key: "external-embed",
+      title: "Embed",
+      icon: <Globe className="size-3.5" />,
+      description: "Embed a link",
+      searchTerms: ["embed", "link", "youtube", "figma", "iframe", "video"],
+      command: ({ editor, range }: CommandProps) => insertExternalEmbed(editor, range),
+      section: "general",
+      pushAfter: "attachment",
+    });
 
     [
       ...internalAdditionalOptions,

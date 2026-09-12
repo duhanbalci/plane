@@ -10,6 +10,7 @@ export enum CORE_EXTENSIONS {
   BULLET_LIST = "bulletList",
   CALLOUT = "calloutComponent",
   CHARACTER_COUNT = "characterCount",
+  COMMENT = "comment",
   CODE_BLOCK = "codeBlock",
   CODE_INLINE = "code",
   CUSTOM_COLOR = "customColor",
@@ -50,6 +51,8 @@ export enum CORE_EXTENSIONS {
   PAGE_EMBED = "page-embed-component",
   EMOJI = "emoji",
   UNIQUE_ID = "uniqueID",
+  ATTACHMENT = "attachment-component",
+  EXTERNAL_EMBED = "external-embed-component",
 }
 
 export const BLOCK_NODE_TYPES = [
@@ -76,4 +79,6 @@ export const BLOCK_NODE_TYPES = [
   CORE_EXTENSIONS.CALLOUT,
   CORE_EXTENSIONS.WORK_ITEM_EMBED,
   CORE_EXTENSIONS.PAGE_EMBED,
+  CORE_EXTENSIONS.ATTACHMENT,
+  CORE_EXTENSIONS.EXTERNAL_EMBED,
 ];

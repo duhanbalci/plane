@@ -44,6 +44,9 @@ export const markRenderers: MarkRendererRegistry = {
     color: CODE_COLORS.text,
   }),
 
+  // Inline page comments carry no visual weight in the export.
+  comment: (_mark: TipTapMark, style: Style): Style => style,
+
   link: (_mark: TipTapMark, style: Style): Style => ({
     ...style,
     color: LINK_COLORS.primary,

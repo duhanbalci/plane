@@ -4,9 +4,11 @@
  * See the LICENSE file for details.
  */
 
+export * from "./attachment";
 export * from "./callout";
 export * from "./code";
 export * from "./code-inline";
+export * from "./comment-mark";
 export * from "./custom-link";
 export * from "./custom-list-keymap";
 export * from "./image";
@@ -21,6 +23,7 @@ export * from "./custom-color";
 export * from "./enter-key";
 export * from "./extensions";
 export * from "./headings-list";
+export * from "./external-embed";
 export * from "./horizontal-rule";
 export * from "./keymap";
 export * from "./quote";

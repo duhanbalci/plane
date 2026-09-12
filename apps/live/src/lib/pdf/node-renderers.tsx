@@ -338,6 +338,32 @@ export const nodeRenderers: NodeRendererRegistry = {
     );
   },
 
+  "attachment-component": (node: TipTapNode, _children: ReactElement[], ctx: PDFRenderContext): ReactElement => {
+    const name = (node.attrs?.name as string) || "Attachment";
+    const assetId = (node.attrs?.asset_id as string) || (node.attrs?.src as string) || "";
+
+    return (
+      <Text key={ctx.getKey()} style={pdfStyles.link}>
+        {assetId ? `${name} (${assetId})` : name}
+      </Text>
+    );
+  },
+
+  "external-embed-component": (node: TipTapNode, _children: ReactElement[], ctx: PDFRenderContext): ReactElement => {
+    const src = (node.attrs?.src as string) || "";
+    const title = (node.attrs?.title as string) || src;
+
+    if (!src) {
+      return <View key={ctx.getKey()} />;
+    }
+
+    return (
+      <Link key={ctx.getKey()} src={src} style={pdfStyles.link}>
+        {title}
+      </Link>
+    );
+  },
+
   mention: (node: TipTapNode, _children: ReactElement[], ctx: PDFRenderContext): ReactElement => {
     const id = (node.attrs?.id as string) || "";
     const entityIdentifier = (node.attrs?.entity_identifier as string) || "";

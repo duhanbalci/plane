@@ -28,6 +28,73 @@ from plane.bgtasks.storage_metadata_task import get_asset_object_metadata
 from plane.throttles.asset import AssetRateThrottle
 
 
+# Only images may be uploaded for avatars, covers and logos.
+ALLOWED_IMAGE_MIME_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/jpg",
+    "image/gif",
+]
+
+# Page descriptions also carry file attachment blocks, so documents and media
+# are allowed there. Mirrors ACCEPTED_ATTACHMENT_MIME_TYPES in the editor.
+ALLOWED_PAGE_ATTACHMENT_MIME_TYPES = ALLOWED_IMAGE_MIME_TYPES + [
+    "image/svg+xml",
+    "image/tiff",
+    "image/bmp",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "text/markdown",
+    "application/rtf",
+    "audio/mpeg",
+    "audio/wav",
+    "audio/ogg",
+    "audio/midi",
+    "audio/x-midi",
+    "audio/aac",
+    "audio/flac",
+    "audio/x-m4a",
+    "video/mp4",
+    "video/mpeg",
+    "video/ogg",
+    "video/webm",
+    "video/quicktime",
+    "video/x-msvideo",
+    "video/x-ms-wmv",
+    "application/zip",
+    "application/x-rar-compressed",
+    "application/x-tar",
+    "application/gzip",
+    "model/gltf-binary",
+    "model/gltf+json",
+    "application/octet-stream",
+    "font/ttf",
+    "font/otf",
+    "font/woff",
+    "font/woff2",
+    "text/css",
+    "text/javascript",
+    "application/json",
+    "text/xml",
+    "text/csv",
+    "application/xml",
+]
+
+
+def get_allowed_mime_types(entity_type):
+    """Page attachments accept documents and media, everything else images only."""
+    if entity_type == FileAsset.EntityTypeContext.PAGE_DESCRIPTION:
+        return ALLOWED_PAGE_ATTACHMENT_MIME_TYPES
+    return ALLOWED_IMAGE_MIME_TYPES
+
+
 class UserAssetsV2Endpoint(BaseAPIView):
     """This endpoint is used to upload user profile images."""
 
@@ -126,17 +193,11 @@ class UserAssetsV2Endpoint(BaseAPIView):
             )
 
         # Check if the file type is allowed
-        allowed_types = [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/jpg",
-            "image/gif",
-        ]
+        allowed_types = get_allowed_mime_types(entity_type)
         if type not in allowed_types:
             return Response(
                 {
-                    "error": "Invalid file type. Only JPEG, PNG, WebP, JPG and GIF files are allowed.",
+                    "error": "Invalid file type.",
                     "status": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -364,17 +425,11 @@ class WorkspaceFileAssetEndpoint(BaseAPIView):
                 )
 
         # Check if the file type is allowed
-        allowed_types = [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/jpg",
-            "image/gif",
-        ]
+        allowed_types = get_allowed_mime_types(entity_type)
         if type not in allowed_types:
             return Response(
                 {
-                    "error": "Invalid file type. Only JPEG, PNG, WebP, JPG and GIF files are allowed.",
+                    "error": "Invalid file type.",
                     "status": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -593,17 +648,11 @@ class ProjectAssetEndpoint(BaseAPIView):
             )
 
         # Check if the file type is allowed
-        allowed_types = [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/jpg",
-            "image/gif",
-        ]
+        allowed_types = get_allowed_mime_types(entity_type)
         if type not in allowed_types:
             return Response(
                 {
-                    "error": "Invalid file type. Only JPEG, PNG, WebP, JPG and GIF files are allowed.",
+                    "error": "Invalid file type.",
                     "status": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,

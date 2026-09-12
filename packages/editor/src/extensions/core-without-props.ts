@@ -11,13 +11,16 @@ import { Underline } from "@tiptap/extension-underline";
 // plane editor imports
 import { CoreEditorAdditionalExtensionsWithoutProps } from "@/extensions/core/without-props";
 // extensions
+import { AttachmentExtensionConfig } from "./attachment/extension-config";
 import { CustomCalloutExtensionConfig } from "./callout/extension-config";
 import { CustomCodeBlockExtensionWithoutProps } from "./code/without-props";
 import { CustomCodeInlineExtension } from "./code-inline";
+import { CommentMarkExtensionConfig } from "./comment-mark/extension-config";
 import { CustomColorExtension } from "./custom-color";
 import { CustomImageExtensionConfig } from "./custom-image/extension-config";
 import { CustomLinkExtension } from "./custom-link";
 import { EmojiExtension } from "./emoji/extension";
+import { ExternalEmbedExtensionConfig } from "./external-embed/extension-config";
 import { CustomHorizontalRule } from "./horizontal-rule";
 import { ImageExtensionConfig } from "./image";
 import { CustomMentionExtensionConfig } from "./mentions/extension-config";
@@ -61,7 +64,13 @@ export const CoreEditorExtensionsWithoutProps = [
   CustomTextAlignExtension,
   CustomCalloutExtensionConfig,
   CustomColorExtension,
+  AttachmentExtensionConfig,
+  ExternalEmbedExtensionConfig,
   ...CoreEditorAdditionalExtensionsWithoutProps,
 ];
 
-export const DocumentEditorExtensionsWithoutProps = [WorkItemEmbedExtensionConfig, PageEmbedExtensionConfig];
+export const DocumentEditorExtensionsWithoutProps = [
+  WorkItemEmbedExtensionConfig,
+  PageEmbedExtensionConfig,
+  CommentMarkExtensionConfig,
+];

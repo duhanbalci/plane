@@ -38,8 +38,10 @@ import { CoreEditorAdditionalExtensions } from "@/extensions/core";
 // types
 import type { IEditorProps } from "@/types";
 // local imports
+import { AttachmentExtension } from "./attachment/extension";
 import { CustomImageExtension } from "./custom-image/extension";
 import { EmojiExtension } from "./emoji/extension";
+import { ExternalEmbedExtension } from "./external-embed/extension";
 import { CustomPlaceholderExtension } from "./placeholder";
 import { CustomStarterKitExtension } from "./starter-kit";
 import { UniqueID } from "./unique-id/extension";
@@ -137,6 +139,13 @@ export const CoreEditorExtensions = (args: TArguments): Extensions => {
     }),
     UniqueID.configure({
       provider,
+    }),
+    AttachmentExtension({
+      fileHandler,
+      isEditable: editable,
+    }),
+    ExternalEmbedExtension({
+      isEditable: editable,
     }),
   ];
 

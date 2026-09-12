@@ -9,10 +9,13 @@ import type { Editor, Range } from "@tiptap/core";
 import { CORE_EXTENSIONS } from "@/constants/extension";
 // extensions
 import { replaceCodeWithText } from "@/extensions/code/utils/replace-code-block-with-text";
+import { ACCEPTED_ATTACHMENT_MIME_TYPES } from "@/constants/config";
 import type { InsertImageComponentProps } from "@/extensions/custom-image/types";
 // helpers
 import type { ExtendedEmojiStorage } from "@/extensions/emoji/emoji";
 import { findTableAncestor } from "@/helpers/common";
+// plugins
+import { insertFilesSafely } from "@/plugins/drop";
 
 export const setText = (editor: Editor, range?: Range) => {
   if (range) editor.chain().focus().deleteRange(range).setNode(CORE_EXTENSIONS.PARAGRAPH).run();
@@ -197,4 +200,31 @@ export const openEmojiPicker = (editor: Editor, range?: Range) => {
   const emojiStorage = editor.storage.emoji as ExtendedEmojiStorage;
   emojiStorage.forceOpen = true;
   editor.chain().focus().insertContent(":").run();
+};
+
+/** inserts an empty external embed block, the link is asked for in the node view */
+export const insertExternalEmbed = (editor: Editor, range?: Range) => {
+  if (range) editor.chain().focus().deleteRange(range).insertExternalEmbed({}).run();
+  else editor.chain().focus().insertExternalEmbed({}).run();
+};
+
+/** opens the file picker and inserts the picked files as attachment blocks */
+export const insertAttachment = (editor: Editor, range?: Range) => {
+  if (range) editor.chain().focus().deleteRange(range).run();
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ACCEPTED_ATTACHMENT_MIME_TYPES.join(",");
+  input.multiple = true;
+  input.addEventListener("change", () => {
+    const files = Array.from(input.files ?? []);
+    if (files.length === 0) return;
+    void insertFilesSafely({
+      editor,
+      files,
+      initialPos: editor.state.selection.from,
+      event: "insert",
+      type: "attachment",
+    });
+  });
+  input.click();
 };

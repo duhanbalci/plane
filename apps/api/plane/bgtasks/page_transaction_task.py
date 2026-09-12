@@ -35,6 +35,14 @@ COMPONENT_MAP = {
             "entity_identifier": m.get("entity_identifier"),
         },
     },
+    "attachment-component": {
+        "attributes": ["id", "asset_id"],
+        "extract": lambda m: {
+            "entity_name": "attachment",
+            "entity_type": "attachment",
+            "entity_identifier": m.get("asset_id"),
+        },
+    },
     "image-component": {
         "attributes": ["id", "src"],
         "extract": lambda m: {

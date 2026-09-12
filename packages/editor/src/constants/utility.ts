@@ -26,4 +26,7 @@ export const NODE_FILE_MAP: NodeFileMapType = {
   [CORE_EXTENSIONS.CUSTOM_IMAGE]: {
     fileSetName: "deletedImageSet",
   },
+  [CORE_EXTENSIONS.ATTACHMENT]: {
+    fileSetName: "deletedAttachmentSet",
+  },
 };
