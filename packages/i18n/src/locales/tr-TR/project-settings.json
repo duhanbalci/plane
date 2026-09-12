@@ -428,6 +428,14 @@
         "loading": "Proje özelliği güncelleniyor...",
         "success": "Proje özelliği başarıyla güncellendi.",
         "error": "Proje özelliği güncellenirken bir şeyler yanlış gitti. Lütfen tekrar deneyin."
+      },
+      "epics": {
+        "title": "Epikler",
+        "short_title": "Epikler",
+        "description": "İş kalemlerini epikler altında toplayıp döngü ve modüller arasında büyük girişimleri takip edin.",
+        "toggle_title": "Epikleri etkinleştir",
+        "toggle_description": "Proje üyeleri epik oluşturup iş kalemi ekleyebilir. İş kalemi tipleri gerekir.",
+        "requires_types": "Önce iş kalemi tiplerini açın."
       }
     },
     "project_updates": {

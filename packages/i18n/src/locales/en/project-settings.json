@@ -428,6 +428,14 @@
         "loading": "Updating project feature...",
         "success": "Project feature updated successfully.",
         "error": "Something went wrong while updating project feature. Please try again."
+      },
+      "epics": {
+        "title": "Epics",
+        "short_title": "Epics",
+        "description": "Group work items under epics to track bigger initiatives across cycles and modules.",
+        "toggle_title": "Enable epics",
+        "toggle_description": "Project members will be able to create epics and add work items to them. Requires work item types.",
+        "requires_types": "Turn on work item types first."
       }
     },
     "project_updates": {
