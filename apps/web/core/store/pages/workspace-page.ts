@@ -122,8 +122,10 @@ export class WorkspacePage extends BasePage implements TWorkspacePage {
   }
 
   /** Wiki pages do not move between projects. */
+  /** Owners and workspace admins may move a wiki page into a project. */
   get canCurrentUserMovePage() {
-    return false;
+    const role = this.getWorkspaceRole();
+    return this.isCurrentUserOwner || role === EUserPermissions.ADMIN;
   }
 
   get isContentEditable() {
