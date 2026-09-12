@@ -30,6 +30,14 @@
     "upgrade_plan": "Apgreyd plen",
     "plane_pro": "Pleyn Pro",
     "business": "Biznis",
-    "wiki": "Wiki"
+    "wiki": "Wiki",
+    "work": "Çalışma",
+    "settings": "Ayarlar",
+    "app_rail": {
+      "icon_only": "Yalnızca simge",
+      "icon_with_name": "Simge ve ad",
+      "dock": "Uygulama rayını sabitle",
+      "undock": "Uygulama rayını gizle"
+    }
   }
 }

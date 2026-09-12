@@ -285,9 +285,9 @@ export const WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS_LINKS: IWorkspaceSidebarN
   WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["home"],
 ];
 
+// NOTE: wiki is not listed here anymore — it is a mode, reachable from the app rail.
 export const WORKSPACE_SIDEBAR_STATIC_PINNED_NAVIGATION_ITEMS_LINKS: IWorkspaceSidebarNavigationItem[] = [
   WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["projects"],
-  WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["wiki"],
 ];
 
 export const IS_FAVORITE_MENU_OPEN = "is_favorite_menu_open";

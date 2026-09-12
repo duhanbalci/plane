@@ -14,6 +14,7 @@ import { useLocalStorage } from "@plane/hooks";
 import { ResizableSidebar } from "@/components/sidebar/resizable-sidebar";
 import { WikiSidebar } from "@/components/wiki";
 // hooks
+import { useAppMode } from "@/hooks/use-app-mode";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 // local imports
 import { ExtendedAppSidebar } from "./extended-sidebar";
@@ -35,12 +36,12 @@ export const ProjectAppSidebar = observer(function ProjectAppSidebar() {
   // routes
   const { workspaceSlug } = useParams();
   const pathname = usePathname();
+  // hooks
+  const { mode } = useAppMode();
   // derived values
   const isAnyExtendedSidebarOpen = isExtendedSidebarOpened;
 
   const isNotificationsPath = pathname.includes(`/${workspaceSlug}/notifications`);
-  // wiki is a mode: its own sidebar body replaces the projects one
-  const isWikiPath = /^\/[^/]+\/wiki(\/|$)/.test(pathname);
 
   // handlers
   const handleWidthChange = (width: number) => setValue(width);
@@ -69,7 +70,7 @@ export const ProjectAppSidebar = observer(function ProjectAppSidebar() {
         isAnyExtendedSidebarExpanded={isAnyExtendedSidebarOpen}
         isAnySidebarDropdownOpen={isAnySidebarDropdownOpen}
       >
-        {isWikiPath ? <WikiSidebar /> : <AppSidebar />}
+        {mode === "wiki" ? <WikiSidebar /> : <AppSidebar />}
       </ResizableSidebar>
     </>
   );

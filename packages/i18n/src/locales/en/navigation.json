@@ -30,6 +30,14 @@
     "upgrade_plan": "Upgrade plan",
     "plane_pro": "Plane Pro",
     "business": "Business",
-    "wiki": "Wiki"
+    "wiki": "Wiki",
+    "work": "Work",
+    "settings": "Settings",
+    "app_rail": {
+      "icon_only": "Icon only",
+      "icon_with_name": "Icon with name",
+      "dock": "Dock app rail",
+      "undock": "Undock app rail"
+    }
   }
 }

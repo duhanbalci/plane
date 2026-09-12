@@ -180,7 +180,9 @@ export function ResizableSidebar({
       <div
         id="main-sidebar"
         className={cn(
-          "z-20 h-full border-r border-subtle bg-surface-1",
+          "z-20 h-full bg-surface-1",
+          // the panel reads as its own rounded card, like the content area next to it
+          !isCollapsed && "rounded-lg border border-subtle",
           !isResizing && "transition-all duration-300 ease-in-out",
           isCollapsed ? "w-0 translate-x-[-100%] opacity-0" : "translate-x-0 opacity-100",
           isMobile && "absolute",
@@ -197,7 +199,7 @@ export function ResizableSidebar({
       >
         <aside
           className={cn(
-            "group/sidebar relative flex h-full w-full flex-col overflow-hidden bg-surface-1 pt-3",
+            "group/sidebar relative flex h-full w-full flex-col overflow-hidden rounded-lg bg-surface-1 pt-3",
             isAnyExtendedSidebarExpanded && "rounded-none"
           )}
         >
@@ -240,7 +242,7 @@ export function ResizableSidebar({
         <aside
           className={cn(
             "group/sidebar relative z-20 flex h-full w-full flex-col overflow-hidden bg-surface-1 pt-4",
-            "self-center rounded-md rounded-tl-none rounded-bl-none border-r border-subtle",
+            "self-center rounded-lg border border-subtle",
             isAnyExtendedSidebarExpanded && "rounded-none"
           )}
         >

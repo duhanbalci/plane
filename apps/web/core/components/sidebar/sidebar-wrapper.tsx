@@ -13,6 +13,7 @@ import { ScrollArea } from "@plane/propel/scrollarea";
 // components
 import { CustomizeNavigationDialog } from "@/components/navigation/customize-navigation-dialog";
 // hooks
+import { useAppMode } from "@/hooks/use-app-mode";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import useSize from "@/hooks/use-window-size";
 // plane web components
@@ -21,17 +22,18 @@ import { AppSidebarToggleButton } from "./sidebar-toggle-button";
 import { IconButton } from "@plane/propel/icon-button";
 
 type TSidebarWrapperProps = {
-  title: string;
   children: React.ReactNode;
   quickActions?: React.ReactNode;
 };
 
 export const SidebarWrapper = observer(function SidebarWrapper(props: TSidebarWrapperProps) {
-  const { title, children, quickActions } = props;
+  const { children, quickActions } = props;
   // state
   const [isCustomizeNavDialogOpen, setIsCustomizeNavDialogOpen] = useState(false);
   // store hooks
   const { toggleSidebar, sidebarCollapsed } = useAppTheme();
+  // hooks — the panel header mirrors the mode picked in the app rail
+  const { mode, title } = useAppMode();
   const windowSize = useSize();
   // refs
   const ref = useRef<HTMLDivElement>(null);
@@ -52,12 +54,11 @@ export const SidebarWrapper = observer(function SidebarWrapper(props: TSidebarWr
       <CustomizeNavigationDialog isOpen={isCustomizeNavDialogOpen} onClose={() => setIsCustomizeNavDialogOpen(false)} />
       <div ref={ref} className="flex h-full w-full animate-fade-in flex-col">
         <div className="flex flex-col gap-3 px-3">
-          {/* Workspace switcher and settings */}
-
+          {/* Mode title + panel actions */}
           <div className="flex items-center justify-between gap-2 px-2">
             <span className="pt-1 text-16 font-medium text-primary">{title}</span>
             <div className="flex items-center gap-2">
-              {title === "Projects" && (
+              {mode === "work" && (
                 <IconButton
                   size="base"
                   variant="ghost"

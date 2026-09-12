@@ -18,7 +18,7 @@ export default function WorkspaceLayout(props: Route.ComponentProps) {
   return (
     <AuthenticationWrapper>
       <WorkspaceAuthWrapper>
-        <AppRailVisibilityProvider>
+        <AppRailVisibilityProvider isEnabled>
           <WorkspaceContentWrapper>
             <GlobalModals workspaceSlug={workspaceSlug} />
             <Outlet />

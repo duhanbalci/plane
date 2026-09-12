@@ -13,7 +13,7 @@ import { ChevronDown, ChevronRight, Plus, Search, X } from "lucide-react";
 import { useTranslation } from "@plane/i18n";
 import { Logo } from "@plane/propel/emoji-icon-picker";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
-import { HomeOutline, PagesOutline, ProjectsOutline } from "@makeplane/propel/icons";
+import { HomeOutline, PagesOutline } from "@makeplane/propel/icons";
 import { cn, getPageName } from "@plane/utils";
 // components
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
@@ -109,7 +109,6 @@ export const WikiSidebar = observer(function WikiSidebar() {
     <>
       <CollectionFormModal isOpen={isCreateCollectionModalOpen} onClose={() => setIsCreateCollectionModalOpen(false)} />
       <SidebarWrapper
-        title={t("sidebar.wiki")}
         quickActions={
           <div className="flex flex-col gap-2">
             {canCurrentUserCreatePage && (
@@ -147,14 +146,6 @@ export const WikiSidebar = observer(function WikiSidebar() {
               <span className="flex items-center gap-1.5 text-13 font-medium">
                 <HomeOutline className="size-4" />
                 {t("sidebar.home")}
-              </span>
-            </SidebarNavItem>
-          </Link>
-          <Link href={`/${slug}/projects`}>
-            <SidebarNavItem>
-              <span className="flex items-center gap-1.5 text-13 font-medium">
-                <ProjectsOutline className="size-4" />
-                {t("sidebar.projects")}
               </span>
             </SidebarNavItem>
           </Link>
