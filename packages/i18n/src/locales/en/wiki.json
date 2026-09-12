@@ -124,6 +124,13 @@
       "submit": "Move to Wiki",
       "success": "Page moved to the wiki.",
       "error": "Page could not be moved to the wiki. Please try again."
+    },
+    "sidebar": {
+      "new_page": "New page",
+      "collections": "Collections"
+    },
+    "recents": {
+      "title": "Recently visited"
     }
   }
 }

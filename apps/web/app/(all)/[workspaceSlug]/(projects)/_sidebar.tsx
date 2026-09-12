@@ -12,6 +12,7 @@ import { SIDEBAR_WIDTH } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
 // components
 import { ResizableSidebar } from "@/components/sidebar/resizable-sidebar";
+import { WikiSidebar } from "@/components/wiki";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 // local imports
@@ -38,6 +39,8 @@ export const ProjectAppSidebar = observer(function ProjectAppSidebar() {
   const isAnyExtendedSidebarOpen = isExtendedSidebarOpened;
 
   const isNotificationsPath = pathname.includes(`/${workspaceSlug}/notifications`);
+  // wiki is a mode: its own sidebar body replaces the projects one
+  const isWikiPath = /^\/[^/]+\/wiki(\/|$)/.test(pathname);
 
   // handlers
   const handleWidthChange = (width: number) => setValue(width);
@@ -66,7 +69,7 @@ export const ProjectAppSidebar = observer(function ProjectAppSidebar() {
         isAnyExtendedSidebarExpanded={isAnyExtendedSidebarOpen}
         isAnySidebarDropdownOpen={isAnySidebarDropdownOpen}
       >
-        <AppSidebar />
+        {isWikiPath ? <WikiSidebar /> : <AppSidebar />}
       </ResizableSidebar>
     </>
   );

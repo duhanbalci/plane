@@ -124,6 +124,13 @@
       "submit": "Wiki'ye tasi",
       "success": "Sayfa wiki'ye tasindi.",
       "error": "Sayfa wiki'ye tasinamadi. Lutfen tekrar deneyin."
+    },
+    "sidebar": {
+      "new_page": "Yeni sayfa",
+      "collections": "Koleksiyonlar"
+    },
+    "recents": {
+      "title": "Son ziyaret edilenler"
     }
   }
 }
