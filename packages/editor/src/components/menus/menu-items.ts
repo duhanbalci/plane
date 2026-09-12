@@ -29,11 +29,13 @@ import {
   TextOutline,
   UnderlineOutline,
 } from "@makeplane/propel/icons";
+import { Paperclip } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 // constants
 import { CORE_EXTENSIONS } from "@/constants/extension";
 // helpers
 import {
+  insertAttachment,
   insertHorizontalRule,
   insertImage,
   insertTableCommand,
@@ -197,6 +199,14 @@ export const ImageItem = (editor: Editor): EditorMenuItem<"image"> => ({
   icon: ImageOutline,
 });
 
+export const AttachmentItem = (editor: Editor): EditorMenuItem<"attachment"> => ({
+  key: "attachment",
+  name: "File",
+  isActive: () => editor?.isActive(CORE_EXTENSIONS.ATTACHMENT),
+  command: () => insertAttachment(editor),
+  icon: Paperclip,
+});
+
 export const HorizontalRuleItem = (editor: Editor): EditorMenuItem<"divider"> =>
   ({
     key: "divider",
@@ -276,6 +286,7 @@ export const getEditorMenuItems = (editor: Editor | null): EditorMenuItem<TEdito
     QuoteItem(editor),
     TableItem(editor),
     ImageItem(editor),
+    AttachmentItem(editor),
     HorizontalRuleItem(editor),
     LinkItem(editor),
     TextColorItem(editor),

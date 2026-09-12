@@ -28,6 +28,7 @@ import {
   ToDoOutline,
   UnderlineOutline,
 } from "@makeplane/propel/icons";
+import { Paperclip } from "lucide-react";
 import { MonospaceIcon, SansSerifIcon, SerifIcon } from "@plane/propel/icons";
 import type { TCommandExtraProps, TEditorCommands, TEditorFontStyle } from "@/types";
 
@@ -161,9 +162,10 @@ export const USER_ACTION_ITEMS: ToolbarMenuItem<"quote" | "code">[] = [
   { itemKey: "code", renderKey: "code", name: "Code", icon: CodeOutline, editors: ["lite", "document"] },
 ];
 
-export const COMPLEX_ITEMS: ToolbarMenuItem<"table" | "image">[] = [
+export const COMPLEX_ITEMS: ToolbarMenuItem<"table" | "image" | "attachment">[] = [
   { itemKey: "table", renderKey: "table", name: "Table", icon: TableEditorOutline, editors: ["document"] },
   { itemKey: "image", renderKey: "image", name: "Image", icon: ImageOutline, editors: ["lite", "document"] },
+  { itemKey: "attachment", renderKey: "attachment", name: "File", icon: Paperclip, editors: ["document"] },
 ];
 
 export const IMAGE_ITEM = COMPLEX_ITEMS.find((item): item is ToolbarMenuItem<"image"> => item.itemKey === "image")!;
