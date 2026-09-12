@@ -4,8 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
+import { TaskItem } from "@tiptap/extension-task-item";
+import { TaskList } from "@tiptap/extension-task-list";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
 // plane editor imports
@@ -21,6 +21,7 @@ import { EmojiExtension } from "./emoji/extension";
 import { CustomHorizontalRule } from "./horizontal-rule";
 import { ImageExtensionConfig } from "./image";
 import { CustomMentionExtensionConfig } from "./mentions/extension-config";
+import { PageEmbedExtensionConfig } from "./page-embed/extension-config";
 import { CustomQuoteExtension } from "./quote";
 import { CustomStarterKitExtension } from "./starter-kit";
 import { TableHeader, TableCell, TableRow, Table } from "./table";
@@ -63,4 +64,4 @@ export const CoreEditorExtensionsWithoutProps = [
   ...CoreEditorAdditionalExtensionsWithoutProps,
 ];
 
-export const DocumentEditorExtensionsWithoutProps = [WorkItemEmbedExtensionConfig];
+export const DocumentEditorExtensionsWithoutProps = [WorkItemEmbedExtensionConfig, PageEmbedExtensionConfig];

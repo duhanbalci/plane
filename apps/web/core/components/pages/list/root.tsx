@@ -23,15 +23,15 @@ type TPagesListRoot = {
 export const PagesListRoot = observer(function PagesListRoot(props: TPagesListRoot) {
   const { pageType, storeType } = props;
   // store hooks
-  const { getCurrentProjectFilteredPageIdsByTab } = usePageStore(storeType);
-  // derived values
-  const filteredPageIds = getCurrentProjectFilteredPageIdsByTab(pageType);
+  const { getRootPageIds } = usePageStore(storeType);
+  // derived values: the tree roots, children are rendered by the blocks themselves
+  const rootPageIds = getRootPageIds(pageType);
 
-  if (!filteredPageIds) return <></>;
+  if (!rootPageIds) return <></>;
   return (
     <ListLayout>
-      {filteredPageIds.map((pageId) => (
-        <PageListBlock key={pageId} pageId={pageId} storeType={storeType} />
+      {rootPageIds.map((pageId) => (
+        <PageListBlock key={pageId} pageId={pageId} storeType={storeType} siblingIds={rootPageIds} />
       ))}
     </ListLayout>
   );

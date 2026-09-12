@@ -4,6 +4,7 @@
 
 # Python imports
 import json
+import uuid
 from datetime import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -11,6 +12,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection
 from django.db.models import (
     Exists,
+    Max,
     OuterRef,
     Q,
     Value,
@@ -73,6 +75,30 @@ def unarchive_archive_page_and_descendants(page_id, archived_at):
         cursor.execute(sql, [page_id, archived_at])
 
 
+def page_and_descendant_ids(page_id):
+    """Return the page id and every descendant id (recursive CTE, self first)."""
+    sql = """
+    WITH RECURSIVE descendants AS (
+        SELECT id FROM pages WHERE id = %s AND deleted_at IS NULL
+        UNION ALL
+        SELECT pages.id FROM pages, descendants
+        WHERE pages.parent_id = descendants.id AND pages.deleted_at IS NULL
+    )
+    SELECT id FROM descendants;
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [page_id])
+        return [row[0] for row in cursor.fetchall()]
+
+
+def parse_uuid(value):
+    """Parse a uuid, returning None for anything malformed."""
+    try:
+        return uuid.UUID(str(value))
+    except (ValueError, AttributeError, TypeError):
+        return None
+
+
 class PageViewSet(BaseViewSet):
     serializer_class = PageSerializer
     model = Page
@@ -86,7 +112,7 @@ class PageViewSet(BaseViewSet):
             entity_identifier=OuterRef("pk"),
             workspace__slug=self.kwargs.get("slug"),
         )
-        return self.filter_queryset(
+        queryset = self.filter_queryset(
             super()
             .get_queryset()
             .filter(workspace__slug=self.kwargs.get("slug"))
@@ -95,7 +121,6 @@ class PageViewSet(BaseViewSet):
                 projects__project_projectmember__is_active=True,
                 projects__archived_at__isnull=True,
             )
-            .filter(parent__isnull=True)
             .filter(Q(owned_by=self.request.user) | Q(access=0))
             .prefetch_related("projects")
             .select_related("workspace")
@@ -137,9 +162,33 @@ class PageViewSet(BaseViewSet):
                     Value([], output_field=ArrayField(UUIDField())),
                 ),
             )
+            .annotate(
+                sub_pages_count=Count(
+                    "child_page",
+                    filter=Q(
+                        child_page__deleted_at__isnull=True,
+                        child_page__archived_at__isnull=True,
+                    ),
+                    distinct=True,
+                )
+            )
             .filter(project=True)
             .distinct()
         )
+        return self.filter_by_parent(queryset)
+
+    def filter_by_parent(self, queryset):
+        """`?parent=` selects the slice of the tree: absent/`all` → flat list of
+        every page, `root` → top level only, `<uuid>` → direct children."""
+        parent = self.request.GET.get("parent", "all")
+        if not parent or parent == "all":
+            return queryset
+        if parent == "root":
+            return queryset.filter(parent__isnull=True)
+        parent_id = parse_uuid(parent)
+        if parent_id is None:
+            return queryset.none()
+        return queryset.filter(parent_id=parent_id)
 
     def create(self, request, slug, project_id):
         serializer = PageSerializer(
@@ -320,6 +369,81 @@ class PageViewSet(BaseViewSet):
         pages = PageSerializer(queryset, many=True).data
         return Response(pages, status=status.HTTP_200_OK)
 
+    def move(self, request, slug, project_id, page_id):
+        """Re-parent a page and/or place it between its siblings."""
+        page = Page.objects.get(
+            pk=page_id,
+            workspace__slug=slug,
+            projects__id=project_id,
+            project_pages__deleted_at__isnull=True,
+        )
+
+        if page.is_locked:
+            return Response({"error": "Page is locked"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Cross-project move is a different operation (not implemented yet);
+        # refuse instead of silently re-parenting the page to root.
+        if request.data.get("new_project_id"):
+            return Response(
+                {"error": "Moving a page to another project is not supported"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        parent_param = request.data.get("parent", None)
+        parent = None
+        if parent_param:
+            parent_id = parse_uuid(parent_param)
+            if parent_id is None:
+                return Response({"error": "Invalid parent"}, status=status.HTTP_400_BAD_REQUEST)
+            parent = Page.objects.filter(
+                pk=parent_id,
+                workspace__slug=slug,
+                projects__id=project_id,
+                project_pages__deleted_at__isnull=True,
+            ).first()
+            if parent is None:
+                return Response({"error": "Parent page not found"}, status=status.HTTP_404_NOT_FOUND)
+            if parent.archived_at:
+                return Response(
+                    {"error": "A page cannot be moved under an archived page"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            # Cycle guard: the target cannot be the page itself or one of its
+            # descendants.
+            if str(parent.id) in {str(pk) for pk in page_and_descendant_ids(page.id)}:
+                return Response(
+                    {"error": "A page cannot be moved under itself or one of its sub pages"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        sort_order = request.data.get("sort_order", None)
+        if sort_order is None:
+            last_sort_order = (
+                Page.objects.filter(
+                    workspace__slug=slug,
+                    projects__id=project_id,
+                    project_pages__deleted_at__isnull=True,
+                    parent=parent,
+                )
+                .exclude(pk=page.id)
+                .aggregate(max_order=Max("sort_order"))
+                .get("max_order")
+            )
+            sort_order = (last_sort_order or 0) + Page.DEFAULT_SORT_ORDER
+        else:
+            try:
+                sort_order = float(sort_order)
+            except (TypeError, ValueError):
+                return Response({"error": "Invalid sort_order"}, status=status.HTTP_400_BAD_REQUEST)
+
+        page.parent = parent
+        page.sort_order = sort_order
+        page.save(update_fields=["parent", "sort_order", "updated_at"])
+
+        moved_page = self.get_queryset().filter(pk=page.id).first()
+        serializer = PageDetailSerializer(moved_page if moved_page is not None else page)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def archive(self, request, slug, project_id, page_id):
         page = Page.objects.get(
             pk=page_id,
@@ -408,27 +532,36 @@ class PageViewSet(BaseViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # remove parent from all the children
-        _ = Page.objects.filter(
-            parent_id=page_id,
-            projects__id=project_id,
-            workspace__slug=slug,
-            project_pages__deleted_at__isnull=True,
-        ).update(parent=None)
+        cascade = request.query_params.get("cascade", "false").lower() == "true"
+
+        if cascade:
+            # Delete the whole subtree; the root is deleted below.
+            deleted_ids = page_and_descendant_ids(page_id)
+            for descendant in Page.objects.filter(id__in=deleted_ids).exclude(pk=page_id):
+                descendant.delete()
+        else:
+            deleted_ids = [page.id]
+            # remove parent from all the children
+            _ = Page.objects.filter(
+                parent_id=page_id,
+                projects__id=project_id,
+                workspace__slug=slug,
+                project_pages__deleted_at__isnull=True,
+            ).update(parent=None)
 
         page.delete()
-        # Delete the user favorite page
+        # Delete the user favorite pages
         UserFavorite.objects.filter(
             project=project_id,
             workspace__slug=slug,
-            entity_identifier=page_id,
+            entity_identifier__in=deleted_ids,
             entity_type="page",
         ).delete()
-        # Delete the page from recent visit
+        # Delete the pages from recent visit
         UserRecentVisit.objects.filter(
             project_id=project_id,
             workspace__slug=slug,
-            entity_identifier=page_id,
+            entity_identifier__in=deleted_ids,
             entity_name="page",
         ).delete(soft=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -441,7 +574,6 @@ class PageViewSet(BaseViewSet):
                 projects__project_projectmember__is_active=True,
                 projects__archived_at__isnull=True,
             )
-            .filter(parent__isnull=True)
             .filter(Q(owned_by=request.user) | Q(access=0))
             .annotate(
                 project=Exists(
@@ -451,6 +583,7 @@ class PageViewSet(BaseViewSet):
             .filter(project=True)
             .distinct()
         )
+        queryset = self.filter_by_parent(queryset)
 
         project = Project.objects.get(pk=project_id)
         if (
@@ -593,40 +726,32 @@ class PagesDescriptionViewSet(BaseViewSet):
 class PageDuplicateEndpoint(BaseAPIView):
     permission_classes = [ProjectPagePermission]
 
-    def post(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
-            pk=page_id,
-            workspace__slug=slug,
-            projects__id=project_id,
-            project_pages__deleted_at__isnull=True,
-        )
-
-        # check for permission
-        if page.access == Page.PRIVATE_ACCESS and page.owned_by_id != request.user.id:
-            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
-
+    def copy_page(self, page, request, slug, project_id, name=None, parent_id=None):
+        """Copy a single page row (with its project links and assets)."""
         # get all the project ids where page is present
-        project_ids = ProjectPage.objects.filter(page_id=page_id).values_list("project_id", flat=True)
+        project_ids = list(ProjectPage.objects.filter(page_id=page.id).values_list("project_id", flat=True))
+        description_html = page.description_html
 
         page.pk = None
-        page.name = f"{page.name} (Copy)"
+        page.name = name if name is not None else page.name
         page.description_binary = None
+        page.parent_id = parent_id
         page.owned_by = request.user
         page.created_by = request.user
         page.updated_by = request.user
         page.save()
 
-        for project_id in project_ids:
+        for page_project_id in project_ids:
             ProjectPage.objects.create(
                 workspace_id=page.workspace_id,
-                project_id=project_id,
+                project_id=page_project_id,
                 page_id=page.id,
                 created_by_id=page.created_by_id,
                 updated_by_id=page.updated_by_id,
             )
 
         page_transaction.delay(
-            new_description_html=page.description_html,
+            new_description_html=description_html,
             old_description_html=None,
             page_id=page.id,
         )
@@ -639,9 +764,50 @@ class PageDuplicateEndpoint(BaseAPIView):
             slug=slug,
             user_id=request.user.id,
         )
+        return page
+
+    def copy_subtree(self, source_id, request, slug, project_id, parent_id):
+        """Copy the direct children of `source_id` recursively, keeping the tree shape."""
+        children = Page.objects.filter(
+            parent_id=source_id,
+            workspace__slug=slug,
+            projects__id=project_id,
+            project_pages__deleted_at__isnull=True,
+        ).order_by("sort_order")
+
+        for child in children:
+            child_id = child.id
+            copied_child = self.copy_page(child, request, slug, project_id, parent_id=parent_id)
+            self.copy_subtree(child_id, request, slug, project_id, copied_child.id)
+
+    def post(self, request, slug, project_id, page_id):
+        page = Page.objects.get(
+            pk=page_id,
+            workspace__slug=slug,
+            projects__id=project_id,
+            project_pages__deleted_at__isnull=True,
+        )
+
+        # check for permission
+        if page.access == Page.PRIVATE_ACCESS and page.owned_by_id != request.user.id:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        include_children = request.query_params.get("include_children", "false").lower() == "true"
+
+        copied_page = self.copy_page(
+            page,
+            request,
+            slug,
+            project_id,
+            name=f"{page.name} (Copy)",
+            parent_id=page.parent_id,
+        )
+
+        if include_children:
+            self.copy_subtree(page_id, request, slug, project_id, copied_page.id)
 
         page = (
-            Page.objects.filter(pk=page.id)
+            Page.objects.filter(pk=copied_page.id)
             .annotate(
                 project_ids=Coalesce(
                     ArrayAgg("projects__id", distinct=True, filter=~Q(projects__id=True)),

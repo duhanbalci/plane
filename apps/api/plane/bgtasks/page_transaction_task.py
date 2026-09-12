@@ -27,6 +27,14 @@ COMPONENT_MAP = {
             "entity_identifier": m.get("entity_identifier"),
         },
     },
+    "page-embed-component": {
+        "attributes": ["id", "entity_identifier"],
+        "extract": lambda m: {
+            "entity_name": "page_embed",
+            "entity_type": "page_embed",
+            "entity_identifier": m.get("entity_identifier"),
+        },
+    },
     "image-component": {
         "attributes": ["id", "src"],
         "extract": lambda m: {

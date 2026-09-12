@@ -55,9 +55,9 @@ export class ProjectPage extends BasePage implements TProjectPage {
         if (!workspaceSlug || !projectId || !page.id) throw new Error("Missing required fields.");
         await projectPageService.restore(workspaceSlug, projectId, page.id);
       },
-      duplicate: async () => {
+      duplicate: async (options?: { includeChildren?: boolean }) => {
         if (!workspaceSlug || !projectId || !page.id) throw new Error("Missing required fields.");
-        return await projectPageService.duplicate(workspaceSlug, projectId, page.id);
+        return await projectPageService.duplicate(workspaceSlug, projectId, page.id, options);
       },
     });
     makeObservable(this, {

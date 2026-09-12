@@ -43,6 +43,18 @@ export const PageDetailsHeader = observer(function PageDetailsHeader() {
   // derived values
   const projectPageIds = getCurrentProjectPageIds(projectId?.toString());
 
+  // the parent chain of the current page, closest ancestor last
+  const ancestorPages: NonNullable<ReturnType<typeof getPageById>>[] = [];
+  let ancestorId = page?.parent ?? null;
+  const seenAncestorIds = new Set<string>();
+  while (ancestorId && !seenAncestorIds.has(ancestorId)) {
+    seenAncestorIds.add(ancestorId);
+    const ancestor = getPageById(ancestorId);
+    if (!ancestor) break;
+    ancestorPages.unshift(ancestor);
+    ancestorId = ancestor.parent ?? null;
+  }
+
   const switcherOptions = projectPageIds
     .map((id) => {
       const _page = id === pageId ? page : getPageById(id);
@@ -77,6 +89,19 @@ export const PageDetailsHeader = observer(function PageDetailsHeader() {
                 />
               }
             />
+
+            {ancestorPages.map((ancestorPage) => (
+              <Breadcrumbs.Item
+                key={ancestorPage.id}
+                component={
+                  <BreadcrumbLink
+                    label={getPageName(ancestorPage.name)}
+                    href={`/${workspaceSlug}/projects/${projectId}/pages/${ancestorPage.id}`}
+                    icon={<SwitcherIcon logo_props={ancestorPage.logo_props} LabelIcon={PagesOutline} size={16} />}
+                  />
+                }
+              />
+            ))}
 
             <Breadcrumbs.Item
               component={

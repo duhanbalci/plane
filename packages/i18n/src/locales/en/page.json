@@ -114,5 +114,16 @@
   },
   "page_content_limit_banner": {
     "message": "Content limit reached and live sync is off. Create a new page or use nested pages to continue syncing."
+  },
+  "nested_pages": {
+    "add_sub_page": "Add sub page",
+    "expand": "Expand sub pages",
+    "collapse": "Collapse sub pages",
+    "sub_page": "Sub page",
+    "sub_page_description": "Create a sub page",
+    "delete_modal": {
+      "only_this_page": "Delete only this page (sub pages move up one level)",
+      "with_sub_pages": "Delete this page and all its sub pages"
+    }
   }
 }

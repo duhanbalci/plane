@@ -22,7 +22,7 @@ import type {
 import { useTranslation } from "@plane/i18n";
 import type { TSearchEntityRequestPayload, TSearchResponse, TWebhookConnectionQueryParams } from "@plane/types";
 import { ERowVariant, Row } from "@plane/ui";
-import { cn, generateRandomColor, hslToHex } from "@plane/utils";
+import { cn, generateRandomColor, getPageName, hslToHex } from "@plane/utils";
 // components
 import { EditorMentionsRoot } from "@/components/editor/embeds/mentions";
 // hooks
@@ -37,6 +37,8 @@ import type { TCustomEventHandlers } from "@/hooks/use-realtime-page-events";
 import { useRealtimePageEvents } from "@/hooks/use-realtime-page-events";
 import type { TExtendedEditorExtensionsConfig } from "@/hooks/pages";
 import type { EPageStoreType } from "@/hooks/store";
+import { usePageStore } from "@/hooks/store";
+import { useAppRouter } from "@/hooks/use-app-router";
 import { useEditorFlagging } from "@/hooks/use-editor-flagging";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
@@ -97,6 +99,8 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
   const { data: currentUser } = useUser();
   const { getWorkspaceBySlug } = useWorkspace();
   const { getUserDetails } = useMember();
+  const { getPageById, createPage } = usePageStore(storeType);
+  const router = useAppRouter();
   // derived values
   const {
     id: pageId,
@@ -291,6 +295,19 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
               // oxlint-disable-next-line no-shadow
               renderComponent: (props) => <EditorMentionsRoot {...props} />,
               getMentionedEntityDetails: (id: string) => ({ display_name: getUserDetails(id)?.display_name ?? "" }),
+            }}
+            pageEmbedConfig={{
+              getPageDetails: (embeddedPageId) => {
+                const embeddedPage = getPageById(embeddedPageId);
+                if (!embeddedPage) return undefined;
+                return { name: getPageName(embeddedPage.name), logo_props: embeddedPage.logo_props };
+              },
+              onClick: (embeddedPageId) => router.push(handlers.getRedirectionLink(embeddedPageId)),
+              createPage: async (name) => {
+                // the new page becomes a sub page of the page being edited
+                const createdPage = await createPage({ name, parent: pageId, access: page.access });
+                return createdPage?.id ? { id: createdPage.id } : undefined;
+              },
             }}
             updatePageProperties={updatePageProperties}
             realtimeConfig={realtimeConfig}

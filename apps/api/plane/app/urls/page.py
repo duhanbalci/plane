@@ -35,6 +35,12 @@ urlpatterns = [
         PageFavoriteViewSet.as_view({"post": "create", "delete": "destroy"}),
         name="user-favorite-pages",
     ),
+    # move a page inside the tree
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/move/",
+        PageViewSet.as_view({"post": "move"}),
+        name="project-page-move",
+    ),
     # archived pages
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/archive/",

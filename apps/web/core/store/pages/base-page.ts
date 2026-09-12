@@ -40,7 +40,7 @@ export type TBasePage = TPage & {
   updatePageLogo: (value: TChangeHandlerProps) => Promise<void>;
   addToFavorites: () => Promise<void>;
   removePageFromFavorites: () => Promise<void>;
-  duplicate: () => Promise<TPage | undefined>;
+  duplicate: (options?: { includeChildren?: boolean }) => Promise<TPage | undefined>;
   mutateProperties: (data: Partial<TPage>, shouldUpdateName?: boolean) => void;
   setSyncingStatus: (status: "syncing" | "synced" | "error") => void;
   // sub-store
@@ -70,7 +70,7 @@ export type TBasePageServices = {
     archived_at: string;
   }>;
   restore: () => Promise<void>;
-  duplicate: () => Promise<TPage>;
+  duplicate: (options?: { includeChildren?: boolean }) => Promise<TPage>;
 };
 
 export type TPageInstance = TBasePage &
@@ -97,6 +97,10 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
   archived_at: string | null | undefined;
   workspace: string | undefined;
   project_ids?: string[] | undefined;
+  // nested pages
+  parent?: string | null;
+  sort_order?: number;
+  sub_pages_count?: number;
   created_by: string | undefined;
   updated_by: string | undefined;
   created_at: Date | undefined;
@@ -134,6 +138,9 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
     this.archived_at = page?.archived_at || undefined;
     this.workspace = page?.workspace || undefined;
     this.project_ids = page?.project_ids || undefined;
+    this.parent = page?.parent ?? null;
+    this.sort_order = page?.sort_order ?? undefined;
+    this.sub_pages_count = page?.sub_pages_count ?? 0;
     this.created_by = page?.created_by || undefined;
     this.updated_by = page?.updated_by || undefined;
     this.created_at = page?.created_at || undefined;
@@ -159,6 +166,9 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
       archived_at: observable.ref,
       workspace: observable.ref,
       project_ids: observable,
+      parent: observable.ref,
+      sort_order: observable.ref,
+      sub_pages_count: observable.ref,
       created_by: observable.ref,
       updated_by: observable.ref,
       created_at: observable.ref,
@@ -235,6 +245,9 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
       archived_at: this.archived_at,
       workspace: this.workspace,
       project_ids: this.project_ids,
+      parent: this.parent,
+      sort_order: this.sort_order,
+      sub_pages_count: this.sub_pages_count,
       created_by: this.created_by,
       updated_by: this.updated_by,
       created_at: this.created_at,
@@ -532,7 +545,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
   /**
    * @description duplicate the page
    */
-  duplicate = async () => await this.services.duplicate();
+  duplicate = async (options?: { includeChildren?: boolean }) => await this.services.duplicate(options);
 
   /**
    * @description mutate multiple properties at once

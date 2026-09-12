@@ -7,12 +7,15 @@
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { AnyExtension } from "@tiptap/core";
 import { SlashCommands } from "@/extensions";
+// local imports
+import { PageEmbedExtension } from "./page-embed/extension";
+import { pageEmbedSlashCommandOption } from "./page-embed/slash-command";
 // types
 import type { IEditorProps, TExtensions, TUserDetails } from "@/types";
 
 export type TDocumentEditorAdditionalExtensionsProps = Pick<
   IEditorProps,
-  "disabledExtensions" | "flaggedExtensions" | "fileHandler" | "extendedEditorProps"
+  "disabledExtensions" | "flaggedExtensions" | "fileHandler" | "extendedEditorProps" | "pageEmbedConfig"
 > & {
   isEditable: boolean;
   provider?: HocuspocusProvider;
@@ -27,8 +30,17 @@ export type TDocumentEditorAdditionalExtensionsRegistry = {
 const extensionRegistry: TDocumentEditorAdditionalExtensionsRegistry[] = [
   {
     isEnabled: (disabledExtensions) => !disabledExtensions.includes("slash-commands"),
-    getExtension: ({ disabledExtensions, flaggedExtensions }) =>
-      SlashCommands({ disabledExtensions, flaggedExtensions }),
+    getExtension: ({ disabledExtensions, flaggedExtensions, pageEmbedConfig }) =>
+      SlashCommands({
+        disabledExtensions,
+        flaggedExtensions,
+        additionalOptions: pageEmbedConfig ? [pageEmbedSlashCommandOption(pageEmbedConfig)] : undefined,
+      }),
+  },
+  {
+    // the sub page embed node; the schema-only twin lives in core-without-props
+    isEnabled: () => true,
+    getExtension: ({ pageEmbedConfig }) => PageEmbedExtension(pageEmbedConfig),
   },
 ];
 

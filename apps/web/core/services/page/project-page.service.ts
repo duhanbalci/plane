@@ -21,8 +21,8 @@ export class ProjectPageService extends APIService {
     this.fileUploadService = new FileUploadService();
   }
 
-  async fetchAll(workspaceSlug: string, projectId: string): Promise<TPage[]> {
-    return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/`)
+  async fetchAll(workspaceSlug: string, projectId: string, params?: { parent?: string }): Promise<TPage[]> {
+    return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/`, { params })
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
@@ -70,8 +70,15 @@ export class ProjectPageService extends APIService {
       });
   }
 
-  async remove(workspaceSlug: string, projectId: string, pageId: string): Promise<void> {
-    return this.delete(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/`)
+  async remove(
+    workspaceSlug: string,
+    projectId: string,
+    pageId: string,
+    options?: { cascade?: boolean }
+  ): Promise<void> {
+    return this.delete(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/`, undefined, {
+      params: options?.cascade ? { cascade: true } : undefined,
+    })
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
@@ -174,8 +181,30 @@ export class ProjectPageService extends APIService {
       });
   }
 
-  async duplicate(workspaceSlug: string, projectId: string, pageId: string): Promise<TPage> {
-    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/duplicate/`)
+  async duplicate(
+    workspaceSlug: string,
+    projectId: string,
+    pageId: string,
+    options?: { includeChildren?: boolean }
+  ): Promise<TPage> {
+    return this.post(
+      `/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/duplicate/`,
+      {},
+      { params: options?.includeChildren ? { include_children: true } : undefined }
+    )
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async moveInTree(
+    workspaceSlug: string,
+    projectId: string,
+    pageId: string,
+    data: { parent: string | null; sort_order?: number }
+  ): Promise<TPage> {
+    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/move/`, data)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;

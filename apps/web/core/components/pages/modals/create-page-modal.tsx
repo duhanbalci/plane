@@ -26,6 +26,8 @@ type Props = {
   handleModalClose: () => void;
   redirectionEnabled?: boolean;
   storeType: EPageStoreType;
+  /** when set, the created page becomes a sub page of this page */
+  parentId?: string;
 };
 
 export function CreatePageModal(props: Props) {
@@ -37,12 +39,14 @@ export function CreatePageModal(props: Props) {
     handleModalClose,
     redirectionEnabled = false,
     storeType,
+    parentId,
   } = props;
   // states
   const [pageFormData, setPageFormData] = useState<Partial<TPage>>({
     id: undefined,
     name: "",
     logo_props: undefined,
+    parent: parentId ?? null,
   });
   // router
   const router = useAppRouter();
@@ -56,8 +60,13 @@ export function CreatePageModal(props: Props) {
     setPageFormData((prev) => ({ ...prev, access: pageAccess }));
   }, [pageAccess]);
 
+  // keep the parent in sync with the block the modal was opened from
+  useEffect(() => {
+    setPageFormData((prev) => ({ ...prev, parent: parentId ?? null }));
+  }, [parentId]);
+
   const handleStateClear = () => {
-    setPageFormData({ id: undefined, name: "", access: pageAccess });
+    setPageFormData({ id: undefined, name: "", access: pageAccess, parent: parentId ?? null });
     handleModalClose();
   };
 

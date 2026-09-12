@@ -62,6 +62,10 @@ class Page(BaseModel):
         verbose_name_plural = "Pages"
         db_table = "pages"
         ordering = ("-created_at",)
+        indexes = [
+            # Sibling lookups for the nested page tree.
+            models.Index(fields=["parent", "sort_order"], name="page_parent_sort_order_idx")
+        ]
 
     def __str__(self):
         """Return owner email and page name"""
@@ -91,6 +95,7 @@ class PageLog(BaseModel):
         ("forward_link", "Forward Link"),
         ("page_mention", "Page Mention"),
         ("user_mention", "User Mention"),
+        ("page_embed", "Page Embed"),
     )
     transaction = models.UUIDField(default=uuid.uuid4)
     page = models.ForeignKey(Page, related_name="page_log", on_delete=models.CASCADE)

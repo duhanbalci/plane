@@ -44,6 +44,7 @@
   --horizontal-offset: 5px;
 
   &:has(.issue-embed),
+  &:has(.page-embed),
   &.table-wrapper {
     --horizontal-offset: 0px;
   }

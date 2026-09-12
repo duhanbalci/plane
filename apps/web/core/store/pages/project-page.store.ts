@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { unset, set } from "lodash-es";
+import { orderBy, unset, set } from "lodash-es";
 import { makeObservable, observable, runInAction, action, reaction, computed } from "mobx";
 import { computedFn } from "mobx-utils";
 // types
@@ -26,6 +26,9 @@ type TLoader = "init-loader" | "mutation-loader" | undefined;
 
 type TError = { title: string; description: string };
 
+// same gap the API uses between siblings
+const DEFAULT_PAGE_SORT_ORDER = 65535;
+
 export const ROLE_PERMISSIONS_TO_CREATE_PAGE = [
   EUserPermissions.ADMIN,
   EUserPermissions.MEMBER,
@@ -46,6 +49,8 @@ export interface IProjectPageStore {
   getCurrentProjectPageIdsByTab: (pageType: TPageNavigationTabs) => string[] | undefined;
   getCurrentProjectPageIds: (projectId: string) => string[];
   getCurrentProjectFilteredPageIdsByTab: (pageType: TPageNavigationTabs) => string[] | undefined;
+  getRootPageIds: (pageType: TPageNavigationTabs) => string[] | undefined;
+  getChildPageIds: (parentId: string) => string[];
   getPageById: (pageId: string) => TProjectPage | undefined;
   updateFilters: <T extends keyof TPageFilters>(filterKey: T, filterValue: TPageFilters[T]) => void;
   clearAllFilters: () => void;
@@ -62,8 +67,9 @@ export interface IProjectPageStore {
     options?: { trackVisit?: boolean }
   ) => Promise<TPage | undefined>;
   createPage: (pageData: Partial<TPage>) => Promise<TPage | undefined>;
-  removePage: (params: { pageId: string; shouldSync?: boolean }) => Promise<void>;
+  removePage: (params: { pageId: string; shouldSync?: boolean; cascade?: boolean }) => Promise<void>;
   movePage: (workspaceSlug: string, projectId: string, pageId: string, newProjectId: string) => Promise<void>;
+  movePageInTree: (pageId: string, newParentId: string | null, index?: number) => Promise<void>;
 }
 
 export class ProjectPageStore implements IProjectPageStore {
@@ -99,6 +105,7 @@ export class ProjectPageStore implements IProjectPageStore {
       createPage: action,
       removePage: action,
       movePage: action,
+      movePageInTree: action,
     });
     this.rootStore = store;
     // service
@@ -180,6 +187,31 @@ export class ProjectPageStore implements IProjectPageStore {
     const pages = (filteredPages.map((page) => page.id) as string[]) || undefined;
 
     return pages ?? undefined;
+  });
+
+  /**
+   * @description get the root (parentless) page ids of the current project for the given tab.
+   * While searching the tree is flattened so matches inside sub pages stay reachable.
+   * @param {TPageNavigationTabs} pageType
+   */
+  getRootPageIds = computedFn((pageType: TPageNavigationTabs) => {
+    const filteredPageIds = this.getCurrentProjectFilteredPageIdsByTab(pageType);
+    if (!filteredPageIds) return undefined;
+    if (this.filters.searchQuery.trim() !== "") return filteredPageIds;
+    return filteredPageIds.filter((pageId) => !this.getPageById(pageId)?.parent);
+  });
+
+  /**
+   * @description get the direct children of a page, ordered by sort_order
+   * @param {string} parentId
+   */
+  getChildPageIds = computedFn((parentId: string) => {
+    const { projectId } = this.store.router;
+    if (!projectId || !parentId) return [];
+    const childPages = Object.values(this?.data || {}).filter(
+      (page) => page.parent === parentId && page.project_ids?.includes(projectId)
+    );
+    return orderBy(childPages, (page) => page.sort_order ?? 0, "asc").map((page) => page.id) as string[];
   });
 
   /**
@@ -327,15 +359,33 @@ export class ProjectPageStore implements IProjectPageStore {
    * @description delete a page
    * @param {string} pageId
    */
-  removePage = async ({ pageId, shouldSync: _shouldSync = true }: { pageId: string; shouldSync?: boolean }) => {
+  removePage = async ({
+    pageId,
+    shouldSync: _shouldSync = true,
+    cascade = false,
+  }: {
+    pageId: string;
+    shouldSync?: boolean;
+    cascade?: boolean;
+  }) => {
     try {
       const { workspaceSlug, projectId } = this.store.router;
       if (!workspaceSlug || !projectId || !pageId) return undefined;
 
-      await this.service.remove(workspaceSlug, projectId, pageId);
+      // With cascade the whole subtree goes away, otherwise the children move up.
+      const removedPageIds = cascade ? this.getDescendantPageIds(pageId) : [pageId];
+      const childPageIds = cascade ? [] : this.getChildPageIds(pageId);
+
+      await this.service.remove(workspaceSlug, projectId, pageId, { cascade });
       runInAction(() => {
-        unset(this.data, [pageId]);
-        if (this.rootStore.favorite.entityMap[pageId]) this.rootStore.favorite.removeFavoriteFromStore(pageId);
+        for (const removedPageId of removedPageIds) {
+          unset(this.data, [removedPageId]);
+          if (this.rootStore.favorite.entityMap[removedPageId])
+            this.rootStore.favorite.removeFavoriteFromStore(removedPageId);
+        }
+        for (const childPageId of childPageIds) {
+          this.getPageById(childPageId)?.mutateProperties({ parent: null }, false);
+        }
       });
     } catch (error) {
       runInAction(() => {
@@ -366,5 +416,85 @@ export class ProjectPageStore implements IProjectPageStore {
       console.error("Unable to move page", error);
       throw error;
     }
+  };
+
+  /**
+   * @description the page id and every descendant id, walking the local tree
+   * @param {string} pageId
+   */
+  getDescendantPageIds = (pageId: string): string[] => {
+    const ids = [pageId];
+    for (const childId of this.getChildPageIds(pageId)) {
+      ids.push(...this.getDescendantPageIds(childId));
+    }
+    return ids;
+  };
+
+  /**
+   * @description re-parent a page and/or place it at `index` among its new siblings
+   * @param {string} pageId
+   * @param {string | null} newParentId
+   * @param {number | undefined} index
+   */
+  movePageInTree = async (pageId: string, newParentId: string | null, index?: number) => {
+    const { workspaceSlug, projectId } = this.store.router;
+    const page = this.getPageById(pageId);
+    if (!workspaceSlug || !projectId || !page) return;
+    // a page cannot become a child of itself or of one of its own descendants
+    if (newParentId && this.getDescendantPageIds(pageId).includes(newParentId)) return;
+
+    const previousParent = page.parent ?? null;
+    const previousSortOrder = page.sort_order;
+    const sortOrder = this.getSortOrderForIndex(pageId, newParentId, index);
+
+    runInAction(() => {
+      page.mutateProperties({ parent: newParentId, sort_order: sortOrder }, false);
+    });
+
+    try {
+      const updatedPage = await this.service.moveInTree(workspaceSlug, projectId, pageId, {
+        parent: newParentId,
+        sort_order: sortOrder,
+      });
+      runInAction(() => {
+        page.mutateProperties(updatedPage, false);
+      });
+    } catch (error) {
+      // rollback the optimistic update
+      runInAction(() => {
+        page.mutateProperties({ parent: previousParent, sort_order: previousSortOrder }, false);
+      });
+      console.error("Unable to move page in the tree", error);
+      throw error;
+    }
+  };
+
+  /**
+   * @description sort_order that places a page at `index` among the children of `parentId`
+   */
+  private getSortOrderForIndex = (pageId: string, parentId: string | null, index?: number) => {
+    const siblingIds = (parentId ? this.getChildPageIds(parentId) : this.getRootSiblingIds()).filter(
+      (siblingId) => siblingId !== pageId
+    );
+    const sortOrders = siblingIds.map((siblingId) => this.getPageById(siblingId)?.sort_order ?? 0);
+
+    if (index === undefined || index >= sortOrders.length) {
+      const last = sortOrders.length > 0 ? Math.max(...sortOrders) : 0;
+      return last + DEFAULT_PAGE_SORT_ORDER;
+    }
+    if (index <= 0) return sortOrders[0] - DEFAULT_PAGE_SORT_ORDER;
+    return (sortOrders[index - 1] + sortOrders[index]) / 2;
+  };
+
+  /**
+   * @description root level pages of the current project, ordered by sort_order
+   */
+  private getRootSiblingIds = () => {
+    const { projectId } = this.store.router;
+    if (!projectId) return [];
+    const rootPages = Object.values(this?.data || {}).filter(
+      (page) => !page.parent && page.project_ids?.includes(projectId)
+    );
+    return orderBy(rootPages, (page) => page.sort_order ?? 0, "asc").map((page) => page.id) as string[];
   };
 }

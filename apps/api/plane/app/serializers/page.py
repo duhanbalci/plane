@@ -24,6 +24,9 @@ from plane.db.models import (
 
 class PageSerializer(BaseSerializer):
     is_favorite = serializers.BooleanField(read_only=True)
+    # Annotated in PageViewSet.get_queryset; falls back to a query when the
+    # instance comes from a queryset without the annotation.
+    sub_pages_count = serializers.SerializerMethodField()
     labels = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=Label.objects.all()),
         write_only=True,
@@ -55,8 +58,16 @@ class PageSerializer(BaseSerializer):
             "logo_props",
             "label_ids",
             "project_ids",
+            "sort_order",
+            "sub_pages_count",
         ]
         read_only_fields = ["workspace", "owned_by"]
+
+    def get_sub_pages_count(self, obj) -> int:
+        count = getattr(obj, "sub_pages_count", None)
+        if count is None:
+            count = obj.child_page.filter(deleted_at__isnull=True, archived_at__isnull=True).count()
+        return count
 
     def create(self, validated_data):
         labels = validated_data.pop("labels", None)

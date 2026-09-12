@@ -114,5 +114,16 @@
   },
   "page_content_limit_banner": {
     "message": "İçerik sınırına ulaşıldı ve canlı senkronizasyon kapalı. Senkronizasyona devam etmek için yeni bir sayfa oluşturun veya iç içe sayfalar kullanın."
+  },
+  "nested_pages": {
+    "add_sub_page": "Alt sayfa ekle",
+    "expand": "Alt sayfalari genislet",
+    "collapse": "Alt sayfalari daralt",
+    "sub_page": "Alt sayfa",
+    "sub_page_description": "Alt sayfa olustur",
+    "delete_modal": {
+      "only_this_page": "Sadece bu sayfayi sil (alt sayfalar bir ust seviyeye tasinir)",
+      "with_sub_pages": "Bu sayfayi ve tum alt sayfalarini sil"
+    }
   }
 }
