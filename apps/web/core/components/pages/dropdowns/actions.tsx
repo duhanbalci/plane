@@ -22,6 +22,7 @@ import {
 } from "@makeplane/propel/icons";
 // constants
 import { EPageAccess } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 // plane editor
 // plane ui
 import type { TContextMenuItem } from "@plane/ui";
@@ -29,6 +30,7 @@ import { ContextMenu, CustomMenu } from "@plane/ui";
 // components
 import { cn } from "@plane/utils";
 import { DeletePageModal } from "@/components/pages/modals/delete-page-modal";
+import { MoveToProjectModal } from "@/components/wiki/move-to-project-modal";
 import { MoveToWikiModal } from "@/components/wiki/move-to-wiki-modal";
 // hooks
 import { usePageOperations } from "@/hooks/use-page-operations";
@@ -52,7 +54,8 @@ export type TPageActions =
   | "version-history"
   | "export"
   | "move"
-  | "move-to-wiki";
+  | "move-to-wiki"
+  | "move-to-project";
 
 type Props = {
   extraOptions?: (TContextMenuItem & { key: TPageActions })[];
@@ -68,12 +71,15 @@ export const PageActions = observer(function PageActions(props: Props) {
   const [deletePageModal, setDeletePageModal] = useState(false);
   const [movePageModal, setMovePageModal] = useState(false);
   const [moveToWikiModal, setMoveToWikiModal] = useState(false);
+  const [moveToProjectModal, setMoveToProjectModal] = useState(false);
   // params
   const { workspaceSlug } = useParams();
   // page flag
   const { isMovePageEnabled } = usePageFlag({
     workspaceSlug: workspaceSlug?.toString() ?? "",
   });
+  // i18n
+  const { t } = useTranslation();
   // page operations
   const { pageOperations } = usePageOperations({
     page,
@@ -170,6 +176,14 @@ export const PageActions = observer(function PageActions(props: Props) {
           // only a project page can leave its project for the workspace wiki
           shouldRender: isProjectPage && canCurrentUserMovePage && !archived_at,
         },
+        {
+          key: "move-to-project",
+          action: () => setMoveToProjectModal(true),
+          title: t("wiki.move_to_project.title"),
+          icon: ExportOutline,
+          // only a wiki page can leave the workspace wiki for a project
+          shouldRender: !isProjectPage && canCurrentUserMovePage && !archived_at,
+        },
       ];
       if (extraOptions) {
         menuItems.push(...extraOptions);
@@ -190,6 +204,7 @@ export const PageActions = observer(function PageActions(props: Props) {
       canCurrentUserMovePage,
       isMovePageEnabled,
       pageOperations,
+      t,
     ]
   );
   // arrange options
@@ -211,6 +226,9 @@ export const PageActions = observer(function PageActions(props: Props) {
       />
       {isProjectPage && (
         <MoveToWikiModal isOpen={moveToWikiModal} onClose={() => setMoveToWikiModal(false)} page={page} />
+      )}
+      {!isProjectPage && (
+        <MoveToProjectModal isOpen={moveToProjectModal} onClose={() => setMoveToProjectModal(false)} page={page} />
       )}
       {parentRef && <ContextMenu parentRef={parentRef} items={arrangedOptions} />}
       <CustomMenu placement="bottom-end" optionsClassName="max-h-[90vh]" ellipsis closeOnSelect>

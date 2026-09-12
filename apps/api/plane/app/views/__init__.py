@@ -174,6 +174,7 @@ from .page.base import (
     PageDuplicateEndpoint,
     PageCollectionViewSet,
     PageMoveToWikiEndpoint,
+    PageMoveToProjectEndpoint,
     WorkspacePageFavoriteViewSet,
 )
 from .page.version import PageVersionEndpoint

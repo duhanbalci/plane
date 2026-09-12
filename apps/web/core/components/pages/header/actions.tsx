@@ -16,6 +16,7 @@ import { PageCopyLinkControl } from "./copy-link-control";
 import { PageFavoriteControl } from "./favorite-control";
 import { PageOfflineBadge } from "./offline-badge";
 import { PageLockControl } from "./lock-control";
+import { PageMoveControl } from "./move-control";
 
 type Props = {
   page: TPageInstance;
@@ -30,6 +31,7 @@ export const PageHeaderActions = observer(function PageHeaderActions(props: Prop
       <PageArchivedBadge page={page} />
       <PageOfflineBadge page={page} />
       <PageLockControl page={page} />
+      <PageMoveControl page={page} storeType={storeType} />
       <PageCopyLinkControl page={page} />
       <PageFavoriteControl page={page} />
       <PageOptionsDropdown page={page} storeType={storeType} />

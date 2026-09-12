@@ -118,6 +118,14 @@
       "title": "Henuz wiki sayfasi yok",
       "description": "Calisma alani wiki'sine baslamak icin bir koleksiyonda sayfa olusturun."
     },
+    "move_to_project": {
+      "title": "Projeye tasi",
+      "description": "Sayfa ve alt sayfalari wiki'den cikar, secilen projenin sayfasi olur.",
+      "project_placeholder": "Proje sec",
+      "submit": "Tasi",
+      "success": "Sayfa projeye tasindi.",
+      "error": "Sayfa tasinamadi. Lutfen tekrar deneyin."
+    },
     "move_to_wiki": {
       "title": "Wiki'ye tasi",
       "description": "Sayfa ve alt sayfalari projeden cikar, calisma alani wiki sayfasi olur.",

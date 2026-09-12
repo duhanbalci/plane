@@ -358,6 +358,69 @@ class TestMoveProjectPageToWiki:
 
 
 @pytest.mark.contract
+class TestMoveWikiPageToProject:
+    @pytest.mark.django_db
+    def test_move_to_project(self, session_client, workspace, project, make_wiki_page):
+        root = make_wiki_page("root")
+        child = make_wiki_page("child", parent=root)
+
+        response = session_client.post(
+            f"/api/workspaces/{workspace.slug}/pages/{root.id}/move-to-project/",
+            {"project_id": str(project.id)},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        for page in (root, child):
+            page.refresh_from_db()
+            assert page.is_global is False
+            assert page.collection_id is None
+            assert ProjectPage.objects.filter(page_id=page.id, project_id=project.id).exists()
+        assert child.parent_id == root.id
+        assert root.parent_id is None
+
+        # It is gone from the wiki listing and shows up in the project one.
+        wiki_ids = {p["id"] for p in session_client.get(_pages_url(workspace.slug)).json()}
+        assert wiki_ids.isdisjoint({str(root.id), str(child.id)})
+        project_ids = {
+            p["id"]
+            for p in session_client.get(f"/api/workspaces/{workspace.slug}/projects/{project.id}/pages/").json()
+        }
+        assert {str(root.id), str(child.id)} <= project_ids
+
+    @pytest.mark.django_db
+    def test_move_requires_project_membership(self, member_client, workspace, project, make_wiki_page):
+        page = make_wiki_page("root")
+
+        response = member_client.post(
+            f"/api/workspaces/{workspace.slug}/pages/{page.id}/move-to-project/",
+            {"project_id": str(project.id)},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        page.refresh_from_db()
+        assert page.is_global is True
+
+    @pytest.mark.django_db
+    def test_project_page_is_not_movable_through_the_wiki_endpoint(
+        self, session_client, workspace, project, create_user
+    ):
+        page = Page.objects.create(workspace=workspace, owned_by=create_user, name="project page")
+        ProjectPage.objects.create(workspace=workspace, project=project, page=page)
+
+        response = session_client.post(
+            f"/api/workspaces/{workspace.slug}/pages/{page.id}/move-to-project/",
+            {"project_id": str(project.id)},
+            format="json",
+        )
+
+        # WorkspacePagePermission already refuses a project page on the wiki route.
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert ProjectPage.objects.filter(page_id=page.id, project_id=project.id).exists()
+
+
+@pytest.mark.contract
 class TestWikiPageArchiveDelete:
     @pytest.mark.django_db
     def test_archive_and_delete(self, session_client, workspace, make_wiki_page):

@@ -13,6 +13,7 @@ from plane.app.views import (
     PageDuplicateEndpoint,
     PageCollectionViewSet,
     PageMoveToWikiEndpoint,
+    PageMoveToProjectEndpoint,
     WorkspacePageFavoriteViewSet,
     PageCommentViewSet,
     PageCommentReactionViewSet,
@@ -94,6 +95,12 @@ urlpatterns = [
         name="project-page-move-to-wiki",
     ),
     # ---------------------------------------------------------------- wiki
+    # move a wiki page into a project
+    path(
+        "workspaces/<str:slug>/pages/<uuid:page_id>/move-to-project/",
+        PageMoveToProjectEndpoint.as_view(),
+        name="workspace-page-move-to-project",
+    ),
     path(
         "workspaces/<str:slug>/pages-summary/",
         PageViewSet.as_view({"get": "summary"}, **WORKSPACE_SCOPE),

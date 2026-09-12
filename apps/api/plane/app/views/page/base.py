@@ -988,3 +988,52 @@ class PageMoveToWikiEndpoint(BaseAPIView):
 
         page.refresh_from_db()
         return Response(PageDetailSerializer(page).data, status=status.HTTP_200_OK)
+
+
+class PageMoveToProjectEndpoint(BaseAPIView):
+    """Turn a workspace (wiki) page (and its subtree) into a project page."""
+
+    permission_classes = [WorkspacePagePermission]
+
+    def post(self, request, slug, page_id):
+        page = Page.objects.filter(pk=page_id, workspace__slug=slug, is_global=True).first()
+        if page is None or ProjectPage.objects.filter(page_id=page_id, deleted_at__isnull=True).exists():
+            return Response({"error": "Page not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        project_id = parse_uuid(request.data.get("project_id"))
+        if project_id is None:
+            return Response({"error": "Invalid project"}, status=status.HTTP_400_BAD_REQUEST)
+
+        project = Project.objects.filter(pk=project_id, workspace__slug=slug).first()
+        if project is None:
+            return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # The caller has to be able to write both sides of the move.
+        if not WorkspaceMember.objects.filter(
+            workspace__slug=slug, member=request.user, role__in=[20, 15], is_active=True
+        ).exists():
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        if not ProjectMember.objects.filter(
+            project_id=project.id, member=request.user, role__in=[20, 15], is_active=True
+        ).exists():
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        moved_ids = page_and_descendant_ids(page.id)
+        # The moved page becomes a project page root; its children keep their parents.
+        Page.objects.filter(id__in=moved_ids).update(is_global=False, collection=None)
+        Page.objects.filter(pk=page.id).update(parent=None)
+        existing_ids = set(
+            ProjectPage.objects.filter(page_id__in=moved_ids, deleted_at__isnull=True).values_list("page_id", flat=True)
+        )
+        ProjectPage.objects.bulk_create(
+            [
+                ProjectPage(page_id=moved_id, project_id=project.id, workspace_id=page.workspace_id)
+                for moved_id in moved_ids
+                if moved_id not in existing_ids
+            ]
+        )
+        UserFavorite.objects.filter(entity_type="page", entity_identifier__in=moved_ids).update(project=project)
+
+        page.refresh_from_db()
+        return Response(PageDetailSerializer(page).data, status=status.HTTP_200_OK)

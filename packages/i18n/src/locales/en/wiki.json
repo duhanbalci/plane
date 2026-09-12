@@ -118,6 +118,14 @@
       "title": "No wiki pages yet",
       "description": "Create a page in a collection to start your workspace wiki."
     },
+    "move_to_project": {
+      "title": "Move to project",
+      "description": "The page and its sub pages leave the wiki and become pages of the chosen project.",
+      "project_placeholder": "Select project",
+      "submit": "Move",
+      "success": "Page moved to the project.",
+      "error": "Page could not be moved. Please try again."
+    },
     "move_to_wiki": {
       "title": "Move to Wiki",
       "description": "The page and its sub pages leave the project and become workspace wiki pages.",

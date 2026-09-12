@@ -219,4 +219,15 @@ export class WorkspacePageService extends APIService {
         throw error?.response?.data;
       });
   }
+
+  /** Move a wiki page (and its subtree) into a project. */
+  async moveWikiPageToProject(workspaceSlug: string, pageId: string, projectId: string): Promise<TPage> {
+    return this.post(`/api/workspaces/${workspaceSlug}/pages/${pageId}/move-to-project/`, {
+      project_id: projectId,
+    })
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
 }
