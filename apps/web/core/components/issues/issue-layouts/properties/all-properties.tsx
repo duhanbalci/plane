@@ -31,6 +31,7 @@ import { EstimateDropdown } from "@/components/dropdowns/estimate";
 import { MemberDropdown } from "@/components/dropdowns/member/dropdown";
 import { ModuleDropdown } from "@/components/dropdowns/module/dropdown";
 import { PriorityDropdown } from "@/components/dropdowns/priority";
+import { IssueTypeDropdown } from "@/components/dropdowns/issue-type";
 import { StateDropdown } from "@/components/dropdowns/state/dropdown";
 // hooks
 import { useProjectEstimates } from "@/hooks/store/estimates";
@@ -73,6 +74,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
   const { getStateById } = useProjectState();
   const { isMobile } = usePlatformOS();
   const projectDetails = getProjectById(issue.project_id);
+  const isIssueTypeEnabled = Boolean(projectDetails?.is_issue_type_enabled);
 
   // router
   const router = useAppRouter();
@@ -110,6 +112,10 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
 
   const handlePriority = async (value: TIssuePriorities) => {
     if (updateIssue) await updateIssue(issue.project_id, issue.id, { priority: value });
+  };
+
+  const handleIssueType = async (typeId: string) => {
+    if (updateIssue) await updateIssue(issue.project_id, issue.id, { type_id: typeId });
   };
 
   const handleLabel = async (ids: string[]) => {
@@ -468,6 +474,26 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             <div className="text-caption-sm-regular">{issue.link_count}</div>
           </div>
         </Tooltip>
+      </WithDisplayPropertiesHOC>
+
+      {/* work item type */}
+      <WithDisplayPropertiesHOC
+        displayProperties={displayProperties}
+        displayPropertyKey="issue_type"
+        shouldRenderProperty={() => isIssueTypeEnabled}
+      >
+        {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
+        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+          <IssueTypeDropdown
+            value={issue.type_id}
+            onChange={handleIssueType}
+            projectId={issue.project_id}
+            disabled={isReadOnly}
+            buttonVariant="border-with-text"
+            renderByDefault={isMobile}
+            showTooltip
+          />
+        </div>
       </WithDisplayPropertiesHOC>
 
       {/* label */}

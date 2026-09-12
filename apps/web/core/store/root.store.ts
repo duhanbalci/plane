@@ -36,6 +36,8 @@ import type { IFavoriteStore } from "./favorite.store";
 import { FavoriteStore } from "./favorite.store";
 import type { IGlobalViewStore } from "./global-view.store";
 import { GlobalViewStore } from "./global-view.store";
+import type { IIssueTypeStore } from "./issue-types";
+import { IssueTypeStore } from "./issue-types";
 import type { IProjectInboxStore } from "./inbox/project-inbox.store";
 import { ProjectInboxStore } from "./inbox/project-inbox.store";
 import type { IInstanceStore } from "./instance.store";
@@ -83,6 +85,7 @@ export class CoreRootStore {
   projectView: IProjectViewStore;
   globalView: IGlobalViewStore;
   issue: IIssueRootStore;
+  issueTypes: IIssueTypeStore;
   state: IStateStore;
   label: ILabelStore;
   dashboard: IDashboardStore;
@@ -120,6 +123,7 @@ export class CoreRootStore {
     this.projectView = new ProjectViewStore(this);
     this.globalView = new GlobalViewStore(this);
     this.issue = new IssueRootStore(this);
+    this.issueTypes = new IssueTypeStore(this);
     this.state = new StateStore(this);
     this.label = new LabelStore(this);
     this.dashboard = new DashboardStore(this);
@@ -155,6 +159,7 @@ export class CoreRootStore {
     this.projectView = new ProjectViewStore(this);
     this.globalView = new GlobalViewStore(this);
     this.issue = new IssueRootStore(this);
+    this.issueTypes = new IssueTypeStore(this);
     this.state = new StateStore(this);
     this.label = new LabelStore(this);
     this.dashboard = new DashboardStore(this);

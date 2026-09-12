@@ -42,6 +42,9 @@ from plane.db.models import (
     IssueDescriptionVersion,
     ProjectMember,
     EstimatePoint,
+    IssueType,
+    ProjectIssueType,
+    Project,
 )
 from plane.utils.content_validator import (
     validate_html_content,
@@ -193,6 +196,26 @@ class IssueCreateSerializer(BaseSerializer):
             ).exists()
         ):
             raise serializers.ValidationError("Estimate point is not valid please pass a valid estimate_point_id")
+
+        # Work item type must be linked to the project and active
+        project_id = self.context.get("project_id")
+        if attrs.get("type"):
+            if not ProjectIssueType.objects.filter(
+                project_id=project_id,
+                issue_type_id=attrs.get("type").id,
+                issue_type__is_active=True,
+            ).exists():
+                raise serializers.ValidationError("Work item type is not valid please pass a valid type")
+        elif self.instance is None and "type" not in attrs:
+            # Fall back to the project's default type when the feature is on
+            if Project.objects.filter(pk=project_id, is_issue_type_enabled=True).exists():
+                default_type_id = (
+                    ProjectIssueType.objects.filter(project_id=project_id, is_default=True, issue_type__is_active=True)
+                    .values_list("issue_type_id", flat=True)
+                    .first()
+                )
+                if default_type_id:
+                    attrs["type"] = IssueType.objects.get(pk=default_type_id)
 
         return attrs
 
@@ -796,6 +819,7 @@ class IssueSerializer(DynamicBaseSerializer):
             "sequence_id",
             "project_id",
             "parent_id",
+            "type_id",
             "cycle_id",
             "module_ids",
             "label_ids",
@@ -853,6 +877,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             "sequence_id": instance.sequence_id,
             "project_id": instance.project_id,
             "parent_id": instance.parent_id,
+            "type_id": instance.type_id,
             "created_at": instance.created_at,
             "updated_at": instance.updated_at,
             "created_by": instance.created_by_id,

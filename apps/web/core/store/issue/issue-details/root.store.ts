@@ -14,6 +14,7 @@ import type {
   TIssueLink,
   TIssueReaction,
   TIssueRelationTypes,
+  TIssuePropertyValues,
   TIssueServiceType,
   TWorkItemWidgets,
 } from "@plane/types";
@@ -31,6 +32,8 @@ import { IssueStore } from "./issue.store";
 import type { IIssueStore, IIssueStoreActions } from "./issue.store";
 import { IssueLinkStore } from "./link.store";
 import type { IIssueLinkStore, IIssueLinkStoreActions } from "./link.store";
+import { IssuePropertyValuesStore } from "./property-values.store";
+import type { IIssuePropertyValuesStore, IIssuePropertyValuesStoreActions } from "./property-values.store";
 import { IssueReactionStore } from "./reaction.store";
 import type { IIssueReactionStore, IIssueReactionStoreActions } from "./reaction.store";
 import { IssueRelationStore } from "./relation.store";
@@ -71,7 +74,8 @@ export interface IIssueDetail
     IIssueRelationStoreActions,
     IIssueActivityStoreActions,
     IIssueCommentStoreActions,
-    IIssueCommentReactionStoreActions {
+    IIssueCommentReactionStoreActions,
+    IIssuePropertyValuesStoreActions {
   // observables
   peekIssue: TPeekIssue | undefined;
   relationKey: TIssueRelationTypes | null;
@@ -120,6 +124,7 @@ export interface IIssueDetail
   link: IIssueLinkStore;
   subscription: IIssueSubscriptionStore;
   relation: IIssueRelationStore;
+  propertyValues: IIssuePropertyValuesStore;
 }
 
 export class IssueDetail implements IIssueDetail {
@@ -163,6 +168,7 @@ export class IssueDetail implements IIssueDetail {
   activity: IIssueActivityStore;
   comment: IIssueCommentStore;
   commentReaction: IIssueCommentReactionStore;
+  propertyValues: IIssuePropertyValuesStore;
 
   constructor(rootStore: IIssueRootStore, serviceType: TIssueServiceType) {
     makeObservable(this, {
@@ -215,6 +221,7 @@ export class IssueDetail implements IIssueDetail {
     this.link = new IssueLinkStore(this, serviceType);
     this.subscription = new IssueSubscriptionStore(this, serviceType);
     this.relation = new IssueRelationStore(this);
+    this.propertyValues = new IssuePropertyValuesStore(this);
   }
 
   // computed
@@ -413,4 +420,14 @@ export class IssueDetail implements IIssueDetail {
     reaction: string,
     userId: string
   ) => this.commentReaction.removeCommentReaction(workspaceSlug, projectId, commentId, reaction, userId);
+
+  // property values
+  fetchPropertyValues = async (workspaceSlug: string, projectId: string, issueId: string) =>
+    this.propertyValues.fetchPropertyValues(workspaceSlug, projectId, issueId);
+  updatePropertyValues = async (
+    workspaceSlug: string,
+    projectId: string,
+    issueId: string,
+    data: TIssuePropertyValues
+  ) => this.propertyValues.updatePropertyValues(workspaceSlug, projectId, issueId, data);
 }

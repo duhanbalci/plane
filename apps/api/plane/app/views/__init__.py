@@ -184,6 +184,15 @@ from .external.base import (
     UnsplashEndpoint,
     WorkspaceGPTIntegrationEndpoint,
 )
+from .issue_type import (
+    IssueTypeViewSet,
+    ProjectIssueTypeViewSet,
+    ProjectIssueTypeEnableEndpoint,
+    IssuePropertyViewSet,
+    IssuePropertyOptionViewSet,
+    IssuePropertyValueEndpoint,
+)
+
 from .estimate.base import (
     ProjectEstimatePointEndpoint,
     BulkEstimatePointEndpoint,

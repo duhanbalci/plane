@@ -867,5 +867,7 @@
       "description": "İş öğelerini JSON dosyasına aktarın.",
       "short_description": "JSON olarak aktar"
     }
-  }
+  },
+  "work_item_types_feature": "İş öğesi türleri",
+  "work_item_types_feature_description": "İş öğelerini türler ve özel alanlarla kendi akışınıza göre şekillendirin."
 }

@@ -174,8 +174,13 @@ class IssueSerializer(BaseSerializer):
 
         if not issue_type:
             # Get default issue type
-            issue_type = IssueType.objects.filter(project_issue_types__project_id=project_id, is_default=True).first()
-            issue_type = issue_type
+            # The project default lives on ProjectIssueType, not on IssueType
+            issue_type = IssueType.objects.filter(
+                project_issue_types__project_id=project_id,
+                project_issue_types__is_default=True,
+                project_issue_types__deleted_at__isnull=True,
+                is_active=True,
+            ).first()
 
         issue = Issue.objects.create(**validated_data, project_id=project_id, type=issue_type)
 

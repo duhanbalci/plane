@@ -19,6 +19,7 @@ import { useTranslation } from "@plane/i18n";
 import { Button } from "@plane/propel/button";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import type { TIssue, TWorkspaceDraftIssue } from "@plane/types";
+import { AlertModalCore } from "@plane/ui";
 // hooks
 import { Switch } from "@makeplane/propel/components/switch";
 import {
@@ -30,15 +31,18 @@ import {
 } from "@plane/utils";
 // components
 import {
+  IssueAdditionalProperties,
   IssueDefaultProperties,
   IssueDescriptionEditor,
   IssueParentTag,
   IssueProjectSelect,
   IssueTitleInput,
 } from "@/components/issues/issue-modal/components";
+import { IssueTypeDropdown } from "@/components/dropdowns/issue-type";
 // helpers
 // hooks
 import { useIssueModal } from "@/hooks/context/use-issue-modal";
+import { useIssueTypes } from "@/hooks/store/use-issue-types";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
@@ -98,6 +102,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   // states
   const [gptAssistantModal, setGptAssistantModal] = useState(false);
   const [isMoving, setIsMoving] = useState<boolean>(false);
+  const [pendingIssueTypeId, setPendingIssueTypeId] = useState<string | null>(null);
 
   // refs
   const editorRef = useRef<EditorRefApi>(null);
@@ -116,6 +121,9 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     selectedParentIssue,
     setWorkItemTemplateId,
     setSelectedParentIssue,
+    issuePropertyValues,
+    setIssuePropertyValues,
+    setIssuePropertyValueErrors,
     getIssueTypeIdOnProjectChange,
     getActiveAdditionalPropertiesLength,
     handlePropertyValuesValidation,
@@ -129,6 +137,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     issue: { getIssueById },
   } = useIssueDetail();
   const { fetchCycles } = useProjectIssueProperties();
+  const { getActiveProperties } = useIssueTypes();
   const { getStateById } = useProjectState();
 
   // form info
@@ -155,6 +164,27 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   });
 
   const isDisabled = isSubmitting || isApplyingTemplate;
+  const issueTypeId = watch("type_id");
+  const isIssueTypeEnabled = Boolean(projectId && getProjectById(projectId)?.is_issue_type_enabled);
+
+  // changing the type drops the custom property values of the previous type
+  const applyIssueTypeChange = (nextTypeId: string) => {
+    setValue<"type_id">("type_id", nextTypeId, { shouldValidate: true, shouldDirty: true });
+    setIssuePropertyValues({});
+    setIssuePropertyValueErrors({});
+    handleFormChange();
+  };
+
+  const handleIssueTypeChange = (nextTypeId: string) => {
+    if (nextTypeId === issueTypeId) return;
+    const hasPropertyValues = Object.values(issuePropertyValues).some((values) => values && values.length > 0);
+    const hasPropertiesOnCurrentType = getActiveProperties(issueTypeId).length > 0;
+    if (hasPropertyValues && hasPropertiesOnCurrentType) {
+      setPendingIssueTypeId(nextTypeId);
+      return;
+    }
+    applyIssueTypeChange(nextTypeId);
+  };
 
   const { getIndex } = getTabIndex(ETabIndices.ISSUE_FORM, isMobile);
 
@@ -352,6 +382,21 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
 
   return (
     <FormProvider {...methods}>
+      <AlertModalCore
+        isOpen={!!pendingIssueTypeId}
+        handleClose={() => setPendingIssueTypeId(null)}
+        handleSubmit={() => {
+          if (pendingIssueTypeId) applyIssueTypeChange(pendingIssueTypeId);
+          setPendingIssueTypeId(null);
+        }}
+        isSubmitting={false}
+        title={t("work_item_types.change_confirmation.title")}
+        content={t("work_item_types.change_confirmation.description")}
+        primaryButtonText={{
+          default: t("work_item_types.change_confirmation.button.default"),
+          loading: t("work_item_types.change_confirmation.button.loading"),
+        }}
+      />
       <div className="flex gap-2 bg-transparent">
         <div className="w-full rounded-lg">
           <form
@@ -368,6 +413,17 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                     disabled={!!data?.id || !!data?.sourceIssueId || isProjectSelectionDisabled}
                     handleFormChange={handleFormChange}
                   />
+                  {isIssueTypeEnabled && (
+                    <IssueTypeDropdown
+                      value={issueTypeId}
+                      onChange={handleIssueTypeChange}
+                      projectId={projectId}
+                      disabled={isDisabled}
+                      buttonVariant="border-with-text"
+                      placeholder={t("work_item_types.label")}
+                      dropdownArrow
+                    />
+                  )}
                 </div>
               </div>
               {watch("parent_id") && selectedParentIssue && (
@@ -418,6 +474,12 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                   onClose={onClose}
                 />
               </div>
+              <IssueAdditionalProperties
+                workspaceSlug={workspaceSlug?.toString()}
+                projectId={projectId}
+                issueTypeId={issueTypeId}
+                isDisabled={isDisabled}
+              />
             </div>
             <div
               className={cn(

@@ -37,6 +37,7 @@ export enum EIssueGroupByToServerOptions {
   "created_by" = "created_by",
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   "team_project" = "project_id",
+  "type_id" = "type_id",
 }
 
 export enum EIssueGroupBYServerToProperty {
@@ -50,6 +51,7 @@ export enum EIssueGroupBYServerToProperty {
   "target_date" = "target_date",
   "project_id" = "project_id",
   "created_by" = "created_by",
+  "type_id" = "type_id",
 }
 
 export enum EIssueCommentAccessSpecifier {
@@ -124,6 +126,7 @@ export const ISSUE_GROUP_BY_OPTIONS: {
   { key: "labels", titleTranslationKey: "common.labels" },
   { key: "assignees", titleTranslationKey: "common.assignees" },
   { key: "created_by", titleTranslationKey: "common.created_by" },
+  { key: "type_id", titleTranslationKey: "work_item_types.label" },
   { key: null, titleTranslationKey: "common.none" },
 ];
 
@@ -208,6 +211,7 @@ export const ISSUE_DISPLAY_PROPERTIES: {
   },
   { key: "modules", titleTranslationKey: "common.module" },
   { key: "cycle", titleTranslationKey: "common.cycle" },
+  { key: "issue_type", titleTranslationKey: "work_item_types.label" },
 ];
 
 export const SPREADSHEET_PROPERTY_LIST: (keyof IIssueDisplayProperties)[] = [

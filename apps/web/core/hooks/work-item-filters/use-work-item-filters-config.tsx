@@ -18,6 +18,7 @@ import {
   StartDateOutline,
   StateOutline,
   UserOutline,
+  WorkItemsOutline,
 } from "@makeplane/propel/icons";
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
@@ -31,6 +32,7 @@ import type {
   IIssueLabel,
   IModule,
   IProject,
+  TIssueType,
   TWorkItemFilterProperty,
 } from "@plane/types";
 
@@ -51,6 +53,7 @@ import {
   getSubscriberFilterConfig,
   getTargetDateFilterConfig,
   getUpdatedAtFilterConfig,
+  getWorkItemTypeFilterConfig,
   isLoaderReady,
 } from "@plane/utils";
 // store hooks
@@ -59,6 +62,7 @@ import { useLabel } from "@/hooks/store/use-label";
 import { useMember } from "@/hooks/store/use-member";
 import { useModule } from "@/hooks/store/use-module";
 import { useProject } from "@/hooks/store/use-project";
+import { useIssueTypes } from "@/hooks/store/use-issue-types";
 import { useProjectState } from "@/hooks/store/use-project-state";
 // plane web imports
 import { useFiltersOperatorConfigs } from "@/hooks/rich-filters/use-filters-operator-configs";
@@ -98,6 +102,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
   const { getModuleById } = useModule();
   const { getStateById } = useProjectState();
   const { getUserDetails } = useMember();
+  const { getProjectTypes } = useIssueTypes();
   // derived values
   const operatorConfigs = useFiltersOperatorConfigs({ workspaceSlug });
   const filtersToShow = useMemo(() => new Set(allowedFilters), [allowedFilters]);
@@ -137,6 +142,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
         : [],
     [projectIds, getProjectById]
   );
+  const workItemTypes: TIssueType[] = useMemo(() => getProjectTypes(projectId), [projectId, getProjectTypes]);
   const areAllConfigsInitialized = useMemo(() => isLoaderReady(projectLoader), [projectLoader]);
 
   /**
@@ -362,6 +368,20 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     [isFilterEnabled, projects, operatorConfigs]
   );
 
+  // work item type filter config
+  const workItemTypeFilterConfig = useMemo(
+    () =>
+      getWorkItemTypeFilterConfig<TWorkItemFilterProperty>("type_id")({
+        isEnabled: isFilterEnabled("type_id") && project?.is_issue_type_enabled === true,
+        filterIcon: WorkItemsOutline,
+        workItemTypes,
+        getOptionIcon: (workItemType) =>
+          workItemType.logo_props ? <Logo logo={workItemType.logo_props} size={12} /> : undefined,
+        ...operatorConfigs,
+      }),
+    [isFilterEnabled, project?.is_issue_type_enabled, workItemTypes, operatorConfigs]
+  );
+
   return {
     areAllConfigsInitialized,
     configs: [
@@ -380,6 +400,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       updatedAtFilterConfig,
       createdByFilterConfig,
       subscriberFilterConfig,
+      workItemTypeFilterConfig,
     ],
     configMap: {
       project_id: projectFilterConfig,
@@ -397,6 +418,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       target_date: targetDateFilterConfig,
       created_at: createdAtFilterConfig,
       updated_at: updatedAtFilterConfig,
+      type_id: workItemTypeFilterConfig,
     },
     isFilterEnabled,
     members: members ?? [],

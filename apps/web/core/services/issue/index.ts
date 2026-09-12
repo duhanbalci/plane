@@ -12,5 +12,8 @@ export * from "./issue_attachment.service";
 export * from "./issue_activity.service";
 export * from "./issue_comment.service";
 export * from "./issue_relation.service";
+export * from "./issue-type.service";
+export * from "./issue-property.service";
+export * from "./issue-property-value.service";
 export * from "./work_item_version.service";
 export * from "./workspace_draft.service";

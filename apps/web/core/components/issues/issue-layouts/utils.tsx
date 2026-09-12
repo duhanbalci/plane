@@ -153,10 +153,35 @@ export const getGroupByColumns = ({
     assignees: getAssigneeColumns,
     created_by: getCreatedByColumns,
     team_project: getTeamProjectColumns,
+    type_id: getWorkItemTypeColumns,
   };
 
   // Get and return the columns for the specified group by option
   return groupByColumnMap[groupBy]?.({ isWorkspaceLevel, projectId });
+};
+
+const getWorkItemTypeColumns = ({ projectId }: TGetColumns): IGroupByColumn[] | undefined => {
+  const targetProjectId = projectId ?? store.projectRoot.project.currentProjectDetails?.id;
+  if (!targetProjectId) return;
+  const issueTypes = store.issueTypes.getProjectTypes(targetProjectId);
+  if (issueTypes.length === 0) return;
+  const columns: IGroupByColumn[] = issueTypes.map((issueType) => ({
+    id: issueType.id,
+    name: issueType.name,
+    icon: (
+      <div className="grid h-6 w-6 flex-shrink-0 place-items-center">
+        {issueType.logo_props ? <Logo logo={issueType.logo_props} /> : null}
+      </div>
+    ),
+    payload: { type_id: issueType.id },
+  }));
+  columns.push({
+    id: "None",
+    name: "None",
+    icon: undefined,
+    payload: {},
+  });
+  return columns;
 };
 
 const getProjectColumns = (): IGroupByColumn[] | undefined => {

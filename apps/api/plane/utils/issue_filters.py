@@ -159,6 +159,21 @@ def filter_labels(params, issue_filter, method, prefix=""):
     return issue_filter
 
 
+def filter_issue_type(params, issue_filter, method, prefix=""):
+    """Work item type filter. `type` already means state type, so the key is `issue_type`."""
+    if method == "GET":
+        issue_types = [item for item in params.get("issue_type").split(",") if item != "null"]
+        if "None" in issue_types:
+            issue_filter[f"{prefix}type__isnull"] = True
+        issue_types = filter_valid_uuids(issue_types)
+        if len(issue_types) and "" not in issue_types:
+            issue_filter[f"{prefix}type__in"] = issue_types
+    else:
+        if params.get("issue_type", None) and len(params.get("issue_type")) and params.get("issue_type") != "null":
+            issue_filter[f"{prefix}type__in"] = params.get("issue_type")
+    return issue_filter
+
+
 def filter_assignees(params, issue_filter, method, prefix=""):
     if method == "GET":
         assignees = [item for item in params.get("assignees").split(",") if item != "null"]
@@ -435,6 +450,7 @@ def issue_filters(query_params, method, prefix=""):
         "priority": filter_priority,
         "parent": filter_parent,
         "labels": filter_labels,
+        "issue_type": filter_issue_type,
         "assignees": filter_assignees,
         "mentions": filter_mentions,
         "created_by": filter_created_by,

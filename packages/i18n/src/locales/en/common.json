@@ -867,5 +867,7 @@
       "description": "Export work items to a JSON file.",
       "short_description": "Export as json"
     }
-  }
+  },
+  "work_item_types_feature": "Work item types",
+  "work_item_types_feature_description": "Shape work items to your work with types and custom properties."
 }

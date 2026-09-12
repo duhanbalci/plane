@@ -4,5 +4,14 @@
  * See the LICENSE file for details.
  */
 
-export type TIssuePropertyValues = Record<string, unknown>;
-export type TIssuePropertyValueErrors = Record<string, unknown>;
+/**
+ * Custom property values of a work item, keyed by property id.
+ * Every value is stored as a list of strings, single valued properties keep a single item.
+ */
+export type TIssuePropertyValues = Record<string, string[]>;
+
+/**
+ * Validation errors of custom property values, keyed by property id.
+ * The value is an i18n key or a ready to render message.
+ */
+export type TIssuePropertyValueErrors = Record<string, string>;

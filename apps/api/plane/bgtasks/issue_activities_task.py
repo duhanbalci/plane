@@ -31,6 +31,9 @@ from plane.db.models import (
     State,
     User,
     EstimatePoint,
+    IssueType,
+    IssueProperty,
+    IssuePropertyOption,
 )
 from plane.settings.redis import redis_instance
 from plane.utils.exception_logger import log_exception
@@ -475,6 +478,38 @@ def track_estimate_points(
         )
 
 
+def track_issue_type(
+    requested_data,
+    current_instance,
+    issue_id,
+    project_id,
+    workspace_id,
+    actor_id,
+    issue_activities,
+    epoch,
+):
+    key = "type_id" if "type_id" in requested_data else "type"
+    if current_instance.get(key) != requested_data.get(key):
+        old_type = IssueType.objects.filter(pk=current_instance.get(key)).first() if current_instance.get(key) else None
+        new_type = IssueType.objects.filter(pk=requested_data.get(key)).first() if requested_data.get(key) else None
+        issue_activities.append(
+            IssueActivity(
+                issue_id=issue_id,
+                actor_id=actor_id,
+                verb="removed" if new_type is None else "updated",
+                old_identifier=current_instance.get(key) if current_instance.get(key) else None,
+                new_identifier=requested_data.get(key) if requested_data.get(key) else None,
+                old_value=old_type.name if old_type else None,
+                new_value=new_type.name if new_type else None,
+                field="type",
+                project_id=project_id,
+                workspace_id=workspace_id,
+                comment="updated the work item type to ",
+                epoch=epoch,
+            )
+        )
+
+
 def track_archive_at(
     requested_data,
     current_instance,
@@ -612,6 +647,8 @@ def update_issue_activity(
         "label_ids": track_labels,
         "assignee_ids": track_assignees,
         "estimate_point": track_estimate_points,
+        "type_id": track_issue_type,
+        "type": track_issue_type,
         "archived_at": track_archive_at,
         "closed_to": track_closed_to,
         # External endpoint keys
@@ -1499,6 +1536,87 @@ def create_intake_activity(
         )
 
 
+def humanize_property_values(issue_property, values, option_names, user_names):
+    """Turn raw property values into a comma separated, readable string."""
+    readable = []
+    for value in values or []:
+        key = str(value)
+        if issue_property.property_type == IssueProperty.PropertyType.OPTION:
+            readable.append(option_names.get(key, key))
+        elif issue_property.property_type == IssueProperty.PropertyType.RELATION:
+            readable.append(user_names.get(key, key))
+        else:
+            readable.append(key)
+    return ", ".join(readable) if readable else None
+
+
+def update_issue_property_activity(
+    requested_data,
+    current_instance,
+    issue_id,
+    project_id,
+    workspace_id,
+    actor_id,
+    issue_activities,
+    epoch,
+):
+    """One activity row per changed custom property."""
+    requested_data = json.loads(requested_data) if requested_data is not None else {}
+    current_instance = json.loads(current_instance) if current_instance is not None else {}
+
+    requested_values = requested_data.get("property_values", {}) or {}
+    current_values = current_instance.get("property_values", {}) or {}
+    if not requested_values:
+        return
+
+    properties = {
+        str(issue_property.id): issue_property
+        for issue_property in IssueProperty.objects.filter(pk__in=list(requested_values.keys()))
+    }
+
+    # Resolve option and user ids referenced by either side in one pass
+    referenced = set()
+    for values in list(requested_values.values()) + list(current_values.values()):
+        referenced.update(str(value) for value in (values or []))
+
+    option_names = {
+        str(option_id): name
+        for option_id, name in IssuePropertyOption.objects.filter(
+            pk__in=[value for value in referenced if is_valid_uuid(value)]
+        ).values_list("id", "name")
+    }
+    user_names = {
+        str(user_id): display_name
+        for user_id, display_name in User.objects.filter(
+            pk__in=[value for value in referenced if is_valid_uuid(value)]
+        ).values_list("id", "display_name")
+    }
+
+    for property_id, values in requested_values.items():
+        issue_property = properties.get(str(property_id))
+        if issue_property is None:
+            continue
+        old_values = current_values.get(str(property_id), []) or []
+        if sorted(str(v) for v in (values or [])) == sorted(str(v) for v in old_values):
+            continue
+        old_value = humanize_property_values(issue_property, old_values, option_names, user_names)
+        new_value = humanize_property_values(issue_property, values, option_names, user_names)
+        issue_activities.append(
+            IssueActivity(
+                issue_id=issue_id,
+                actor_id=actor_id,
+                verb="removed" if new_value is None else "updated",
+                old_value=old_value,
+                new_value=new_value,
+                field=issue_property.display_name,
+                project_id=project_id,
+                workspace_id=workspace_id,
+                comment=f"updated the {issue_property.display_name} to ",
+                epoch=epoch,
+            )
+        )
+
+
 # Receive message from room group
 @shared_task
 def issue_activity(
@@ -1565,6 +1683,7 @@ def issue_activity(
             "issue_draft.activity.updated": update_draft_issue_activity,
             "issue_draft.activity.deleted": delete_draft_issue_activity,
             "intake.activity.created": create_intake_activity,
+            "issue_property.activity.updated": update_issue_property_activity,
         }
 
         func = ACTIVITY_MAPPER.get(type)
