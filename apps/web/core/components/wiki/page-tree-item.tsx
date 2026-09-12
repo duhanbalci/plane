@@ -21,9 +21,9 @@ import { DropIndicator } from "@plane/ui";
 import { cn, getPageName } from "@plane/utils";
 // components
 import { PageActions } from "@/components/pages/dropdowns";
-import { CreatePageModal } from "@/components/pages/modals/create-page-modal";
 // hooks
 import { EPageStoreType, usePage, usePageStore } from "@/hooks/store";
+import { useCreateWikiPage } from "@/hooks/use-create-wiki-page";
 
 const INDENT_PER_LEVEL = 12;
 // shared with the collection drop targets so pages can move between collections
@@ -48,10 +48,10 @@ export const WikiPageTreeItem = observer(function WikiPageTreeItem(props: Props)
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [instruction, setInstruction] = useState<InstructionType | undefined>(undefined);
-  const [isCreateSubPageModalOpen, setIsCreateSubPageModalOpen] = useState(false);
   // hooks
   const { t } = useTranslation();
   const { workspaceSlug, pageId: activePageId } = useParams();
+  const { create: createWikiPage } = useCreateWikiPage(workspaceSlug?.toString());
   const page = usePage({ pageId, storeType });
   const { getChildPageIds, movePageInTree, canCurrentUserCreatePage } = usePageStore(storeType);
   // derived values
@@ -112,17 +112,6 @@ export const WikiPageTreeItem = observer(function WikiPageTreeItem(props: Props)
 
   return (
     <>
-      {workspaceSlug && (
-        <CreatePageModal
-          workspaceSlug={workspaceSlug.toString()}
-          isModalOpen={isCreateSubPageModalOpen}
-          handleModalClose={() => setIsCreateSubPageModalOpen(false)}
-          parentId={pageId}
-          collectionId={page.collection ?? undefined}
-          redirectionEnabled
-          storeType={storeType}
-        />
-      )}
       <div ref={dragRef} className={cn("relative", { "opacity-60": isDragging })}>
         <DropIndicator isVisible={instruction === "reorder-above"} />
         <div
@@ -159,7 +148,7 @@ export const WikiPageTreeItem = observer(function WikiPageTreeItem(props: Props)
                 type="button"
                 className="grid size-5 place-items-center rounded-sm text-tertiary hover:bg-layer-2 hover:text-primary"
                 aria-label={t("nested_pages.add_sub_page")}
-                onClick={() => setIsCreateSubPageModalOpen(true)}
+                onClick={() => createWikiPage({ parentId: pageId, collectionId: page?.collection ?? undefined })}
               >
                 <Plus className="size-3.5" />
               </button>
@@ -173,6 +162,7 @@ export const WikiPageTreeItem = observer(function WikiPageTreeItem(props: Props)
                 "toggle-access",
                 "archive-restore",
                 "delete",
+                "move-to-project",
               ]}
               page={page}
               storeType={storeType}

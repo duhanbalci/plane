@@ -16,9 +16,9 @@ import type { TPageNavigationTabs } from "@plane/types";
 import { CustomMenu } from "@plane/ui";
 import { cn } from "@plane/utils";
 // components
-import { CreatePageModal } from "@/components/pages/modals/create-page-modal";
 // hooks
 import { EPageStoreType, usePageStore } from "@/hooks/store";
+import { useCreateWikiPage } from "@/hooks/use-create-wiki-page";
 // local imports
 import { CollectionFormModal } from "./collection-form-modal";
 import { DeleteCollectionModal } from "./delete-collection-modal";
@@ -38,7 +38,6 @@ export const WikiCollectionItem = observer(function WikiCollectionItem(props: Pr
   // states
   const [isExpanded, setIsExpanded] = useState(true);
   const [isDropTarget, setIsDropTarget] = useState(false);
-  const [isCreatePageModalOpen, setIsCreatePageModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   // store hooks
@@ -51,6 +50,7 @@ export const WikiCollectionItem = observer(function WikiCollectionItem(props: Pr
     canCurrentUserCreatePage,
   } = usePageStore(EPageStoreType.WORKSPACE);
   const { t } = useTranslation();
+  const { create: createWikiPage } = useCreateWikiPage(workspaceSlug);
   // derived values
   const collection = getCollectionById(collectionId);
   const rootPageIds = getCollectionRootPageIds(collectionId, pageType);
@@ -86,14 +86,6 @@ export const WikiCollectionItem = observer(function WikiCollectionItem(props: Pr
 
   return (
     <>
-      <CreatePageModal
-        workspaceSlug={workspaceSlug}
-        isModalOpen={isCreatePageModalOpen}
-        handleModalClose={() => setIsCreatePageModalOpen(false)}
-        collectionId={collectionId}
-        redirectionEnabled
-        storeType={EPageStoreType.WORKSPACE}
-      />
       <CollectionFormModal
         isOpen={isRenameModalOpen}
         onClose={() => setIsRenameModalOpen(false)}
@@ -128,13 +120,13 @@ export const WikiCollectionItem = observer(function WikiCollectionItem(props: Pr
                 type="button"
                 className="grid size-5 place-items-center rounded-sm text-tertiary hover:bg-layer-2 hover:text-primary"
                 aria-label={t("wiki_collections.header.add_page")}
-                onClick={() => setIsCreatePageModalOpen(true)}
+                onClick={() => createWikiPage({ collectionId })}
               >
                 <Plus className="size-3.5" />
               </button>
             )}
             <CustomMenu placement="bottom-end" ellipsis closeOnSelect>
-              <CustomMenu.MenuItem onClick={() => setIsCreatePageModalOpen(true)}>
+              <CustomMenu.MenuItem onClick={() => createWikiPage({ collectionId })}>
                 {t("wiki_collections.menu.create_new_page")}
               </CustomMenu.MenuItem>
               <CustomMenu.MenuItem onClick={() => setIsRenameModalOpen(true)}>

@@ -12,7 +12,6 @@ import { ChevronDown, ChevronRight, Plus, Search, X } from "lucide-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { Logo } from "@plane/propel/emoji-icon-picker";
-import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import { HomeOutline, PagesOutline } from "@makeplane/propel/icons";
 import { cn, getPageName } from "@plane/utils";
 // components
@@ -21,7 +20,7 @@ import { SidebarWrapper } from "@/components/sidebar/sidebar-wrapper";
 // hooks
 import { EPageStoreType, usePageStore } from "@/hooks/store";
 import { useUser } from "@/hooks/store/user";
-import { useAppRouter } from "@/hooks/use-app-router";
+import { useCreateWikiPage } from "@/hooks/use-create-wiki-page";
 // local imports
 import { CollectionFormModal } from "./collection-form-modal";
 import { WikiCollectionItem } from "./collection-item";
@@ -63,24 +62,21 @@ export const WikiSidebar = observer(function WikiSidebar() {
   // router
   const { workspaceSlug } = useParams();
   const pathname = usePathname();
-  const router = useAppRouter();
   // states
   const [isCreateCollectionModalOpen, setIsCreateCollectionModalOpen] = useState(false);
-  const [isCreatingPage, setIsCreatingPage] = useState(false);
   // store hooks
   const {
     collectionIds,
-    defaultCollectionId,
     filters,
     updateFilters,
     canCurrentUserCreatePage,
-    createPage,
     getRootPageIds,
     getFilteredPageIdsByTab,
     getPageById,
   } = usePageStore(storeType);
   const { data: currentUser } = useUser();
   const { t } = useTranslation();
+  const { create: createWikiPage } = useCreateWikiPage(workspaceSlug?.toString());
   // derived values
   const slug = workspaceSlug?.toString() ?? "";
   const wikiHomeHref = `/${slug}/wiki`;
@@ -89,21 +85,6 @@ export const WikiSidebar = observer(function WikiSidebar() {
   );
   const archivedPageIds = getFilteredPageIdsByTab("archived") ?? [];
 
-  const handleCreatePage = async () => {
-    if (isCreatingPage) return;
-    setIsCreatingPage(true);
-    try {
-      const page = await createPage({ collection: defaultCollectionId });
-      if (page?.id) router.push(`/${slug}/wiki/${page.id}`);
-    } catch {
-      setToast({
-        type: TOAST_TYPE.ERROR,
-        title: "Error!",
-        message: t("wiki_collections.toasts.create_page_error"),
-      });
-    }
-    setIsCreatingPage(false);
-  };
 
   return (
     <>
@@ -115,7 +96,7 @@ export const WikiSidebar = observer(function WikiSidebar() {
               <button
                 type="button"
                 className="flex items-center gap-1.5 rounded-md bg-layer-1 px-2 py-1.5 text-13 font-medium text-secondary hover:bg-layer-2 hover:text-primary"
-                onClick={handleCreatePage}
+                onClick={() => createWikiPage()}
               >
                 <Plus className="size-4" />
                 {t("wiki.sidebar.new_page")}
