@@ -36,6 +36,7 @@ import {
   IssueDescriptionEditor,
   IssueParentTag,
   IssueProjectSelect,
+  IssueTemplateDropdown,
   IssueTitleInput,
 } from "@/components/issues/issue-modal/components";
 import { IssueTypeDropdown } from "@/components/dropdowns/issue-type";
@@ -232,10 +233,12 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
 
   useEffect(() => {
     if (workItemTemplateId && editorRef.current) {
-      handleTemplateChange({
+      void handleTemplateChange({
         workspaceSlug: workspaceSlug?.toString(),
         reset,
         editorRef,
+        getValues,
+        projectId,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,10 +282,12 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
       .then(() => {
         setGptAssistantModal(false);
         if (isCreateMoreToggleEnabled && workItemTemplateId) {
-          handleTemplateChange({
+          void handleTemplateChange({
             workspaceSlug: workspaceSlug?.toString(),
             reset,
             editorRef,
+            getValues,
+            projectId,
           });
         } else {
           reset({
@@ -426,6 +431,13 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                       placeholder={isEpic ? t("common.epic") : t("work_item_types.label")}
                       dropdownArrow
                       isEpic={isEpic}
+                    />
+                  )}
+                  {!data?.id && !isEpic && (
+                    <IssueTemplateDropdown
+                      workspaceSlug={workspaceSlug?.toString()}
+                      projectId={projectId}
+                      disabled={isDisabled}
                     />
                   )}
                 </div>

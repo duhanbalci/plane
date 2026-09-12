@@ -93,6 +93,12 @@
           "button": {
             "create": "Create work-item template",
             "update": "Update work-item template"
+          },
+          "sub_work_items": {
+            "title": "Sub work items",
+            "add": "Add sub work item",
+            "remove": "Remove",
+            "name_placeholder": "Sub work item title"
           }
         },
         "page": {
@@ -222,7 +228,13 @@
             }
           }
         }
-      }
+      },
+      "list": {
+        "name": "Name",
+        "source": "Source",
+        "updated": "Updated"
+      },
+      "workspace_scope_note": "Workspace templates have no project context, so only the title, description, priority and sub work items are saved."
     },
     "empty_state": {
       "upgrade": {
@@ -296,6 +308,9 @@
           "title": "We couldn't unpublish that template this.",
           "message": "Try unpublishing it again or come back to it later. If you can't unpublish it then, reach out to us."
         }
+      },
+      "sub_work_items": {
+        "created": "{count} sub work items created from the template."
       }
     },
     "delete_confirmation": {
@@ -327,7 +342,8 @@
       "no_results": {
         "work_item": "No templates found.",
         "project": "No templates found."
-      }
+      },
+      "clear": "No template"
     }
   }
 }

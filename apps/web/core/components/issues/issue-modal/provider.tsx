@@ -14,15 +14,22 @@ import type { ISearchIssueResponse, TIssue, TIssuePropertyValueErrors, TIssuePro
 import { IssueModalContext } from "@/components/issues/issue-modal/context";
 import type {
   TActiveAdditionalPropertiesProps,
+  TCreateSubWorkItemProps,
   TCreateUpdatePropertyValuesProps,
   THandleProjectEntitiesFetchProps,
+  THandleTemplateChangeProps,
   TPropertyValuesValidationProps,
 } from "@/components/issues/issue-modal/context";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssueTypes } from "@/hooks/store/use-issue-types";
 import { useProject } from "@/hooks/store/use-project";
+import { useWorkItemTemplates } from "@/hooks/store/use-work-item-templates";
 import { useUser } from "@/hooks/store/user/user-user";
+// services
+import { IssueService } from "@/services/issue";
+
+const issueService = new IssueService();
 
 export type TIssueModalProviderProps = {
   templateId?: string;
@@ -34,6 +41,8 @@ export type TIssueModalProviderProps = {
 export const IssueModalProvider = observer(function IssueModalProvider(props: TIssueModalProviderProps) {
   const { children, allowedProjectIds } = props;
   // states
+  const [workItemTemplateId, setWorkItemTemplateId] = useState<string | null>(props.templateId ?? null);
+  const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
   const [selectedParentIssue, setSelectedParentIssue] = useState<ISearchIssueResponse | null>(null);
   const [issuePropertyValues, setIssuePropertyValues] = useState<TIssuePropertyValues>({});
   const [issuePropertyValueErrors, setIssuePropertyValueErrors] = useState<TIssuePropertyValueErrors>({});
@@ -45,6 +54,7 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
   const { getActiveProperties, getDefaultTypeId, fetchProjectTypes, fetchProperties, isTypesFetchedForProject } =
     useIssueTypes();
   const { updatePropertyValues } = useIssueDetail();
+  const { getTemplateById } = useWorkItemTemplates();
   // derived values
   const projectIdsWithCreatePermissions = Object.keys(projectsWithCreatePermissions ?? {});
 
@@ -136,15 +146,112 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
     [areIssueTypesEnabled, fetchProjectTypes, fetchProperties, isTypesFetchedForProject]
   );
 
+  /** Apply a template to the open form; values the template does not carry are kept. */
+  const handleTemplateChange = useCallback(
+    async (templateProps: THandleTemplateChangeProps) => {
+      const { workspaceSlug, reset, editorRef, getValues, projectId } = templateProps;
+      const template = getTemplateById(workItemTemplateId);
+      if (!template) return;
+
+      setIsApplyingTemplate(true);
+      try {
+        const templateData = template.template_data;
+        const currentValues = getValues?.() ?? ({} as TIssue);
+        const targetProjectId = projectId ?? currentValues.project_id ?? null;
+
+        // the property definitions of the templated type have to be loaded before the values are set
+        if (targetProjectId) {
+          await handleProjectEntitiesFetch({
+            workItemProjectId: targetProjectId,
+            workItemTypeId: templateData.type_id ?? undefined,
+            workspaceSlug,
+          });
+        }
+
+        const descriptionHTML = templateData.description_html || currentValues.description_html || "<p></p>";
+        reset({
+          ...currentValues,
+          ...(templateData.name ? { name: templateData.name } : {}),
+          description_html: descriptionHTML,
+          ...(templateData.type_id ? { type_id: templateData.type_id } : {}),
+          ...(templateData.state_id ? { state_id: templateData.state_id } : {}),
+          ...(templateData.priority && templateData.priority !== "none" ? { priority: templateData.priority } : {}),
+          ...(templateData.label_ids?.length ? { label_ids: templateData.label_ids } : {}),
+          ...(templateData.assignee_ids?.length ? { assignee_ids: templateData.assignee_ids } : {}),
+          ...(templateData.module_ids?.length ? { module_ids: templateData.module_ids } : {}),
+        } as TIssue);
+        editorRef.current?.setEditorValue(descriptionHTML, true);
+
+        // only the properties that belong to the templated type survive
+        const activePropertyIds = new Set(getActiveProperties(templateData.type_id).map((property) => property.id));
+        const propertyValues: TIssuePropertyValues = {};
+        for (const [propertyId, values] of Object.entries(templateData.properties ?? {})) {
+          if (activePropertyIds.has(propertyId)) propertyValues[propertyId] = values;
+        }
+        setIssuePropertyValues(propertyValues);
+        setIssuePropertyValueErrors({});
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsApplyingTemplate(false);
+      }
+    },
+    [getActiveProperties, getTemplateById, handleProjectEntitiesFetch, workItemTemplateId]
+  );
+
+  /** Create the template's sub work items under the freshly created work item. */
+  const handleCreateSubWorkItem = useCallback(
+    async (subWorkItemProps: TCreateSubWorkItemProps) => {
+      const { workspaceSlug, projectId, parentId } = subWorkItemProps;
+      const template = getTemplateById(workItemTemplateId);
+      const subWorkItems = template?.template_data?.sub_work_items ?? [];
+      if (subWorkItems.length === 0) return;
+
+      let created = 0;
+      for (const subWorkItem of subWorkItems) {
+        try {
+          // sequential on purpose: the sub work items keep the order of the template
+          // oxlint-disable-next-line no-await-in-loop
+          const response = await issueService.createIssue(workspaceSlug, projectId, {
+            name: subWorkItem.name,
+            parent_id: parentId,
+            type_id: subWorkItem.type_id ?? undefined,
+            priority: subWorkItem.priority,
+            label_ids: subWorkItem.label_ids,
+            assignee_ids: subWorkItem.assignee_ids,
+          } as Partial<TIssue>);
+          created += 1;
+
+          const properties = subWorkItem.properties ?? {};
+          if (response?.id && Object.keys(properties).length > 0) {
+            // oxlint-disable-next-line no-await-in-loop
+            await updatePropertyValues(workspaceSlug, projectId, response.id, properties);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      if (created > 0) {
+        setToast({
+          type: TOAST_TYPE.SUCCESS,
+          title: t("success"),
+          message: t("templates.toasts.sub_work_items.created", { count: created }),
+        });
+      }
+    },
+    [getTemplateById, t, updatePropertyValues, workItemTemplateId]
+  );
+
   return (
     <IssueModalContext.Provider
       // oxlint-disable-next-line react/jsx-no-constructed-context-values
       value={{
         allowedProjectIds: allowedProjectIds ?? projectIdsWithCreatePermissions,
-        workItemTemplateId: null,
-        setWorkItemTemplateId: () => {},
-        isApplyingTemplate: false,
-        setIsApplyingTemplate: () => {},
+        workItemTemplateId,
+        setWorkItemTemplateId,
+        isApplyingTemplate,
+        setIsApplyingTemplate,
         selectedParentIssue,
         setSelectedParentIssue,
         issuePropertyValues,
@@ -156,9 +263,9 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
         handlePropertyValuesValidation,
         handleCreateUpdatePropertyValues,
         handleProjectEntitiesFetch,
-        handleTemplateChange: () => Promise.resolve(),
+        handleTemplateChange,
         handleConvert: () => Promise.resolve(),
-        handleCreateSubWorkItem: () => Promise.resolve(),
+        handleCreateSubWorkItem,
       }}
     >
       {children}

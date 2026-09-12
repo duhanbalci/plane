@@ -128,6 +128,8 @@ from .issue_type import (
     IssuePropertyValueSerializer,
 )
 
+from .template import TemplateSerializer
+
 from .analytic import AnalyticViewSerializer
 
 from .notification import NotificationSerializer, UserNotificationPreferenceSerializer

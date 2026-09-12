@@ -206,6 +206,11 @@ from .issue_type import (
     IssuePropertyValueEndpoint,
 )
 
+from .template import (
+    ProjectTemplateViewSet,
+    WorkspaceTemplateViewSet,
+)
+
 from .estimate.base import (
     ProjectEstimatePointEndpoint,
     BulkEstimatePointEndpoint,

@@ -14,6 +14,7 @@ import {
   ModuleOutline,
   PagesOutline,
   StateOutline,
+  TemplatesOutline,
   TriggerOutline,
   ViewsOutline,
   WorkItemsOutline,
@@ -36,5 +37,6 @@ export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, LucideIcon | R
   labels: LabelsOutline,
   estimates: EstimateOutline,
   work_item_types: WorkItemsOutline,
+  templates: TemplatesOutline,
   automations: TriggerOutline,
 };

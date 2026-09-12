@@ -87,6 +87,8 @@ from .issue_type import (
     IssuePropertyValue,
 )
 
+from .template import Template
+
 from .recent_visit import UserRecentVisit
 
 from .label import Label

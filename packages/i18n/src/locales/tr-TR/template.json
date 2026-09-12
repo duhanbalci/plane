@@ -93,6 +93,12 @@
           "button": {
             "create": "İş-öğesi şablonu oluştur",
             "update": "İş-öğesi şablonunu güncelle"
+          },
+          "sub_work_items": {
+            "title": "Alt iş öğeleri",
+            "add": "Alt iş öğesi ekle",
+            "remove": "Kaldır",
+            "name_placeholder": "Alt iş öğesi başlığı"
           }
         },
         "page": {
@@ -222,7 +228,13 @@
             }
           }
         }
-      }
+      },
+      "list": {
+        "name": "Ad",
+        "source": "Kaynak",
+        "updated": "Güncellendi"
+      },
+      "workspace_scope_note": "Workspace şablonlarında proje bağlamı yoktur; yalnızca başlık, açıklama, öncelik ve alt iş öğeleri kaydedilir."
     },
     "empty_state": {
       "upgrade": {
@@ -296,6 +308,9 @@
           "title": "Şablonu yayından kaldıramadık.",
           "message": "Tekrar yayından kaldırmayı deneyin veya daha sonra tekrar gelin. O zaman kaldıramazsanız bizimle iletişime geçin."
         }
+      },
+      "sub_work_items": {
+        "created": "Şablondan {count} alt iş öğesi oluşturuldu."
       }
     },
     "delete_confirmation": {
@@ -327,7 +342,8 @@
       "no_results": {
         "work_item": "Şablon bulunamadı.",
         "project": "Şablon bulunamadı."
-      }
+      },
+      "clear": "Şablon yok"
     }
   }
 }

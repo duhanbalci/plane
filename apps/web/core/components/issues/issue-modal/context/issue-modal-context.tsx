@@ -6,7 +6,7 @@
 
 import { createContext } from "react";
 // ce imports
-import type { UseFormReset, UseFormWatch } from "react-hook-form";
+import type { UseFormGetValues, UseFormReset, UseFormWatch } from "react-hook-form";
 // plane imports
 import type { EditorRefApi } from "@plane/editor";
 import type { ISearchIssueResponse, TIssue, TIssuePropertyValues, TIssuePropertyValueErrors } from "@plane/types";
@@ -41,6 +41,9 @@ export type THandleTemplateChangeProps = {
   workspaceSlug: string;
   reset: UseFormReset<TIssue>;
   editorRef: React.MutableRefObject<EditorRefApi | null>;
+  // current form values, so template fields overwrite only what they carry
+  getValues?: UseFormGetValues<TIssue>;
+  projectId?: string | null;
 };
 
 export type THandleProjectEntitiesFetchProps = {
