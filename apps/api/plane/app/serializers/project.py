@@ -85,6 +85,15 @@ class ProjectSerializer(BaseSerializer):
             if not is_valid:
                 raise serializers.ValidationError({"error": "html content is not valid"})
 
+        # Epic'ler is kalemi tiplerine dayanir; tipler kapaliyken acilamaz.
+        if data.get("is_epic_enabled"):
+            is_issue_type_enabled = data.get(
+                "is_issue_type_enabled",
+                self.instance.is_issue_type_enabled if self.instance else False,
+            )
+            if not is_issue_type_enabled:
+                raise serializers.ValidationError({"error": "WORK_ITEM_TYPES_REQUIRED_FOR_EPICS"})
+
         return data
 
     def create(self, validated_data):

@@ -49,6 +49,7 @@ RESTRICTED_WORKSPACE_SLUGS = [
     "config",
     "workflow",
     "workflows",
+    "wiki",
     "epics",
     "epic",
     "story",

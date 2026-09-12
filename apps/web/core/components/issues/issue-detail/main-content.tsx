@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import type { EditorRefApi } from "@plane/editor";
-import type { TNameDescriptionLoader } from "@plane/types";
+import type { TIssueServiceType, TNameDescriptionLoader } from "@plane/types";
 import { EFileAssetType, EIssueServiceType } from "@plane/types";
 // components
 import { DescriptionVersionsRoot } from "@/components/core/description-versions";
@@ -42,10 +42,19 @@ type Props = {
   issueOperations: TIssueOperations;
   isEditable: boolean;
   isArchived: boolean;
+  issueServiceType?: TIssueServiceType;
 };
 
 export const IssueMainContent = observer(function IssueMainContent(props: Props) {
-  const { workspaceSlug, projectId, issueId, issueOperations, isEditable, isArchived } = props;
+  const {
+    workspaceSlug,
+    projectId,
+    issueId,
+    issueOperations,
+    isEditable,
+    isArchived,
+    issueServiceType = EIssueServiceType.ISSUES,
+  } = props;
   // refs
   const editorRef = useRef<EditorRefApi>(null);
   // states
@@ -57,7 +66,7 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
   const {
     issue: { getIssueById },
     peekIssue,
-  } = useIssueDetail();
+  } = useIssueDetail(issueServiceType);
   const { setShowAlert } = useReloadConfirmations(isSubmitting === "submitting");
   // derived values
   const issue = issueId ? getIssueById(issueId) : undefined;
@@ -167,7 +176,7 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
         issueId={issueId}
         disabled={!isEditable || isArchived}
         renderWidgetModals={!isPeekModeActive}
-        issueServiceType={EIssueServiceType.ISSUES}
+        issueServiceType={issueServiceType}
       />
 
       {windowSize[0] < 768 && (

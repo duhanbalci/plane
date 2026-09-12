@@ -93,7 +93,7 @@ class GlobalSearchEndpoint(BaseAPIView):
                 else:
                     q |= Q(**{f"{field}__icontains": query})
 
-        issues = Issue.issue_objects.filter(
+        issues = Issue.issue_objects.work_items().filter(
             q,
             project__project_projectmember__member=self.request.user,
             project__project_projectmember__is_active=True,
@@ -168,12 +168,22 @@ class GlobalSearchEndpoint(BaseAPIView):
             for field in fields:
                 q |= Q(**{f"{field}__icontains": query})
 
+        # Wiki pages have no ProjectPage row, so workspace membership is the
+        # alternative path into the result set.
+        visible = Q(
+            projects__project_projectmember__member=self.request.user,
+            projects__project_projectmember__is_active=True,
+            projects__archived_at__isnull=True,
+        ) | Q(
+            is_global=True,
+            workspace__workspace_member__member=self.request.user,
+            workspace__workspace_member__is_active=True,
+        )
+
         pages = (
             Page.objects.filter(
                 q,
-                projects__project_projectmember__member=self.request.user,
-                projects__project_projectmember__is_active=True,
-                projects__archived_at__isnull=True,
+                visible,
                 workspace__slug=slug,
             )
             .annotate(
@@ -204,7 +214,7 @@ class GlobalSearchEndpoint(BaseAPIView):
         return (
             pages.order_by("-created_at")
             .distinct()
-            .values("name", "id", "project_ids", "project_identifiers", "workspace__slug")
+            .values("name", "id", "project_ids", "project_identifiers", "workspace__slug", "is_global", "logo_props")
         )
 
     def filter_views(self, query, slug, project_id, workspace_search):
@@ -398,7 +408,8 @@ class SearchEndpoint(BaseAPIView):
                                 q |= Q(**{f"{field}__icontains": query})
 
                     issues = (
-                        Issue.issue_objects.filter(
+                        Issue.issue_objects.work_items()
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -603,7 +614,8 @@ class SearchEndpoint(BaseAPIView):
                                 q |= Q(**{f"{field}__icontains": query})
 
                     issues = (
-                        Issue.issue_objects.filter(
+                        Issue.issue_objects.work_items()
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -710,11 +722,17 @@ class SearchEndpoint(BaseAPIView):
                     pages = (
                         Page.objects.filter(
                             q,
-                            projects__project_projectmember__member=self.request.user,
-                            projects__project_projectmember__is_active=True,
+                            Q(
+                                projects__project_projectmember__member=self.request.user,
+                                projects__project_projectmember__is_active=True,
+                            )
+                            | Q(
+                                is_global=True,
+                                workspace__workspace_member__member=self.request.user,
+                                workspace__workspace_member__is_active=True,
+                            ),
                             workspace__slug=slug,
                             access=0,
-                            is_global=True,
                         )
                         .order_by("-created_at")
                         .distinct()

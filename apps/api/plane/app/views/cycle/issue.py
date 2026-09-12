@@ -110,7 +110,8 @@ class CycleIssueViewSet(BaseViewSet):
     def list(self, request, slug, project_id, cycle_id):
         filters = issue_filters(request.query_params, "GET")
         issue_queryset = (
-            Issue.issue_objects.filter(issue_cycle__cycle_id=cycle_id, issue_cycle__deleted_at__isnull=True)
+            Issue.issue_objects.work_items()
+            .filter(issue_cycle__cycle_id=cycle_id, issue_cycle__deleted_at__isnull=True)
             .filter(project_id=project_id)
             .filter(workspace__slug=slug)
         )

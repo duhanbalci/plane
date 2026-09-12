@@ -33,6 +33,8 @@ export interface IssuesModalProps {
   templateId?: string;
   allowedProjectIds?: string[];
   showActionItemsOnUpdate?: boolean;
+  // Epic modali; tip epic tiplerine kilitli, parent/cycle/module yok.
+  isEpic?: boolean;
 }
 
 export const CreateUpdateIssueModal = observer(function CreateUpdateIssueModal(props: IssuesModalProps) {

@@ -10,8 +10,8 @@ import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { TOAST_TYPE, setPromiseToast, setToast } from "@plane/propel/toast";
-import type { TIssue } from "@plane/types";
-import { EIssuesStoreType } from "@plane/types";
+import type { TIssue, TIssueServiceType } from "@plane/types";
+import { EIssueServiceType, EIssuesStoreType } from "@plane/types";
 // assets
 import emptyIssue from "@/app/assets/empty-state/issue.svg?url";
 // components
@@ -56,11 +56,19 @@ export type TIssueDetailRoot = {
   projectId: string;
   issueId: string;
   is_archived?: boolean;
+  // Epic detayinda `epics/` uclarina gitmek icin.
+  issueServiceType?: TIssueServiceType;
 };
 
 export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDetailRoot) {
   const { t } = useTranslation();
-  const { workspaceSlug, projectId, issueId, is_archived = false } = props;
+  const {
+    workspaceSlug,
+    projectId,
+    issueId,
+    is_archived = false,
+    issueServiceType = EIssueServiceType.ISSUES,
+  } = props;
   // router
   const router = useAppRouter();
   // hooks
@@ -75,7 +83,7 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
     removeIssueFromCycle,
     changeModulesInIssue,
     removeIssueFromModule,
-  } = useIssueDetail();
+  } = useIssueDetail(issueServiceType);
   const {
     issues: { removeIssue: removeArchivedIssue },
   } = useIssues(EIssuesStoreType.ARCHIVED);
@@ -247,6 +255,7 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
               issueOperations={issueOperations}
               isEditable={isEditable}
               isArchived={is_archived}
+              issueServiceType={issueServiceType}
             />
           </div>
           <div
@@ -259,6 +268,7 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
               issueId={issueId}
               issueOperations={issueOperations}
               isEditable={!is_archived && isEditable}
+              issueServiceType={issueServiceType}
             />
           </div>
         </div>

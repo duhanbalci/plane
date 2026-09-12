@@ -7,6 +7,8 @@
 import { observer } from "mobx-react";
 // i18n
 import { useTranslation } from "@plane/i18n";
+import type { TIssueServiceType } from "@plane/types";
+import { EIssueServiceType } from "@plane/types";
 // ui
 import {
   CyclesOutline,
@@ -50,17 +52,25 @@ type Props = {
   issueId: string;
   issueOperations: TIssueOperations;
   isEditable: boolean;
+  issueServiceType?: TIssueServiceType;
 };
 
 export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: Props) {
   const { t } = useTranslation();
-  const { workspaceSlug, projectId, issueId, issueOperations, isEditable } = props;
+  const {
+    workspaceSlug,
+    projectId,
+    issueId,
+    issueOperations,
+    isEditable,
+    issueServiceType = EIssueServiceType.ISSUES,
+  } = props;
   // store hooks
   const { getProjectById } = useProject();
   const { areEstimateEnabledByProjectId } = useProjectEstimates();
   const {
     issue: { getIssueById },
-  } = useIssueDetail();
+  } = useIssueDetail(issueServiceType);
   const { getUserDetails } = useMember();
   const { getStateById } = useProjectState();
   const issue = getIssueById(issueId);

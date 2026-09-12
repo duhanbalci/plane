@@ -90,6 +90,9 @@ class IssueCreateSerializer(BaseSerializer):
     parent_id = serializers.PrimaryKeyRelatedField(
         source="parent", queryset=Issue.objects.all(), required=False, allow_null=True
     )
+    type_id = serializers.PrimaryKeyRelatedField(
+        source="type", queryset=IssueType.objects.all(), required=False, allow_null=True
+    )
     label_ids = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=Label.objects.all()),
         write_only=True,
@@ -216,6 +219,12 @@ class IssueCreateSerializer(BaseSerializer):
                 )
                 if default_type_id:
                     attrs["type"] = IssueType.objects.get(pk=default_type_id)
+
+        # Ic ice epic yok: epic tipli bir is kaleminin parent'i olamaz.
+        issue_type = attrs.get("type") if "type" in attrs else (self.instance.type if self.instance else None)
+        parent = attrs.get("parent") if "parent" in attrs else (self.instance.parent if self.instance else None)
+        if parent is not None and issue_type is not None and issue_type.is_epic:
+            raise serializers.ValidationError("Epic cannot have a parent")
 
         return attrs
 
@@ -913,6 +922,8 @@ class IssueListDetailSerializer(serializers.Serializer):
                             "relation_type": relation.relation_type,
                             "state_id": related_issue.state_id,
                             "priority": related_issue.priority,
+                            "start_date": related_issue.start_date,
+                            "target_date": related_issue.target_date,
                             "created_by": related_issue.created_by_id,
                             "created_at": related_issue.created_at,
                             "updated_at": related_issue.updated_at,
@@ -938,6 +949,8 @@ class IssueListDetailSerializer(serializers.Serializer):
                             "relation_type": relation.relation_type,
                             "state_id": issue.state_id,
                             "priority": issue.priority,
+                            "start_date": issue.start_date,
+                            "target_date": issue.target_date,
                             "created_by": issue.created_by_id,
                             "created_at": issue.created_at,
                             "updated_at": issue.updated_at,

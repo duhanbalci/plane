@@ -49,12 +49,13 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     primaryButtonText,
     isProjectSelectionDisabled = false,
     showActionItemsOnUpdate = false,
+    isEpic = false,
   } = props;
   const issueStoreType = useIssueStoreType();
 
   let storeType = issueStoreFromProps ?? issueStoreType;
-  // Fallback to project store if epic store is used in issue modal.
-  if (storeType === EIssuesStoreType.EPIC) {
+  // Epic store'u yalnizca epic modalinda kullanilir; issue modali proje store'una duser.
+  if (storeType === EIssuesStoreType.EPIC && !isEpic) {
     storeType = EIssuesStoreType.PROJECT;
   }
   // ref
@@ -410,6 +411,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     isDuplicateModalOpen: isDuplicateModalOpen,
     handleDuplicateIssueModal: handleDuplicateIssueModal,
     isProjectSelectionDisabled: isProjectSelectionDisabled,
+    isEpic: isEpic,
   };
 
   return (

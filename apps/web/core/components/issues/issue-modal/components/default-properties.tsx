@@ -43,6 +43,8 @@ type TIssueDefaultPropertiesProps = {
   targetDate: string | null;
   parentId: string | null;
   isDraft: boolean;
+  // Epic modalinda cycle/module/parent alanlari gizlenir.
+  isEpic?: boolean;
   handleFormChange: () => void;
   setSelectedParentIssue: (issue: ISearchIssueResponse) => void;
 };
@@ -58,6 +60,7 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
     targetDate,
     parentId,
     isDraft,
+    isEpic = false,
     handleFormChange,
     setSelectedParentIssue,
   } = props;
@@ -198,7 +201,7 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
           </div>
         )}
       />
-      {projectDetails?.cycle_view && (
+      {!isEpic && projectDetails?.cycle_view && (
         <Controller
           control={control}
           name="cycle_id"
@@ -219,7 +222,7 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
           )}
         />
       )}
-      {projectDetails?.module_view && workspaceSlug && (
+      {!isEpic && projectDetails?.module_view && workspaceSlug && (
         <Controller
           control={control}
           name="module_ids"
@@ -263,8 +266,9 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
           )}
         />
       )}
-      <div className="h-7">
-        {parentId ? (
+      {!isEpic && (
+        <div className="h-7">
+          {parentId ? (
           <CustomMenu
             customButton={
               <button
@@ -317,25 +321,29 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
             <ParentOutline className="h-3 w-3 flex-shrink-0" />
             <span className="whitespace-nowrap">{t("add_parent")}</span>
           </button>
-        )}
-      </div>
-      <Controller
-        control={control}
-        name="parent_id"
-        render={({ field: { onChange } }) => (
-          <ParentIssuesListModal
-            isOpen={parentIssueListModalOpen}
-            handleClose={() => setParentIssueListModalOpen(false)}
-            onChange={(issue) => {
-              onChange(issue.id);
-              handleFormChange();
-              setSelectedParentIssue(issue);
-            }}
-            projectId={projectId ?? undefined}
-            issueId={isDraft ? undefined : id}
-          />
-        )}
-      />
+          )}
+        </div>
+      )}
+      {!isEpic && (
+        <Controller
+          control={control}
+          name="parent_id"
+          render={({ field: { onChange } }) => (
+            <ParentIssuesListModal
+              isOpen={parentIssueListModalOpen}
+              handleClose={() => setParentIssueListModalOpen(false)}
+              onChange={(issue) => {
+                onChange(issue.id);
+                handleFormChange();
+                setSelectedParentIssue(issue);
+              }}
+              projectId={projectId ?? undefined}
+              issueId={isDraft ? undefined : id}
+              showEpicTab={Boolean(projectDetails?.is_epic_enabled)}
+            />
+          )}
+        />
+      )}
     </div>
   );
 });

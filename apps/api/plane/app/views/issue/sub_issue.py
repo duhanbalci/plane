@@ -32,6 +32,8 @@ from plane.utils.order_queryset import order_issue_queryset
 
 class SubIssuesEndpoint(BaseAPIView):
     permission_classes = [ProjectEntityPermission]
+    # Epic uclarinda (`epics/<id>/issues/`) parent bir epic olur; normal uclarda olamaz.
+    is_epic = False
 
     @method_decorator(gzip_page)
     def get(self, request, slug, project_id, issue_id):
@@ -40,9 +42,8 @@ class SubIssuesEndpoint(BaseAPIView):
         # in it, so an unscoped filter leaks sub-issue metadata across projects in the
         # same workspace.
         sub_issues = (
-            Issue.issue_objects.filter(
-                parent_id=issue_id, workspace__slug=slug, project_id=project_id
-            )
+            Issue.issue_objects.work_items()
+            .filter(parent_id=issue_id, workspace__slug=slug, project_id=project_id)
             .annotate(
                 cycle_id=Subquery(
                     CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
@@ -211,15 +212,14 @@ class SubIssuesEndpoint(BaseAPIView):
         # SECURITY: bind the parent issue to the URL workspace + project. A bare
         # pk lookup let any project member re-parent issues under a parent in a
         # different project/workspace.
-        parent_issue = Issue.issue_objects.filter(
-            pk=issue_id, workspace__slug=slug, project_id=project_id
-        ).first()
+        parent_queryset = Issue.issue_objects.epics() if self.is_epic else Issue.issue_objects.work_items()
+        parent_issue = parent_queryset.filter(pk=issue_id, workspace__slug=slug, project_id=project_id).first()
         if parent_issue is None:
             return Response(
                 {"error": "Parent issue not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        sub_issue_ids = request.data.get("sub_issue_ids", [])
+        sub_issue_ids = request.data.get("sub_issue_ids", request.data.get("issues", []))
 
         if not len(sub_issue_ids):
             return Response(
@@ -227,8 +227,15 @@ class SubIssuesEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Epic bir baskasinin cocugu olamaz.
+        if Issue.issue_objects.epics().filter(id__in=sub_issue_ids, workspace__slug=slug).exists():
+            return Response(
+                {"error": "An epic cannot be a sub work item"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Scope to workspace + project to prevent cross-project/cross-tenant IDOR
-        sub_issues = Issue.issue_objects.filter(
+        sub_issues = Issue.issue_objects.work_items().filter(
             id__in=sub_issue_ids, workspace__slug=slug, project_id=project_id
         )
 
@@ -243,9 +250,11 @@ class SubIssuesEndpoint(BaseAPIView):
         # does an unscoped Issue.objects.get and bumps updated_at on a foreign issue.
         scoped_sub_issue_ids = [str(sub_issue.id) for sub_issue in sub_issues]
 
-        updated_sub_issues = Issue.issue_objects.filter(
-            id__in=scoped_sub_issue_ids, workspace__slug=slug, project_id=project_id
-        ).annotate(state_group=F("state__group"))
+        updated_sub_issues = (
+            Issue.issue_objects.work_items()
+            .filter(id__in=scoped_sub_issue_ids, workspace__slug=slug, project_id=project_id)
+            .annotate(state_group=F("state__group"))
+        )
 
         # Track the issue
         _ = [

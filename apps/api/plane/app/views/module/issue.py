@@ -83,7 +83,7 @@ class ModuleIssueViewSet(BaseViewSet):
 
     def get_queryset(self):
         return (
-            Issue.issue_objects.filter(
+            Issue.issue_objects.work_items().filter(
                 project_id=self.kwargs.get("project_id"),
                 workspace__slug=self.kwargs.get("slug"),
                 issue_module__module_id=self.kwargs.get("module_id"),

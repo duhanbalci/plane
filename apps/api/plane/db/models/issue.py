@@ -100,6 +100,13 @@ class IssueManager(SoftDeletionManager):
             .exclude(is_draft=True)
         )
 
+    def work_items(self):
+        # Epic'ler ayri bir uzayda listelenir; normal is kalemi listeleri disari birakir.
+        return self.get_queryset().exclude(type__is_epic=True)
+
+    def epics(self):
+        return self.get_queryset().filter(type__is_epic=True)
+
 
 class Issue(ChangeTrackerMixin, ProjectBaseModel):
     TRACKED_FIELDS = ["state_id"]

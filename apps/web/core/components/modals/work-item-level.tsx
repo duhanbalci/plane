@@ -12,6 +12,7 @@ import { EIssueServiceType, EIssuesStoreType } from "@plane/types";
 // components
 import { BulkDeleteIssuesModal } from "@/components/core/modals/bulk-delete-issues-modal";
 import { DeleteIssueModal } from "@/components/issues/delete-issue-modal";
+import { CreateUpdateEpicModal } from "@/components/epic-modal";
 import { CreateUpdateIssueModal } from "@/components/issues/issue-modal/modal";
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
@@ -43,6 +44,7 @@ export const WorkItemLevelModals = observer(function WorkItemLevelModals(props: 
 
   const {
     isCreateIssueModalOpen,
+    createIssueStoreType,
     toggleCreateIssueModal,
     isDeleteIssueModalOpen,
     toggleDeleteIssueModal,
@@ -83,13 +85,17 @@ export const WorkItemLevelModals = observer(function WorkItemLevelModals(props: 
 
   return (
     <>
-      <CreateUpdateIssueModal
-        isOpen={isCreateIssueModalOpen}
-        onClose={() => toggleCreateIssueModal(false)}
-        data={getCreateIssueModalData()}
-        onSubmit={handleCreateIssueSubmit}
-        allowedProjectIds={createWorkItemAllowedProjectIds}
-      />
+      {createIssueStoreType === EIssuesStoreType.EPIC ? (
+        <CreateUpdateEpicModal isOpen={isCreateIssueModalOpen} onClose={() => toggleCreateIssueModal(false)} />
+      ) : (
+        <CreateUpdateIssueModal
+          isOpen={isCreateIssueModalOpen}
+          onClose={() => toggleCreateIssueModal(false)}
+          data={getCreateIssueModalData()}
+          onSubmit={handleCreateIssueSubmit}
+          allowedProjectIds={createWorkItemAllowedProjectIds}
+        />
+      )}
       {workspaceSlug && workItemId && workItemDetails && workItemDetails.project_id && (
         <DeleteIssueModal
           handleClose={() => toggleDeleteIssueModal(false)}

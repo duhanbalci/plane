@@ -264,6 +264,6 @@ export class IssueRootStore implements IIssueRootStore {
     this.issueCalendarView = new CalendarStore(this);
 
     this.projectEpicsFilter = new ProjectIssuesFilter(this);
-    this.projectEpics = new ProjectIssues(this, this.projectEpicsFilter);
+    this.projectEpics = new ProjectIssues(this, this.projectEpicsFilter, EIssueServiceType.EPICS);
   }
 }

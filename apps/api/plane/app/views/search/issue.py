@@ -106,8 +106,13 @@ class IssueSearchEndpoint(BaseAPIView):
         sub_issue = request.query_params.get("sub_issue", "false")
         target_date = request.query_params.get("target_date", True)
         issue_id = request.query_params.get("issue_id", False)
+        epic = request.query_params.get("epic", "false")
 
-        issues = Issue.issue_objects.filter(
+        # `epic=true` yalniz epic'leri arar (parent secicinin epic sekmesi);
+        # diger tum aramalar epic'leri disarida birakir.
+        base_queryset = Issue.issue_objects.epics() if epic == "true" else Issue.issue_objects.work_items()
+
+        issues = base_queryset.filter(
             workspace__slug=slug,
             project__project_projectmember__member=self.request.user,
             project__project_projectmember__is_active=True,

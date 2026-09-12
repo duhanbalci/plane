@@ -31,6 +31,7 @@ export interface IPartialProject {
   page_view: boolean;
   inbox_view: boolean;
   is_issue_type_enabled?: boolean;
+  is_epic_enabled?: boolean;
   guest_view_all_features?: boolean;
   project_lead?: IUserLite | string | null;
   network?: number;

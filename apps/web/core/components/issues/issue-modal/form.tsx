@@ -71,6 +71,8 @@ export interface IssueFormProps {
   handleDuplicateIssueModal: (isOpen: boolean) => void;
   handleDraftAndClose?: () => void;
   isProjectSelectionDisabled?: boolean;
+  // Epic modali: tip dropdown'i epic tiplerine kilitlenir, parent/cycle/module gizlenir.
+  isEpic?: boolean;
   showActionButtons?: boolean;
   dataResetProperties?: any[];
 }
@@ -95,6 +97,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
       loading: `${data?.id ? t("updating") : t("saving")}`,
     },
     isProjectSelectionDisabled = false,
+    isEpic = false,
     showActionButtons = true,
     dataResetProperties = [],
   } = props;
@@ -137,7 +140,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     issue: { getIssueById },
   } = useIssueDetail();
   const { fetchCycles } = useProjectIssueProperties();
-  const { getActiveProperties } = useIssueTypes();
+  const { getActiveProperties, getEpicTypeId } = useIssueTypes();
   const { getStateById } = useProjectState();
 
   // form info
@@ -220,8 +223,8 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     // if issue type id is present or project not available, return
     if (issueTypeId || !projectId) return;
 
-    // get issue type id on project change
-    const issueTypeIdOnProjectChange = getIssueTypeIdOnProjectChange(projectId);
+    // epic modalinda tip her zaman projenin epic tipi
+    const issueTypeIdOnProjectChange = isEpic ? getEpicTypeId(projectId) : getIssueTypeIdOnProjectChange(projectId);
     if (issueTypeIdOnProjectChange) setValue("type_id", issueTypeIdOnProjectChange, { shouldValidate: true });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -420,8 +423,9 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                       projectId={projectId}
                       disabled={isDisabled}
                       buttonVariant="border-with-text"
-                      placeholder={t("work_item_types.label")}
+                      placeholder={isEpic ? t("common.epic") : t("work_item_types.label")}
                       dropdownArrow
+                      isEpic={isEpic}
                     />
                   )}
                 </div>
@@ -498,6 +502,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                   targetDate={watch("target_date")}
                   parentId={watch("parent_id")}
                   isDraft={isDraft}
+                  isEpic={isEpic}
                   handleFormChange={handleFormChange}
                   setSelectedParentIssue={setSelectedParentIssue}
                 />

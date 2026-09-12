@@ -869,5 +869,7 @@
     }
   },
   "work_item_types_feature": "Work item types",
-  "work_item_types_feature_description": "Shape work items to your work with types and custom properties."
+  "work_item_types_feature_description": "Shape work items to your work with types and custom properties.",
+  "epics_feature": "Epics",
+  "epics_feature_description": "Group work items under long-running initiatives."
 }

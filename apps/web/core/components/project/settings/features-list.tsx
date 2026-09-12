@@ -12,6 +12,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IProject } from "@plane/types";
 import {
   CyclesOutline,
+  EpicOutline,
   IntakeOutline,
   ModuleOutline,
   PagesOutline,
@@ -77,6 +78,15 @@ const PROJECT_FEATURES_LIST = {
     title: "Work item types",
     description: "Shape work items to your work with types and custom properties.",
     icon: <WorkItemsOutline className="h-5 w-5 flex-shrink-0 text-tertiary" />,
+    isPro: false,
+    isEnabled: true,
+  },
+  epics: {
+    key: "epics_feature",
+    property: "is_epic_enabled",
+    title: "Epics",
+    description: "Group work items under long-running initiatives.",
+    icon: <EpicOutline className="h-5 w-5 flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,
   },
@@ -154,7 +164,10 @@ export const ProjectFeaturesList = observer(function ProjectFeaturesList(props: 
                       !isAdmin ||
                       // enabling work item types is irreversible
                       (featureItem.property === "is_issue_type_enabled" &&
-                        Boolean(currentProjectDetails?.is_issue_type_enabled))
+                        Boolean(currentProjectDetails?.is_issue_type_enabled)) ||
+                      // epics need work item types
+                      (featureItem.property === "is_epic_enabled" &&
+                        !currentProjectDetails?.is_issue_type_enabled)
                     }
                   />
                 }

@@ -42,19 +42,25 @@ function ProjectIssueLayout(props: { activeLayout: EIssueLayoutTypes | undefined
   }
 }
 
-export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
+type TProjectLayoutRootProps = {
+  // Epic listesi ayni layout'lari EIssuesStoreType.EPIC ile kullanir.
+  storeType?: EIssuesStoreType.PROJECT | EIssuesStoreType.EPIC;
+};
+
+export const ProjectLayoutRoot = observer(function ProjectLayoutRoot(props: TProjectLayoutRootProps) {
+  const { storeType = EIssuesStoreType.PROJECT } = props;
   // router
   const { workspaceSlug: routerWorkspaceSlug, projectId: routerProjectId } = useParams();
   const workspaceSlug = routerWorkspaceSlug ? routerWorkspaceSlug.toString() : undefined;
   const projectId = routerProjectId ? routerProjectId.toString() : undefined;
   // hooks
-  const { issues, issuesFilter } = useIssues(EIssuesStoreType.PROJECT);
+  const { issues, issuesFilter } = useIssues(storeType);
   // derived values
   const workItemFilters = projectId ? issuesFilter?.getIssueFilters(projectId) : undefined;
   const activeLayout = workItemFilters?.displayFilters?.layout;
 
   useSWR(
-    workspaceSlug && projectId ? `PROJECT_ISSUES_${workspaceSlug}_${projectId}` : null,
+    workspaceSlug && projectId ? `PROJECT_ISSUES_${storeType}_${workspaceSlug}_${projectId}` : null,
     async () => {
       if (workspaceSlug && projectId) {
         await issuesFilter?.fetchFilters(workspaceSlug, projectId);
@@ -65,10 +71,10 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
 
   if (!workspaceSlug || !projectId || !workItemFilters) return <></>;
   return (
-    <IssuesStoreContext.Provider value={EIssuesStoreType.PROJECT}>
+    <IssuesStoreContext.Provider value={storeType}>
       <ProjectLevelWorkItemFiltersHOC
         enableSaveView
-        entityType={EIssuesStoreType.PROJECT}
+        entityType={storeType}
         entityId={projectId}
         filtersToShowByLayout={ISSUE_DISPLAY_FILTERS_BY_PAGE.issues.filters}
         initialWorkItemFilters={workItemFilters}

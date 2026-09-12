@@ -172,6 +172,9 @@ from .page.base import (
     PageFavoriteViewSet,
     PagesDescriptionViewSet,
     PageDuplicateEndpoint,
+    PageCollectionViewSet,
+    PageMoveToWikiEndpoint,
+    WorkspacePageFavoriteViewSet,
 )
 from .page.version import PageVersionEndpoint
 
@@ -184,6 +187,16 @@ from .external.base import (
     UnsplashEndpoint,
     WorkspaceGPTIntegrationEndpoint,
 )
+from .epic import (
+    EpicAnalyticsEndpoint,
+    EpicDetailEndpoint,
+    EpicIssueEndpoint,
+    EpicIssuesEndpoint,
+    EpicListEndpoint,
+    EpicPaginatedViewSet,
+    EpicViewSet,
+)
+
 from .issue_type import (
     IssueTypeViewSet,
     ProjectIssueTypeViewSet,

@@ -37,6 +37,7 @@ from plane.app.views.base import BaseAPIView, BaseViewSet
 from plane.db.models import (
     Issue,
     IssueActivity,
+    PageCollection,
     Workspace,
     WorkspaceMember,
     WorkspaceTheme,
@@ -48,6 +49,9 @@ from plane.license.utils.instance_value import get_configuration_value
 from plane.bgtasks.workspace_seed_task import workspace_seed
 from plane.utils.url import contains_url
 from plane.utils.csv_utils import sanitize_csv_row
+
+# Name of the wiki collection every workspace starts with.
+DEFAULT_PAGE_COLLECTION_NAME = "General"
 
 
 class WorkSpaceViewSet(BaseViewSet):
@@ -126,6 +130,14 @@ class WorkSpaceViewSet(BaseViewSet):
                     member=request.user,
                     role=20,
                     company_role=request.data.get("company_role", ""),
+                )
+
+                # Every workspace starts with a default wiki collection.
+                _ = PageCollection.objects.create(
+                    workspace_id=serializer.data["id"],
+                    name=DEFAULT_PAGE_COLLECTION_NAME,
+                    owned_by=request.user,
+                    is_default=True,
                 )
 
                 # Get total members and role

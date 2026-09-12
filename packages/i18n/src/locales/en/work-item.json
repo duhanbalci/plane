@@ -427,6 +427,9 @@
     "title": {
       "label": "Epic Title",
       "required": "Epic title is required."
+    },
+    "progress": {
+      "overdue": "Overdue"
     }
   }
 }

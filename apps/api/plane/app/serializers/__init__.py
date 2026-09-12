@@ -99,6 +99,7 @@ from .importer import ImporterSerializer
 
 from .page import (
     PageSerializer,
+    PageCollectionSerializer,
     PageDetailSerializer,
     PageVersionSerializer,
     PageBinaryUpdateSerializer,

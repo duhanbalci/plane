@@ -869,5 +869,7 @@
     }
   },
   "work_item_types_feature": "İş öğesi türleri",
-  "work_item_types_feature_description": "İş öğelerini türler ve özel alanlarla kendi akışınıza göre şekillendirin."
+  "work_item_types_feature_description": "İş öğelerini türler ve özel alanlarla kendi akışınıza göre şekillendirin.",
+  "epics_feature": "Epikler",
+  "epics_feature_description": "İş öğelerini uzun soluklu girişimler altında toplayın."
 }

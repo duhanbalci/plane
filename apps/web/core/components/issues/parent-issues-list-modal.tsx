@@ -34,6 +34,8 @@ type Props = {
   projectId: string | undefined;
   issueId?: string;
   searchEpic?: boolean;
+  // Epic'ler ayri bir sekmede aranabilsin.
+  showEpicTab?: boolean;
 };
 
 // services
@@ -47,6 +49,7 @@ export function ParentIssuesListModal({
   projectId,
   issueId,
   searchEpic = false,
+  showEpicTab = false,
 }: Props) {
   // i18n
   const { t } = useTranslation();
@@ -55,6 +58,7 @@ export function ParentIssuesListModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [issues, setIssues] = useState<ISearchIssueResponse[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isEpicTabActive, setIsEpicTabActive] = useState(searchEpic);
   const { isMobile } = usePlatformOS();
   const debouncedSearchTerm: string = useDebounce(searchTerm, 500);
 
@@ -76,17 +80,17 @@ export function ParentIssuesListModal({
     projectService
       .projectIssuesSearch(workspaceSlug, projectId, {
         search: debouncedSearchTerm,
-        parent: searchEpic ? undefined : true,
+        parent: isEpicTabActive ? undefined : true,
         issue_id: issueId,
         workspace_search: false,
-        epic: searchEpic ? true : undefined,
+        epic: isEpicTabActive ? true : undefined,
       })
       .then((res) => setIssues(res))
       .finally(() => {
         setIsSearching(false);
         setIsLoading(false);
       });
-  }, [debouncedSearchTerm, isOpen, issueId, projectId, workspaceSlug]);
+  }, [debouncedSearchTerm, isEpicTabActive, isOpen, issueId, projectId, workspaceSlug]);
 
   return (
     <ModalCore isOpen={isOpen} handleClose={handleClose} position={EModalPosition.CENTER} width={EModalWidth.XXL}>
@@ -111,6 +115,25 @@ export function ParentIssuesListModal({
             tabIndex={baseTabIndex}
           />
         </div>
+        {showEpicTab && (
+          <div className="flex items-center gap-1 border-b border-subtle px-3 pb-2">
+            {[
+              { key: "work_items", label: t("common.work_items"), value: false },
+              { key: "epics", label: t("common.epics"), value: true },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`rounded-sm px-2 py-1 text-13 ${
+                  isEpicTabActive === tab.value ? "bg-layer-1 text-primary" : "text-secondary"
+                }`}
+                onClick={() => setIsEpicTabActive(tab.value)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
         <Combobox.Options
           as="ul"
           static

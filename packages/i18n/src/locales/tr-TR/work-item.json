@@ -427,6 +427,9 @@
     "title": {
       "label": "Epik Başlığı",
       "required": "Epik başlığı gereklidir."
+    },
+    "progress": {
+      "overdue": "Gecikmiş"
     }
   }
 }
