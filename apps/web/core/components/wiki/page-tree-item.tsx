@@ -53,11 +53,24 @@ export const WikiPageTreeItem = observer(function WikiPageTreeItem(props: Props)
   const { workspaceSlug, pageId: activePageId } = useParams();
   const { create: createWikiPage } = useCreateWikiPage(workspaceSlug?.toString());
   const page = usePage({ pageId, storeType });
-  const { getChildPageIds, movePageInTree, canCurrentUserCreatePage } = usePageStore(storeType);
+  const { getChildPageIds, getPageById, movePageInTree, canCurrentUserCreatePage } = usePageStore(storeType);
   // derived values
   const childPageIds = getChildPageIds(pageId);
   const hasSubPages = (page?.sub_pages_count ?? 0) > 0 || childPageIds.length > 0;
   const isActive = activePageId?.toString() === pageId;
+  // keep the branch open while the active page sits somewhere below this one
+  const isAncestorOfActivePage = (() => {
+    let cursor = activePageId ? getPageById(activePageId.toString())?.parent : undefined;
+    for (let depthGuard = 0; cursor && depthGuard < 50; depthGuard++) {
+      if (cursor === pageId) return true;
+      cursor = getPageById(cursor)?.parent;
+    }
+    return false;
+  })();
+
+  useEffect(() => {
+    if (isAncestorOfActivePage) setIsExpanded(true);
+  }, [isAncestorOfActivePage]);
 
   const handleDrop = (sourceId: string, dropInstruction: InstructionType | undefined) => {
     if (!dropInstruction || sourceId === pageId) return;
