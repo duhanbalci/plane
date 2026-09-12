@@ -101,6 +101,8 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
   parent?: string | null;
   sort_order?: number;
   sub_pages_count?: number;
+  // wiki pages sit in a collection
+  collection?: string | null;
   created_by: string | undefined;
   updated_by: string | undefined;
   created_at: Date | undefined;
@@ -141,6 +143,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
     this.parent = page?.parent ?? null;
     this.sort_order = page?.sort_order ?? undefined;
     this.sub_pages_count = page?.sub_pages_count ?? 0;
+    this.collection = page?.collection ?? null;
     this.created_by = page?.created_by || undefined;
     this.updated_by = page?.updated_by || undefined;
     this.created_at = page?.created_at || undefined;
@@ -169,6 +172,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
       parent: observable.ref,
       sort_order: observable.ref,
       sub_pages_count: observable.ref,
+      collection: observable.ref,
       created_by: observable.ref,
       updated_by: observable.ref,
       created_at: observable.ref,
@@ -248,6 +252,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
       parent: this.parent,
       sort_order: this.sort_order,
       sub_pages_count: this.sub_pages_count,
+      collection: this.collection,
       created_by: this.created_by,
       updated_by: this.updated_by,
       created_at: this.created_at,
