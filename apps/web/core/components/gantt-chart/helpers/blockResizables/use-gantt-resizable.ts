@@ -27,6 +27,7 @@ export const useGanttResizable = (
   });
   const ganttContainerDimensions = useRef<DOMRect | undefined>(undefined);
   const currMouseEvent = useRef<MouseEvent | undefined>(undefined);
+  const ignoreDependenciesRef = useRef<boolean>(false);
   // states
   const { currentViewData, updateBlockPosition, setIsDragging, getUpdatedPositionAfterDrag } = useTimeLineChartStore();
   const [isMoving, setIsMoving] = useState<"left" | "right" | "move" | undefined>();
@@ -44,6 +45,7 @@ export const useGanttResizable = (
     const resizableDiv = resizableRef.current;
 
     ganttContainerDimensions.current = ganttContainerElement.getBoundingClientRect();
+    ignoreDependenciesRef.current = e.altKey;
 
     const dayWidth = currentViewData.data.dayWidth;
     const mouseX = e.clientX - ganttContainerDimensions.current.left - SIDEBAR_WIDTH + ganttContainerElement.scrollLeft;
@@ -61,6 +63,8 @@ export const useGanttResizable = (
 
     const handleMouseMove = (e: MouseEvent) => {
       currMouseEvent.current = e;
+      // holding Alt moves the block without dragging its dependents along
+      ignoreDependenciesRef.current = e.altKey;
       setIsMoving(dragDirection);
       setIsDragging(true);
 
@@ -109,7 +113,7 @@ export const useGanttResizable = (
       const deltaWidth = Math.round((width - (block.position?.width ?? 0)) / dayWidth) * dayWidth;
 
       // call update blockPosition
-      if (deltaWidth || deltaLeft) updateBlockPosition(block.id, deltaLeft, deltaWidth);
+      if (deltaWidth || deltaLeft) updateBlockPosition(block.id, deltaLeft, deltaWidth, ignoreDependenciesRef.current);
     };
 
     // remove event listeners and call updateBlockDates
@@ -125,7 +129,11 @@ export const useGanttResizable = (
         (dragDirection === "left" && !block.start_date) || (dragDirection === "right" && !block.target_date);
 
       try {
-        const blockUpdates = getUpdatedPositionAfterDrag(block.id, shouldUpdateHalfBlock);
+        const blockUpdates = getUpdatedPositionAfterDrag(
+          block.id,
+          shouldUpdateHalfBlock,
+          ignoreDependenciesRef.current
+        );
         if (updateBlockDates) updateBlockDates(blockUpdates);
       } catch {
         setToast({

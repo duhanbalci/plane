@@ -14,4 +14,18 @@ export type TIssueRelationMap = {
 
 export type TIssueRelationIdMap = Record<TIssueRelationTypes, string[]>;
 
-export type TIssueRelationTypes = "blocking" | "blocked_by" | "duplicate" | "relates_to";
+export type TIssueRelationTypes =
+  | "blocking"
+  | "blocked_by"
+  | "duplicate"
+  | "relates_to"
+  | "start_before"
+  | "start_after"
+  | "finish_before"
+  | "finish_after";
+
+/** Relation types that constrain dates between two work items on the timeline. */
+export type TIssueDependencyRelationTypes = Extract<
+  TIssueRelationTypes,
+  "blocking" | "blocked_by" | "start_before" | "start_after" | "finish_before" | "finish_after"
+>;

@@ -30,7 +30,11 @@ from plane.db.models import (
     CycleIssue,
 )
 from plane.bgtasks.issue_activities_task import issue_activity
-from plane.utils.issue_relation_mapper import get_actual_relation
+from plane.utils.issue_relation_mapper import (
+    get_actual_relation,
+    get_dependency_edge,
+    has_dependency_path,
+)
 from plane.utils.host import base_host
 
 
@@ -225,6 +229,29 @@ class IssueRelationViewSet(BaseViewSet):
                 pk__in=issues,
             ).values_list("id", flat=True)
         )
+
+        # A work item cannot relate to itself
+        if str(issue_id) in [str(issue) for issue in issues]:
+            return Response(
+                {"error": "relation_self"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Dependency relations must stay acyclic, otherwise date propagation on
+        # the timeline would never settle
+        actual_relation = get_actual_relation(relation_type)
+        for issue in issues:
+            row_issue_id = issue if relation_type in ["blocking", "start_after", "finish_after"] else issue_id
+            row_related_id = issue_id if relation_type in ["blocking", "start_after", "finish_after"] else issue
+            edge = get_dependency_edge(actual_relation, row_issue_id, row_related_id)
+            if edge is None:
+                continue
+            predecessor, dependent = edge
+            if has_dependency_path(project.workspace_id, dependent, predecessor):
+                return Response(
+                    {"error": "relation_cycle"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         issue_relation = IssueRelation.objects.bulk_create(
             [

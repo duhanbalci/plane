@@ -299,6 +299,8 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
 
 export const ISSUE_STORE_TO_FILTERS_MAP: Partial<Record<EIssuesStoreType, TFilterPropertiesByPageType>> = {
   [EIssuesStoreType.PROJECT]: ISSUE_DISPLAY_FILTERS_BY_PAGE.issues,
+  // Epic listesi is kalemi listesiyle ayni filtre setini kullanir.
+  [EIssuesStoreType.EPIC]: ISSUE_DISPLAY_FILTERS_BY_PAGE.issues,
 };
 
 export const SUB_WORK_ITEM_AVAILABLE_FILTERS_FOR_WORK_ITEM_PAGE: (keyof IIssueFilterOptions)[] = [
@@ -360,7 +362,7 @@ export const filterActivityOnSelectedFilters = (
     return filters.includes(activity.activity_type as TActivityFilters);
   });
 
-export const ENABLE_ISSUE_DEPENDENCIES = false;
+export const ENABLE_ISSUE_DEPENDENCIES = true;
 
 export const BASE_ACTIVITY_FILTER_TYPES = [
   EActivityFilterType.ACTIVITY,

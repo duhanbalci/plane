@@ -70,6 +70,7 @@ export const GanttChartBlock = observer(function GanttChartBlock(props: Props) {
         "pointer-events-none": !isBlockVisibleOnChart,
       })}
       id={`gantt-block-${block.id}`}
+      data-gantt-block-id={block.id}
       ref={resizableRef}
       style={{
         height: `${BLOCK_HEIGHT}px`,

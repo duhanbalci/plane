@@ -8,10 +8,14 @@ import { isEqual, set } from "lodash-es";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
 // components
+import { DEPENDENT_RELATION_KIND } from "@plane/constants";
 import type {
   ChartDataType,
   IBlockUpdateDependencyData,
+  IDependencyDrag,
+  IDependencyEdge,
   IGanttBlock,
+  TDependencyKind,
   TGanttViews,
   EGanttBlockType,
 } from "@plane/types";
@@ -27,6 +31,25 @@ import {
 import type { RootStore } from "@/store/root.store";
 
 // types
+type BlockRect = { marginLeft: number; width: number };
+
+/** Highest number of blocks a single drag may cascade through. */
+const MAX_PROPAGATION_NODES = 200;
+
+/** Sub pixel slack so float noise is not read as a violated constraint. */
+const POSITION_EPSILON = 0.5;
+
+/**
+ * Left edge the dependent block must reach for the constraint to hold.
+ * FS: dependent starts after the predecessor ends, SS: starts no earlier than
+ * the predecessor starts, FF: ends no earlier than the predecessor ends.
+ */
+const getRequiredLeft = (kind: TDependencyKind, predecessor: BlockRect, dependent: BlockRect) => {
+  if (kind === "SS") return predecessor.marginLeft;
+  if (kind === "FF") return predecessor.marginLeft + predecessor.width - dependent.width;
+  return predecessor.marginLeft + predecessor.width;
+};
+
 type BlockData = {
   id: string;
   name: string;
@@ -44,12 +67,20 @@ export interface IBaseTimelineStore {
   renderView: any;
   isDragging: boolean;
   isDependencyEnabled: boolean;
+  dependencyDrag: IDependencyDrag | null;
   //
   setBlockIds: (ids: string[]) => void;
   getBlockById: (blockId: string) => IGanttBlock;
   // computed functions
   getIsCurrentDependencyDragging: (blockId: string) => boolean;
   isBlockActive: (blockId: string) => boolean;
+  // dependencies
+  getDependencies: (blockId: string) => IDependencyEdge[];
+  getDependencyEdges: () => IDependencyEdge[];
+  getIsDependencyViolated: (edge: IDependencyEdge) => boolean;
+  startDependencyDrag: (fromId: string, side: "start" | "end", x: number, y: number) => void;
+  updateDependencyDrag: (x: number, y: number) => void;
+  endDependencyDrag: () => void;
   // actions
   updateCurrentView: (view: TGanttViews) => void;
   updateCurrentViewData: (data: ChartDataType | undefined) => void;
@@ -83,6 +114,10 @@ export class BaseTimeLineStore implements IBaseTimelineStore {
   rootStore: RootStore;
 
   isDependencyEnabled = false;
+  dependencyDrag: IDependencyDrag | null = null;
+
+  /** Blocks moved by dependency propagation during the current drag. */
+  private shiftedBlockIds = new Set<string>();
 
   constructor(_rootStore: RootStore) {
     makeObservable(this, {
@@ -94,8 +129,12 @@ export class BaseTimeLineStore implements IBaseTimelineStore {
       currentViewData: observable,
       activeBlockId: observable.ref,
       renderView: observable,
+      dependencyDrag: observable,
       // actions
       setIsDragging: action,
+      startDependencyDrag: action.bound,
+      updateDependencyDrag: action.bound,
+      endDependencyDrag: action.bound,
       setBlockIds: action.bound,
       initGantt: action.bound,
       updateCurrentView: action.bound,
@@ -123,6 +162,8 @@ export class BaseTimeLineStore implements IBaseTimelineStore {
    */
   setIsDragging = (isDragging: boolean) => {
     runInAction(() => {
+      // a fresh drag starts with an empty propagation trail
+      if (isDragging && !this.isDragging) this.shiftedBlockIds.clear();
       this.isDragging = isDragging;
     });
   };
@@ -295,28 +336,55 @@ export class BaseTimeLineStore implements IBaseTimelineStore {
    * @param shouldUpdateHalfBlock if is a half block then update the incomplete block only if this is true
    * @returns
    */
-  getUpdatedPositionAfterDrag = action((id: string, shouldUpdateHalfBlock: boolean) => {
-    const currBlock = this.blocksMap[id];
+  getUpdatedPositionAfterDrag = action(
+    (id: string, shouldUpdateHalfBlock: boolean, ignoreDependencies = false): IBlockUpdateDependencyData[] => {
+      const currBlock = this.blocksMap[id];
 
-    if (!currBlock?.position || !this.currentViewData) return [];
+      if (!currBlock?.position || !this.currentViewData) return [];
 
-    const updatePayload: IBlockUpdateDependencyData = { id, meta: currBlock.meta };
+      const updatePayload: IBlockUpdateDependencyData = { id, meta: currBlock.meta };
 
-    // If shouldUpdateHalfBlock or the start date is available then update start date
-    if (shouldUpdateHalfBlock || currBlock.start_date) {
-      updatePayload.start_date = renderFormattedPayloadDate(
-        getDateFromPositionOnGantt(currBlock.position.marginLeft, this.currentViewData)
-      );
+      // If shouldUpdateHalfBlock or the start date is available then update start date
+      if (shouldUpdateHalfBlock || currBlock.start_date) {
+        updatePayload.start_date = renderFormattedPayloadDate(
+          getDateFromPositionOnGantt(currBlock.position.marginLeft, this.currentViewData)
+        );
+      }
+      // If shouldUpdateHalfBlock or the target date is available then update target date
+      if (shouldUpdateHalfBlock || currBlock.target_date) {
+        updatePayload.target_date = renderFormattedPayloadDate(
+          getDateFromPositionOnGantt(currBlock.position.marginLeft + currBlock.position.width, this.currentViewData, -1)
+        );
+      }
+
+      const updates = [updatePayload];
+
+      if (ignoreDependencies || !this.isDependencyEnabled) return updates;
+
+      // blocks already nudged by the live preview plus anything still violated
+      const shiftedIds = new Set(this.shiftedBlockIds);
+      for (const blockId of Object.keys(this.computeDependencyShifts(id))) shiftedIds.add(blockId);
+
+      for (const blockId of shiftedIds) {
+        if (blockId === id) continue;
+        const block = this.blocksMap[blockId];
+        if (!block?.position) continue;
+
+        updates.push({
+          id: blockId,
+          meta: block.meta,
+          start_date: renderFormattedPayloadDate(
+            getDateFromPositionOnGantt(block.position.marginLeft, this.currentViewData)
+          ),
+          target_date: renderFormattedPayloadDate(
+            getDateFromPositionOnGantt(block.position.marginLeft + block.position.width, this.currentViewData, -1)
+          ),
+        });
+      }
+
+      return updates;
     }
-    // If shouldUpdateHalfBlock or the target date is available then update target date
-    if (shouldUpdateHalfBlock || currBlock.target_date) {
-      updatePayload.target_date = renderFormattedPayloadDate(
-        getDateFromPositionOnGantt(currBlock.position.marginLeft + currBlock.position.width, this.currentViewData, -1)
-      );
-    }
-
-    return [updatePayload];
-  });
+  );
 
   /**
    * updates the block's position such as marginLeft and width while dragging
@@ -325,7 +393,7 @@ export class BaseTimeLineStore implements IBaseTimelineStore {
    * @param deltaWidth
    * @returns
    */
-  updateBlockPosition = action((id: string, deltaLeft: number, deltaWidth: number) => {
+  updateBlockPosition = action((id: string, deltaLeft: number, deltaWidth: number, ignoreDependencies = false) => {
     const currBlock = this.blocksMap[id];
 
     if (!currBlock?.position) return;
@@ -338,9 +406,120 @@ export class BaseTimeLineStore implements IBaseTimelineStore {
         marginLeft: newMarginLeft ?? currBlock.position?.marginLeft,
         width: newWidth ?? currBlock.position?.width,
       });
+
+      if (ignoreDependencies || !this.isDependencyEnabled) return;
+
+      // preview the cascade live while the pointer is still down
+      const shifts = this.computeDependencyShifts(id);
+      for (const [blockId, rect] of Object.entries(shifts)) {
+        this.shiftedBlockIds.add(blockId);
+        set(this.blocksMap, [blockId, "position"], rect);
+      }
     });
   });
 
-  // Dummy method to return if the current Block's dependency is being dragged
-  getIsCurrentDependencyDragging = computedFn((_blockId: string) => false);
+  /** Whether the block may take part in a connector: it needs both dates and a position. */
+  private canConnect = (blockId: string) => {
+    const block = this.blocksMap[blockId];
+    return !!block?.position && !!block.start_date && !!block.target_date;
+  };
+
+  /**
+   * Dependency edges leaving the given block, always predecessor -> dependent.
+   * Read from the relation map, so a relation created anywhere shows up here.
+   */
+  getDependencies = computedFn((blockId: string): IDependencyEdge[] => {
+    if (!this.isDependencyEnabled) return [];
+
+    const relations = this.rootStore?.issue?.issueDetail?.relation?.relationMap?.[blockId];
+    if (!relations) return [];
+
+    const edges: IDependencyEdge[] = [];
+    for (const [relationType, kind] of Object.entries(DEPENDENT_RELATION_KIND)) {
+      for (const to of relations[relationType as keyof typeof relations] ?? []) {
+        if (to === blockId) continue;
+        edges.push({ from: blockId, to, kind });
+      }
+    }
+    return edges;
+  });
+
+  /** Every drawable dependency edge between the blocks currently on the chart. */
+  getDependencyEdges = computedFn((): IDependencyEdge[] => {
+    if (!this.isDependencyEnabled || !this.blockIds) return [];
+
+    const edges: IDependencyEdge[] = [];
+    for (const blockId of this.blockIds) {
+      if (!this.canConnect(blockId)) continue;
+      for (const edge of this.getDependencies(blockId)) {
+        if (!this.canConnect(edge.to)) continue;
+        edges.push(edge);
+      }
+    }
+    return edges;
+  });
+
+  /** Whether the dependent block breaks the constraint of the given edge. */
+  getIsDependencyViolated = computedFn((edge: IDependencyEdge): boolean => {
+    const from = this.blocksMap[edge.from]?.position;
+    const to = this.blocksMap[edge.to]?.position;
+    if (!from || !to) return false;
+
+    return to.marginLeft < getRequiredLeft(edge.kind, from, to) - POSITION_EPSILON;
+  });
+
+  /**
+   * Walks the dependent graph from the given block and returns the minimum
+   * forward shift of every block whose constraint is violated. Breadth first,
+   * duration preserving and bounded, so a cyclic graph cannot loop forever.
+   */
+  private computeDependencyShifts = (rootId: string): Record<string, BlockRect> => {
+    const shifts: Record<string, BlockRect> = {};
+
+    if (!this.isDependencyEnabled) return shifts;
+
+    const getRect = (blockId: string): BlockRect | undefined => shifts[blockId] ?? this.blocksMap[blockId]?.position;
+
+    const queue: string[] = [rootId];
+    let processed = 0;
+
+    while (queue.length > 0 && processed < MAX_PROPAGATION_NODES) {
+      const currentId = queue.shift() as string;
+      processed++;
+
+      const predecessor = getRect(currentId);
+      if (!predecessor || !this.canConnect(currentId)) continue;
+
+      for (const edge of this.getDependencies(currentId)) {
+        if (!this.canConnect(edge.to)) continue;
+
+        const dependent = getRect(edge.to);
+        if (!dependent) continue;
+
+        const requiredLeft = getRequiredLeft(edge.kind, predecessor, dependent);
+        if (dependent.marginLeft >= requiredLeft - POSITION_EPSILON) continue;
+
+        shifts[edge.to] = { marginLeft: requiredLeft, width: dependent.width };
+        queue.push(edge.to);
+      }
+    }
+
+    return shifts;
+  };
+
+  /** Blocks force render while a connector is being dragged so it can be dropped on them. */
+  getIsCurrentDependencyDragging = computedFn((_blockId: string) => !!this.dependencyDrag);
+
+  startDependencyDrag = (fromId: string, side: "start" | "end", x: number, y: number) => {
+    this.dependencyDrag = { fromId, side, x, y };
+  };
+
+  updateDependencyDrag = (x: number, y: number) => {
+    if (!this.dependencyDrag) return;
+    this.dependencyDrag = { ...this.dependencyDrag, x, y };
+  };
+
+  endDependencyDrag = () => {
+    this.dependencyDrag = null;
+  };
 }

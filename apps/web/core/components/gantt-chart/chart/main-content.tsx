@@ -28,6 +28,7 @@ import { IssueBulkOperationsRoot } from "@/components/issues/bulk-operations";
 import { useBulkOperationStatus } from "@/hooks/use-bulk-operation-status";
 // local imports
 import { DEFAULT_BLOCK_WIDTH, GANTT_SELECT_GROUP, HEADER_HEIGHT } from "../constants";
+import { DependencyLayer } from "../dependencies";
 import { getItemPositionWidth } from "../views";
 import { TimelineDragHelper } from "./timeline-drag-helper";
 
@@ -223,6 +224,11 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
                       enableDependency={enableDependency}
                       showAllBlocks={showAllBlocks}
                       updateBlockDates={updateBlockDates}
+                    />
+                    <DependencyLayer
+                      blockIds={blockIds}
+                      itemsContainerWidth={itemsContainerWidth}
+                      ganttContainerRef={ganttContainerRef}
                     />
                   </div>
                 )}

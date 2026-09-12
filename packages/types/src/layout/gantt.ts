@@ -64,3 +64,21 @@ export interface ChartDataTypeData {
   approxFilterRange: number;
   dayWidth: number;
 }
+
+/** Dependency constraint kind between two timeline blocks. */
+export type TDependencyKind = "FS" | "SS" | "FF";
+
+/** A single dependency edge, always pointing predecessor -> dependent. */
+export interface IDependencyEdge {
+  from: string;
+  to: string;
+  kind: TDependencyKind;
+}
+
+/** In flight "drag a connector out of a block edge" gesture. */
+export interface IDependencyDrag {
+  fromId: string;
+  side: "start" | "end";
+  x: number;
+  y: number;
+}
