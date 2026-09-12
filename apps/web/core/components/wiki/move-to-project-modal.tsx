@@ -16,13 +16,11 @@ import { CustomSearchSelect, EModalPosition, EModalWidth, ModalCore } from "@pla
 // hooks
 import { EPageStoreType, usePageStore } from "@/hooks/store";
 import { useProject } from "@/hooks/store/use-project";
-import { useUserPermissions } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
 // services
 import { WorkspacePageService } from "@/services/page";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
-import { ROLE_PERMISSIONS_TO_CREATE_PAGE } from "@/store/pages/project-page.store";
 
 const workspacePageService = new WorkspacePageService();
 
@@ -44,18 +42,13 @@ export const MoveToProjectModal = observer(function MoveToProjectModal(props: Pr
   const [isSubmitting, setIsSubmitting] = useState(false);
   // store hooks
   const { joinedProjectIds, getPartialProjectById } = useProject();
-  const { getProjectRoleByWorkspaceSlugAndProjectId } = useUserPermissions();
   const { removePage } = usePageStore(EPageStoreType.WORKSPACE);
   const { t } = useTranslation();
 
-  // only the projects the user may create pages in are valid targets
+  // joined projects; the API rejects targets the user cannot write pages in
   const options = useMemo(
     () =>
       joinedProjectIds
-        .filter((id) => {
-          const role = getProjectRoleByWorkspaceSlugAndProjectId(workspaceSlug?.toString() ?? "", id);
-          return !!role && ROLE_PERMISSIONS_TO_CREATE_PAGE.includes(role);
-        })
         .map((id) => {
           const project = getPartialProjectById(id);
           return {
@@ -69,7 +62,7 @@ export const MoveToProjectModal = observer(function MoveToProjectModal(props: Pr
             ),
           };
         }),
-    [joinedProjectIds, getPartialProjectById, getProjectRoleByWorkspaceSlugAndProjectId, workspaceSlug]
+    [joinedProjectIds, getPartialProjectById]
   );
 
   useEffect(() => {
