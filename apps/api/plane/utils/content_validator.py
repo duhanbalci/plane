@@ -75,6 +75,15 @@ CUSTOM_TAGS = {
     "label",
     "input",
     "image-component",
+    # fork editor node'lari (packages/editor extension-config'leri ile ayni)
+    "attachment-component",
+    "page-embed-component",
+    "issue-embed-component",
+    "external-embed-component",
+    "inline-date-component",
+    "inline-status-component",
+    "details",
+    "summary",
 }
 ALLOWED_TAGS = nh3.ALLOWED_TAGS | CUSTOM_TAGS
 
@@ -110,6 +119,13 @@ ATTRIBUTES = {
         "data-emoji-url",
         "data-logo-in-use",
         "data-block-type",
+        # columns / tabs / toggle / attachment
+        "data-spacing-group",
+        "data-width",
+        "data-orientation",
+        "data-title",
+        "data-preview",
+        "data-accepted-file-type",
     },
     "a": {"href", "target"},
     # editor node/tag attributes
@@ -134,6 +150,18 @@ ATTRIBUTES = {
         "title",
     },
     "mention-component": {"id", "entity_identifier", "entity_name"},
+    "attachment-component": {"id", "src", "asset_id", "name", "size", "mime", "status"},
+    "page-embed-component": {"id", "entity_identifier"},
+    "issue-embed-component": {
+        "id",
+        "entity_identifier",
+        "entity_name",
+        "project_identifier",
+        "workspace_identifier",
+    },
+    "external-embed-component": {"id", "src", "display", "title"},
+    "inline-date-component": {"id", "date"},
+    "inline-status-component": {"id", "text", "color"},
     "th": {
         "colspan",
         "rowspan",
