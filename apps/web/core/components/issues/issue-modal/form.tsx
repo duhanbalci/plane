@@ -141,7 +141,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     issue: { getIssueById },
   } = useIssueDetail();
   const { fetchCycles } = useProjectIssueProperties();
-  const { getActiveProperties, getEpicTypeId } = useIssueTypes();
+  const { getActiveProperties, getEpicTypeId, isTypesFetchedForProject, fetchProjectTypes } = useIssueTypes();
   const { getStateById } = useProjectState();
 
   // form info
@@ -229,6 +229,11 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
 
     // if issue type id is present or project not available, return
     if (issueTypeId || !projectId) return;
+
+    // liste sayfasi tipleri yuklemez; varsayilan tip icin burada cek
+    if (isIssueTypeEnabled && !isTypesFetchedForProject(projectId) && workspaceSlug) {
+      void fetchProjectTypes(workspaceSlug.toString(), projectId).catch((error) => console.error(error));
+    }
 
     if (defaultTypeIdForProject) setValue("type_id", defaultTypeIdForProject, { shouldValidate: true });
 
