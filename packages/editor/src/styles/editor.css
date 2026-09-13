@@ -517,3 +517,61 @@ span[data-name][data-type="emoji"] img {
 .editor-comment-mark-active {
   background-color: --alpha(var(--background-color-accent-primary) / 30%);
 }
+
+/* toggle (details) block */
+.ProseMirror .editor-details-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding-top: var(--paragraph-padding-top);
+  padding-bottom: var(--paragraph-padding-bottom);
+}
+
+.ProseMirror .editor-details-block > .editor-details-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ProseMirror .editor-details-toggle {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: calc(var(--line-height-regular) + var(--paragraph-padding-top));
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.ProseMirror .editor-details-block.is-open > .editor-details-toggle {
+  transform: rotate(90deg);
+}
+
+.ProseMirror .editor-details-summary {
+  display: block;
+  list-style: none;
+  cursor: text;
+}
+
+.ProseMirror .editor-details-summary::-webkit-details-marker,
+.ProseMirror .editor-details-summary::marker {
+  display: none;
+  content: "";
+}
+
+.ProseMirror .editor-details-block:not(.is-open) > .editor-details-body > .editor-details-content {
+  display: none;
+}
+/* end toggle (details) block */
+
+/* inline date and status chips */
+.ProseMirror inline-date-component,
+.ProseMirror inline-status-component {
+  display: inline;
+}
+
+.ProseMirror .react-renderer.node-inlineDate,
+.ProseMirror .react-renderer.node-inlineStatus {
+  display: inline;
+}
+/* end inline date and status chips */

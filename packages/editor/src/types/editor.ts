@@ -70,6 +70,9 @@ export type TEditorCommands =
   | "attachment"
   | "emoji"
   | "external-embed"
+  | "toggle"
+  | "date"
+  | "status"
   | TExtendedEditorCommands;
 
 export type TCommandExtraProps = {

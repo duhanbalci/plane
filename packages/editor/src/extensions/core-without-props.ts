@@ -17,12 +17,19 @@ import { CustomCodeBlockExtensionWithoutProps } from "./code/without-props";
 import { CustomCodeInlineExtension } from "./code-inline";
 import { CommentMarkExtensionConfig } from "./comment-mark/extension-config";
 import { CustomColorExtension } from "./custom-color";
+import {
+  DetailsContentExtensionConfig,
+  DetailsExtensionConfig,
+  DetailsSummaryExtensionConfig,
+} from "./details/extension-config";
 import { CustomImageExtensionConfig } from "./custom-image/extension-config";
 import { CustomLinkExtension } from "./custom-link";
 import { EmojiExtension } from "./emoji/extension";
 import { ExternalEmbedExtensionConfig } from "./external-embed/extension-config";
 import { CustomHorizontalRule } from "./horizontal-rule";
 import { ImageExtensionConfig } from "./image";
+import { InlineDateExtensionConfig } from "./inline-date/extension-config";
+import { InlineStatusExtensionConfig } from "./inline-status/extension-config";
 import { CustomMentionExtensionConfig } from "./mentions/extension-config";
 import { PageEmbedExtensionConfig } from "./page-embed/extension-config";
 import { CustomQuoteExtension } from "./quote";
@@ -73,4 +80,9 @@ export const DocumentEditorExtensionsWithoutProps = [
   WorkItemEmbedExtensionConfig,
   PageEmbedExtensionConfig,
   CommentMarkExtensionConfig,
+  DetailsExtensionConfig,
+  DetailsSummaryExtensionConfig,
+  DetailsContentExtensionConfig,
+  InlineDateExtensionConfig,
+  InlineStatusExtensionConfig,
 ];

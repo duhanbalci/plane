@@ -53,6 +53,11 @@ export enum CORE_EXTENSIONS {
   UNIQUE_ID = "uniqueID",
   ATTACHMENT = "attachment-component",
   EXTERNAL_EMBED = "external-embed-component",
+  DETAILS = "details",
+  DETAILS_SUMMARY = "detailsSummary",
+  DETAILS_CONTENT = "detailsContent",
+  INLINE_DATE = "inlineDate",
+  INLINE_STATUS = "inlineStatus",
 }
 
 export const BLOCK_NODE_TYPES = [
@@ -81,4 +86,9 @@ export const BLOCK_NODE_TYPES = [
   CORE_EXTENSIONS.PAGE_EMBED,
   CORE_EXTENSIONS.ATTACHMENT,
   CORE_EXTENSIONS.EXTERNAL_EMBED,
+  CORE_EXTENSIONS.DETAILS,
+
+  // Inline nodes that also carry a persisted data-id
+  CORE_EXTENSIONS.INLINE_DATE,
+  CORE_EXTENSIONS.INLINE_STATUS,
 ];
