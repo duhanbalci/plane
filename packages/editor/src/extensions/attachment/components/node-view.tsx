@@ -6,12 +6,14 @@
 
 import { NodeViewWrapper, useEditorState } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
-import { Download, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { Download, Loader2, RefreshCw, Trash2, Video } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 // plane imports
 import { cn, convertBytesToSize } from "@plane/utils";
+// helpers
+import { insertVideo } from "@/helpers/editor-commands";
 // local imports
-import { EAttachmentUploadStatus } from "../types";
+import { EAttachmentAcceptedFileType, EAttachmentUploadStatus } from "../types";
 import type { TAttachmentAttributes, TAttachmentExtensionType } from "../types";
 import { getAttachmentFileMap, getAttachmentIcon } from "../utils";
 
@@ -25,15 +27,21 @@ export type AttachmentNodeViewProps = Omit<NodeViewProps, "extension" | "updateA
 
 export function AttachmentNodeView(props: AttachmentNodeViewProps) {
   const { deleteNode, editor, extension, node, selected, updateAttributes } = props;
-  const { id, mime, name, size, src, uploadStatus } = node.attrs;
+  const { acceptedFileType, id, mime, name, size, src, uploadStatus } = node.attrs;
   // states
   const [downloadSrc, setDownloadSrc] = useState<string | undefined>(undefined);
   const [hasFailed, setHasFailed] = useState(false);
+  // yüklenecek dosyası da kaynağı da olmayan blok (ör. gerçek Plane'den gelen boş video)
+  const [isEmptyBlock, setIsEmptyBlock] = useState(false);
   // refs
   const hasTriedUploadingOnMountRef = useRef(false);
   // derived values
   const FileTypeIcon = getAttachmentIcon(mime);
   const isUploading = !src && uploadStatus !== EAttachmentUploadStatus.FAILED && !hasFailed;
+  const isVideo = acceptedFileType === EAttachmentAcceptedFileType.VIDEO;
+  const maxFileSizeLabel = extension.storage.maxFileSize
+    ? convertBytesToSize(extension.storage.maxFileSize)
+    : undefined;
   // subscribe to the upload progress of this block
   const uploadPercentage: number | undefined = useEditorState({
     editor,
@@ -47,6 +55,7 @@ export function AttachmentNodeView(props: AttachmentNodeViewProps) {
     const upload = extension.options.uploadAttachment;
     if (!entity || !upload || !id) return;
     setHasFailed(false);
+    setIsEmptyBlock(false);
     updateAttributes({ uploadStatus: EAttachmentUploadStatus.UPLOADING });
     editor.storage.utility.uploadInProgress = true;
     try {
@@ -73,7 +82,8 @@ export function AttachmentNodeView(props: AttachmentNodeViewProps) {
     hasTriedUploadingOnMountRef.current = true;
     const fileMap = getAttachmentFileMap(editor);
     if (!fileMap?.has(id ?? "")) {
-      // nothing to upload and no source either, the node is broken
+      // nothing to upload and no source either, the node is empty
+      setIsEmptyBlock(true);
       setHasFailed(true);
       return;
     }
@@ -102,6 +112,55 @@ export function AttachmentNodeView(props: AttachmentNodeViewProps) {
     hasTriedUploadingOnMountRef.current = true;
     void uploadFile();
   }, [uploadFile]);
+
+  // yüklenmiş video attachment kartı değil, doğrudan oynatıcı olarak görünür
+  if (isVideo && downloadSrc) {
+    return (
+      <NodeViewWrapper className="attachment-component">
+        <div
+          className={cn("my-2 overflow-hidden rounded-md border border-subtle bg-layer-1", {
+            "border-accent-strong": selected && editor.isEditable,
+          })}
+          contentEditable={false}
+          data-drag-handle
+        >
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption -- kullanıcı yüklemesi, altyazı yok */}
+          <video className="block max-h-[480px] w-full bg-black" controls preload="metadata" src={downloadSrc} />
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  // dosyası da kaynağı da olmayan video bloğu: gerçek Plane'deki "Add a video" şeridi
+  if (isVideo && isEmptyBlock && !src) {
+    return (
+      <NodeViewWrapper className="attachment-component">
+        <button
+          type="button"
+          className={cn(
+            "my-2 flex w-full items-center gap-2 rounded-md border border-subtle bg-layer-1 px-3 py-3 text-13 text-accent-primary transition-colors hover:bg-layer-1-hover",
+            {
+              "border-accent-strong": selected && editor.isEditable,
+            }
+          )}
+          contentEditable={false}
+          data-drag-handle
+          disabled={!editor.isEditable}
+          onClick={() => {
+            // boş bloğun yerine seçilen videoyu koy
+            deleteNode();
+            insertVideo(editor);
+          }}
+        >
+          <Video className="size-4 shrink-0" />
+          <span className="flex-1 text-left">Add a video</span>
+          {!!maxFileSizeLabel && (
+            <span className="text-11 text-tertiary italic">Up to {maxFileSizeLabel} per file</span>
+          )}
+        </button>
+      </NodeViewWrapper>
+    );
+  }
 
   return (
     <NodeViewWrapper className="attachment-component">

@@ -67,3 +67,6 @@ export const ACCEPTED_ATTACHMENT_MIME_TYPES = [
   "text/csv",
   "application/xml",
 ];
+
+/** video bloğunun kabul ettiği mime tipleri (attachment listesinin video/* alt kümesi) */
+export const ACCEPTED_VIDEO_MIME_TYPES = ACCEPTED_ATTACHMENT_MIME_TYPES.filter((mime) => mime.startsWith("video/"));

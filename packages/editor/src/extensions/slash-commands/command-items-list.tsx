@@ -22,6 +22,8 @@ import {
   TableEditorOutline,
   TextOutline,
   ToDoOutline,
+  VideoOutline,
+  WorkflowsOutline,
 } from "@makeplane/propel/icons";
 // constants
 import { COLORS_LIST } from "@/constants/common";
@@ -39,6 +41,8 @@ import {
   insertAttachment,
   insertExternalEmbed,
   insertCallout,
+  insertMermaidDiagram,
+  insertVideo,
   setText,
   openEmojiPicker,
 } from "@/helpers/editor-commands";
@@ -314,6 +318,17 @@ export const getSlashCommandFilteredSections =
       pushAfter: "image",
     });
     internalAdditionalOptions.push({
+      commandKey: "video",
+      key: "video",
+      title: "Video",
+      icon: <VideoOutline className="size-3.5" />,
+      description: "Upload a video",
+      searchTerms: ["video", "movie", "mp4", "clip", "media", "upload"],
+      command: ({ editor, range }: CommandProps) => insertVideo(editor, range),
+      section: "general",
+      pushAfter: "attachment",
+    });
+    internalAdditionalOptions.push({
       commandKey: "external-embed",
       key: "external-embed",
       title: "Embed",
@@ -323,6 +338,17 @@ export const getSlashCommandFilteredSections =
       command: ({ editor, range }: CommandProps) => insertExternalEmbed(editor, range),
       section: "general",
       pushAfter: "attachment",
+    });
+    internalAdditionalOptions.push({
+      commandKey: "mermaid",
+      key: "mermaid",
+      title: "Mermaid diagram",
+      icon: <WorkflowsOutline className="size-3.5" />,
+      description: "Insert a Mermaid diagram",
+      searchTerms: ["mermaid", "diagram", "flowchart", "graph", "sequence", "chart"],
+      command: ({ editor, range }: CommandProps) => insertMermaidDiagram(editor, range),
+      section: "general",
+      pushAfter: "external-embed",
     });
 
     [

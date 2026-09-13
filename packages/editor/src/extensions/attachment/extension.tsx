@@ -7,7 +7,7 @@
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { v4 as uuidv4 } from "uuid";
 // constants
-import { ACCEPTED_ATTACHMENT_MIME_TYPES } from "@/constants/config";
+import { ACCEPTED_ATTACHMENT_MIME_TYPES, ACCEPTED_VIDEO_MIME_TYPES } from "@/constants/config";
 // helpers
 import { isFileValid } from "@/helpers/file";
 import { insertEmptyParagraphAtNodeBoundaries } from "@/helpers/insert-empty-paragraph-at-node-boundary";
@@ -17,7 +17,7 @@ import type { TFileHandler } from "@/types";
 import { AttachmentNodeView } from "./components/node-view";
 import type { AttachmentNodeViewProps } from "./components/node-view";
 import { AttachmentExtensionConfig } from "./extension-config";
-import { EAttachmentAttributeNames, EAttachmentUploadStatus } from "./types";
+import { EAttachmentAcceptedFileType, EAttachmentAttributeNames, EAttachmentUploadStatus } from "./types";
 import type { TAttachmentExtensionOptions, TAttachmentExtensionStorage } from "./types";
 import { getAttachmentFileMap } from "./utils";
 
@@ -66,10 +66,16 @@ export function AttachmentExtension(props: Props) {
           ({ commands }) => {
             const file = attachmentProps?.file;
             if (!file) return false;
+            const { acceptedFileType } = attachmentProps;
+            // video bloğu yalnız video/* kabul eder, normal ek tüm listeyi
+            const acceptedMimeTypes =
+              acceptedFileType === EAttachmentAcceptedFileType.VIDEO
+                ? ACCEPTED_VIDEO_MIME_TYPES
+                : ACCEPTED_ATTACHMENT_MIME_TYPES;
             // early return if the dropped file is not supported
             if (
               !isFileValid({
-                acceptedMimeTypes: ACCEPTED_ATTACHMENT_MIME_TYPES,
+                acceptedMimeTypes,
                 file,
                 maxFileSize: this.storage.maxFileSize,
                 onError: (_error, message) => alert(message),
@@ -86,6 +92,7 @@ export function AttachmentExtension(props: Props) {
               [EAttachmentAttributeNames.NAME]: file.name,
               [EAttachmentAttributeNames.SIZE]: file.size,
               [EAttachmentAttributeNames.MIME]: file.type,
+              [EAttachmentAttributeNames.ACCEPTED_FILE_TYPE]: acceptedFileType ?? null,
               [EAttachmentAttributeNames.UPLOAD_STATUS]: EAttachmentUploadStatus.PENDING,
             };
 

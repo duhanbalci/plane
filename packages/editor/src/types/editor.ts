@@ -75,6 +75,8 @@ export type TEditorCommands =
   | "column-4"
   | "tabs-horizontal"
   | "tabs-vertical"
+  | "mermaid"
+  | "video"
   | TExtendedEditorCommands;
 
 export type TCommandExtraProps = {
