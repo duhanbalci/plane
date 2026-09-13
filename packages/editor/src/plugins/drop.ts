@@ -8,6 +8,8 @@ import type { Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 // constants
 import { ACCEPTED_ATTACHMENT_MIME_TYPES, ACCEPTED_IMAGE_MIME_TYPES } from "@/constants/config";
+// extensions
+import type { EAttachmentAcceptedFileType } from "@/extensions/attachment/types";
 // types
 import type { TEditorCommands, TExtensions } from "@/types";
 
@@ -98,10 +100,11 @@ type InsertFilesSafelyArgs = {
   files: File[];
   initialPos: number;
   type?: Extract<TEditorCommands, "attachment" | "image">;
+  acceptedFileType?: EAttachmentAcceptedFileType;
 };
 
 export const insertFilesSafely = async (args: InsertFilesSafelyArgs) => {
-  const { disabledExtensions, editor, event, files, initialPos, type } = args;
+  const { acceptedFileType, disabledExtensions, editor, event, files, initialPos, type } = args;
   let pos = initialPos;
 
   for (const file of files) {
@@ -131,6 +134,7 @@ export const insertFilesSafely = async (args: InsertFilesSafelyArgs) => {
           file,
           pos,
           event,
+          acceptedFileType,
         });
       }
     } catch (error) {

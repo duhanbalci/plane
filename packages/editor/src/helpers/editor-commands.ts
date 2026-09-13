@@ -9,7 +9,9 @@ import type { Editor, Range } from "@tiptap/core";
 import { CORE_EXTENSIONS } from "@/constants/extension";
 // extensions
 import { replaceCodeWithText } from "@/extensions/code/utils/replace-code-block-with-text";
-import { ACCEPTED_ATTACHMENT_MIME_TYPES } from "@/constants/config";
+import { ACCEPTED_ATTACHMENT_MIME_TYPES, ACCEPTED_VIDEO_MIME_TYPES } from "@/constants/config";
+import { EAttachmentAcceptedFileType } from "@/extensions/attachment/types";
+import { MERMAID_LANGUAGE } from "@/extensions/code/mermaid";
 import type { InsertImageComponentProps } from "@/extensions/custom-image/types";
 // helpers
 import type { ExtendedEmojiStorage } from "@/extensions/emoji/emoji";
@@ -224,6 +226,34 @@ export const insertAttachment = (editor: Editor, range?: Range) => {
       initialPos: editor.state.selection.from,
       event: "insert",
       type: "attachment",
+    });
+  });
+  input.click();
+};
+
+/** mermaid bloğu = dili "mermaid" olan normal bir code block */
+export const insertMermaidDiagram = (editor: Editor, range?: Range) => {
+  const chain = editor.chain().focus();
+  if (range) chain.deleteRange(range);
+  chain.setCodeBlock({ language: MERMAID_LANGUAGE }).run();
+};
+
+/** yalnız video/* kabul eden dosya seçiciyi açar ve bloğu video olarak işaretler */
+export const insertVideo = (editor: Editor, range?: Range) => {
+  if (range) editor.chain().focus().deleteRange(range).run();
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ACCEPTED_VIDEO_MIME_TYPES.join(",");
+  input.addEventListener("change", () => {
+    const files = Array.from(input.files ?? []);
+    if (files.length === 0) return;
+    void insertFilesSafely({
+      editor,
+      files,
+      initialPos: editor.state.selection.from,
+      event: "insert",
+      type: "attachment",
+      acceptedFileType: EAttachmentAcceptedFileType.VIDEO,
     });
   });
   input.click();

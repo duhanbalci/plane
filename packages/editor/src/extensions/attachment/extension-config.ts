@@ -44,6 +44,16 @@ export const AttachmentExtensionConfig = Node.create({
         },
       },
       [EAttachmentAttributeNames.MIME]: { default: null },
+      // gerçek Plane ile aynı: data-accepted-file-type="video"
+      [EAttachmentAttributeNames.ACCEPTED_FILE_TYPE]: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute("data-accepted-file-type") || null,
+        renderHTML: (attributes: Record<string, unknown>) => {
+          const acceptedFileType = attributes[EAttachmentAttributeNames.ACCEPTED_FILE_TYPE];
+          if (!acceptedFileType) return {};
+          return { "data-accepted-file-type": acceptedFileType };
+        },
+      },
       // upload progress is runtime-only, it never lands in the HTML
       [EAttachmentAttributeNames.UPLOAD_STATUS]: { default: null, rendered: false },
     };

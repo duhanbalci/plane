@@ -70,6 +70,8 @@ export type TEditorCommands =
   | "attachment"
   | "emoji"
   | "external-embed"
+  | "mermaid"
+  | "video"
   | TExtendedEditorCommands;
 
 export type TCommandExtraProps = {

@@ -15,7 +15,13 @@ export enum EAttachmentAttributeNames {
   NAME = "name",
   SIZE = "size",
   MIME = "mime",
+  ACCEPTED_FILE_TYPE = "acceptedFileType",
   UPLOAD_STATUS = "uploadStatus",
+}
+
+/** bloğun hangi dosya ailesine kilitlendiği; boşsa normal dosya eki */
+export enum EAttachmentAcceptedFileType {
+  VIDEO = "video",
 }
 
 export enum EAttachmentUploadStatus {
@@ -32,6 +38,7 @@ export type TAttachmentAttributes = {
   [EAttachmentAttributeNames.NAME]: string | null;
   [EAttachmentAttributeNames.SIZE]: number | null;
   [EAttachmentAttributeNames.MIME]: string | null;
+  [EAttachmentAttributeNames.ACCEPTED_FILE_TYPE]: EAttachmentAcceptedFileType | null;
   [EAttachmentAttributeNames.UPLOAD_STATUS]: EAttachmentUploadStatus | null;
 };
 
@@ -44,6 +51,7 @@ export type TInsertAttachmentProps = {
   file?: File;
   pos?: number;
   event: "insert" | "drop";
+  acceptedFileType?: EAttachmentAcceptedFileType;
 };
 
 export type TAttachmentExtensionOptions = {
