@@ -38,9 +38,10 @@ export const WorkItemTypePropertyList = observer(function WorkItemTypePropertyLi
   const [propertyToDelete, setPropertyToDelete] = useState<TIssueProperty | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
   // store hooks
-  const { getProperties, updateProperty, deleteProperty } = useIssueTypes();
+  const { getProperties, getTypeById, updateProperty, deleteProperty } = useIssueTypes();
   // derived values
   const properties = getProperties(typeId);
+  const typeName = getTypeById(typeId)?.name;
 
   const handleToggleActive = async (property: TIssueProperty) => {
     try {
@@ -104,7 +105,12 @@ export const WorkItemTypePropertyList = observer(function WorkItemTypePropertyLi
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h6 className="text-body-sm-medium text-primary">{t("work_item_types.settings.properties.title")}</h6>
+            <h6 className="flex items-center gap-2 text-body-sm-medium text-primary">
+              {t("work_item_types.settings.properties.title")}
+              {typeName && (
+                <span className="rounded-sm bg-surface-3 px-1.5 py-0.5 text-caption-sm-regular text-tertiary">{typeName}</span>
+              )}
+            </h6>
             <p className="text-caption-sm-regular text-tertiary">
               {t("work_item_types.settings.properties.description")}
             </p>

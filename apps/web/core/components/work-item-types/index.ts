@@ -9,3 +9,4 @@ export * from "./property-list";
 export * from "./property-modal";
 export * from "./root";
 export * from "./type-modal";
+export * from "./type-logo";

@@ -217,19 +217,23 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...dataResetProperties]);
 
-  // Update the issue type id when the project id changes
+  // Update the issue type id when the project id changes.
+  // Tipler modal acildiktan sonra yuklenebilir; deger degisince tekrar dene.
+  const defaultTypeIdForProject = projectId
+    ? isEpic
+      ? getEpicTypeId(projectId)
+      : getIssueTypeIdOnProjectChange(projectId)
+    : null;
   useEffect(() => {
     const issueTypeId = watch("type_id");
 
     // if issue type id is present or project not available, return
     if (issueTypeId || !projectId) return;
 
-    // epic modalinda tip her zaman projenin epic tipi
-    const issueTypeIdOnProjectChange = isEpic ? getEpicTypeId(projectId) : getIssueTypeIdOnProjectChange(projectId);
-    if (issueTypeIdOnProjectChange) setValue("type_id", issueTypeIdOnProjectChange, { shouldValidate: true });
+    if (defaultTypeIdForProject) setValue("type_id", defaultTypeIdForProject, { shouldValidate: true });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, projectId]);
+  }, [data, projectId, defaultTypeIdForProject]);
 
   useEffect(() => {
     if (workItemTemplateId && editorRef.current) {

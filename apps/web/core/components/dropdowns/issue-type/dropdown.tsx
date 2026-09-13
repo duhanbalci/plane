@@ -11,12 +11,12 @@ import { usePopper } from "react-popper";
 import { Combobox } from "@headlessui/react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
-import { Logo } from "@plane/propel/emoji-icon-picker";
-import { ChevronDownOutline, SearchOutline, TickOutline, WorkItemsOutline } from "@makeplane/propel/icons";
+import { ChevronDownOutline, SearchOutline, TickOutline } from "@makeplane/propel/icons";
 import { ComboDropDown } from "@plane/ui";
 import { cn } from "@plane/utils";
 // hooks
 import { useIssueTypes } from "@/hooks/store/use-issue-types";
+import { WorkItemTypeLogo } from "@/components/work-item-types/type-logo";
 import { useDropdown } from "@/hooks/use-dropdown";
 // local imports
 import { DropdownButton } from "../buttons";
@@ -134,11 +134,7 @@ export const IssueTypeDropdown = observer(function IssueTypeDropdown(props: Prop
         renderToolTipByDefault={renderByDefault}
       >
         {!hideIcon &&
-          (selectedType?.logo_props ? (
-            <Logo logo={selectedType.logo_props} size={12} />
-          ) : (
-            <WorkItemsOutline className="h-3 w-3 flex-shrink-0" />
-          ))}
+          <WorkItemTypeLogo type={selectedType} size={12} />}
         {(selectedType || placeholder) && BUTTON_VARIANTS_WITH_TEXT.includes(buttonVariant) && (
           <span className="truncate">
             {selectedType ? selectedType.name : <span className="text-placeholder">{placeholder}</span>}
@@ -200,11 +196,7 @@ export const IssueTypeDropdown = observer(function IssueTypeDropdown(props: Prop
                         )}
                       >
                         <div className="flex flex-grow items-center gap-2 truncate">
-                          {type.logo_props ? (
-                            <Logo logo={type.logo_props} size={12} />
-                          ) : (
-                            <WorkItemsOutline className="h-3 w-3 flex-shrink-0" />
-                          )}
+                          <WorkItemTypeLogo type={type} size={12} />
                           <span className="flex-grow truncate">{type.name}</span>
                         </div>
                         {selected && <TickOutline className="h-3.5 w-3.5 flex-shrink-0" />}

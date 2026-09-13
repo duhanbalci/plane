@@ -6,9 +6,10 @@
 
 import { observer } from "mobx-react";
 // plane imports
-import { Logo } from "@plane/propel/emoji-icon-picker";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssueTypeIdentifier } from "@plane/types";
+// hooks
+import { WorkItemTypeLogo } from "@/components/work-item-types/type-logo";
 // hooks
 import { useIssueTypes } from "@/hooks/store/use-issue-types";
 
@@ -29,12 +30,12 @@ export const IssueTypeIdentifier = observer(function IssueTypeIdentifier(props: 
   // derived values
   const issueType = getTypeById(issueTypeId);
 
-  if (!issueType?.logo_props) return null;
+  if (!issueType) return null;
 
   return (
     <Tooltip label={issueType.name}>
       <div className="flex shrink-0 items-center">
-        <Logo logo={issueType.logo_props} size={SIZE_MAP[size]} />
+        <WorkItemTypeLogo type={issueType} size={SIZE_MAP[size]} />
       </div>
     </Tooltip>
   );

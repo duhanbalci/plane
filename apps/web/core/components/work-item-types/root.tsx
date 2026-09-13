@@ -10,9 +10,8 @@ import useSWR from "swr";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@plane/propel/button";
-import { Logo } from "@plane/propel/emoji-icon-picker";
 import { Switch } from "@makeplane/propel/components/switch";
-import { AddOutline, DeleteOutline, EditOutline, WorkItemsOutline } from "@makeplane/propel/icons";
+import { AddOutline, DeleteOutline, EditOutline } from "@makeplane/propel/icons";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import type { TIssueType } from "@plane/types";
 import { AlertModalCore } from "@plane/ui";
@@ -25,6 +24,7 @@ import { useProject } from "@/hooks/store/use-project";
 // local imports
 import { WorkItemTypesEnableCard } from "./enable-card";
 import { WorkItemTypePropertyList } from "./property-list";
+import { WorkItemTypeLogo } from "./type-logo";
 import { CreateUpdateWorkItemTypeModal } from "./type-modal";
 
 type Props = {
@@ -188,11 +188,7 @@ export const WorkItemTypesRoot = observer(function WorkItemTypesRoot(props: Prop
                 className="flex min-w-0 flex-grow items-center gap-3 text-left"
                 onClick={() => setSelectedTypeId(issueType.id)}
               >
-                {issueType.logo_props ? (
-                  <Logo logo={issueType.logo_props} size={16} />
-                ) : (
-                  <WorkItemsOutline className="h-4 w-4 flex-shrink-0 text-tertiary" />
-                )}
+                <WorkItemTypeLogo type={issueType} size={16} className="text-tertiary" />
                 <div className="min-w-0">
                   <p className="truncate text-body-xs-medium text-primary">
                     {issueType.name}
