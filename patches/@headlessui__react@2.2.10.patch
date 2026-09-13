@@ -1,0 +1,7 @@
+diff --git a/dist/internal/frozen.js b/dist/internal/frozen.js
+index 6519148144e0151b4edbe631174aaa0ef15178b1..9f778a9238dfe5506887bc46ede151d5af8d81bd 100644
+--- a/dist/internal/frozen.js
++++ b/dist/internal/frozen.js
+@@ -1 +1 @@
+-import r,{cloneElement as l,isValidElement as c,useState as a}from"react";function f({children:t,freeze:e},o){let n=u(e,t);return c(n)?l(n,{ref:o}):r.createElement(r.Fragment,null,n)}const s=r.forwardRef(f);function u(t,e){let[o,n]=a(e);return!t&&o!==e&&n(e),t?o:e}export{s as Frozen,u as useFrozenData};
++import r,{cloneElement as l,isValidElement as c,useState as a}from"react";function d(t){return r.version.split(".")[0]>="19"?t.props.ref:t.ref}function f({children:t,freeze:e},o){let n=u(e,t);if(!c(n))return r.createElement(r.Fragment,null,n);if(o==null)return n;let i=d(n);if(i==null)return l(n,{ref:o});return l(n,{ref:m=>{typeof i=="function"?i(m):i.current=m,typeof o=="function"?o(m):o.current=m}})}const s=r.forwardRef(f);function u(t,e){let[o,n]=a(e);return!t&&o!==e&&n(e),t?o:e}export{s as Frozen,u as useFrozenData};
