@@ -37,6 +37,8 @@ const Command = Extension.create<SlashCommandOptions>({
     return {
       suggestion: {
         char: "/",
+        // "2 Columns", "Mermaid diagram" gibi bosluklu etiketler yazilabilsin (gercek Plane gibi)
+        allowSpaces: true,
         command: ({ editor, range, props }) => {
           props.command({ editor, range });
         },

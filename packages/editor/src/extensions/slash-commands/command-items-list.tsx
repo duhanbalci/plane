@@ -368,19 +368,25 @@ export const getSlashCommandFilteredSections =
       }
     });
 
-    const filteredSlashSections = SLASH_COMMAND_SECTIONS.map((section) => ({
-      ...section,
-      items: section.items.filter((item) => {
-        if (typeof query !== "string") return;
-
-        const lowercaseQuery = query.toLowerCase();
-        return (
-          item.title.toLowerCase().includes(lowercaseQuery) ||
-          item.description.toLowerCase().includes(lowercaseQuery) ||
-          item.searchTerms.some((t) => t.includes(lowercaseQuery))
-        );
-      }),
-    }));
+    // baslik eslesmesi aciklama/arama terimi eslesmesinden once gelsin
+    // ("video" yazinca Embed degil Video ilk sirada)
+    const rankItem = (item: ISlashCommandItem, lowercaseQuery: string): number => {
+      const title = item.title.toLowerCase();
+      if (title.startsWith(lowercaseQuery)) return 0;
+      if (title.includes(lowercaseQuery)) return 1;
+      if (item.searchTerms.some((t) => t.includes(lowercaseQuery))) return 2;
+      if (item.description.toLowerCase().includes(lowercaseQuery)) return 3;
+      return -1;
+    };
+    const filteredSlashSections = SLASH_COMMAND_SECTIONS.map((section) => {
+      if (typeof query !== "string") return { ...section, items: [] };
+      const lowercaseQuery = query.toLowerCase();
+      const ranked = section.items
+        .map((item, index) => ({ item, index, rank: rankItem(item, lowercaseQuery) }))
+        .filter((entry) => entry.rank !== -1)
+        .sort((a, b) => a.rank - b.rank || a.index - b.index);
+      return { ...section, items: ranked.map((entry) => entry.item) };
+    });
 
     return filteredSlashSections.filter((s) => s.items.length !== 0);
   };
