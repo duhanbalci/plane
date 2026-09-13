@@ -70,6 +70,11 @@ export type TEditorCommands =
   | "attachment"
   | "emoji"
   | "external-embed"
+  | "column-2"
+  | "column-3"
+  | "column-4"
+  | "tabs-horizontal"
+  | "tabs-vertical"
   | TExtendedEditorCommands;
 
 export type TCommandExtraProps = {

@@ -53,6 +53,10 @@ export enum CORE_EXTENSIONS {
   UNIQUE_ID = "uniqueID",
   ATTACHMENT = "attachment-component",
   EXTERNAL_EMBED = "external-embed-component",
+  COLUMN_LIST = "columnList",
+  COLUMN = "column",
+  TABS = "tabs",
+  TAB = "tab",
 }
 
 export const BLOCK_NODE_TYPES = [
@@ -81,4 +85,10 @@ export const BLOCK_NODE_TYPES = [
   CORE_EXTENSIONS.PAGE_EMBED,
   CORE_EXTENSIONS.ATTACHMENT,
   CORE_EXTENSIONS.EXTERNAL_EMBED,
+
+  // Layout nodes
+  CORE_EXTENSIONS.COLUMN_LIST,
+  CORE_EXTENSIONS.COLUMN,
+  CORE_EXTENSIONS.TABS,
+  CORE_EXTENSIONS.TAB,
 ];

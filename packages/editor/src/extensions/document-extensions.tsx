@@ -8,9 +8,13 @@ import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { AnyExtension } from "@tiptap/core";
 import { SlashCommands } from "@/extensions";
 // local imports
+import { ColumnExtension, ColumnListExtension } from "./columns/extension";
+import { columnSlashCommandOptions } from "./columns/slash-command";
 import { CommentMarkExtension } from "./comment-mark/extension";
 import { PageEmbedExtension } from "./page-embed/extension";
 import { pageEmbedSlashCommandOption } from "./page-embed/slash-command";
+import { TabExtension, TabsExtension } from "./tabs/extension";
+import { tabsSlashCommandOptions } from "./tabs/slash-command";
 // types
 import type { IEditorProps, TExtensions, TUserDetails } from "@/types";
 
@@ -40,7 +44,11 @@ const extensionRegistry: TDocumentEditorAdditionalExtensionsRegistry[] = [
       SlashCommands({
         disabledExtensions,
         flaggedExtensions,
-        additionalOptions: pageEmbedConfig ? [pageEmbedSlashCommandOption(pageEmbedConfig)] : undefined,
+        additionalOptions: [
+          ...(pageEmbedConfig ? [pageEmbedSlashCommandOption(pageEmbedConfig)] : []),
+          ...columnSlashCommandOptions,
+          ...tabsSlashCommandOptions,
+        ],
       }),
   },
   {
@@ -52,6 +60,24 @@ const extensionRegistry: TDocumentEditorAdditionalExtensionsRegistry[] = [
     // the inline comment mark; the schema-only twin lives in core-without-props
     isEnabled: () => true,
     getExtension: ({ pageCommentConfig }) => CommentMarkExtension(pageCommentConfig),
+  },
+  {
+    // the multi column layout; the schema-only twins live in core-without-props
+    isEnabled: () => true,
+    getExtension: () => ColumnListExtension,
+  },
+  {
+    isEnabled: () => true,
+    getExtension: () => ColumnExtension,
+  },
+  {
+    // the tabs layout; the schema-only twins live in core-without-props
+    isEnabled: () => true,
+    getExtension: () => TabsExtension,
+  },
+  {
+    isEnabled: () => true,
+    getExtension: () => TabExtension,
   },
 ];
 

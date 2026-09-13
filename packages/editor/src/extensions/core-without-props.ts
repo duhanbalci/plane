@@ -14,6 +14,7 @@ import { CoreEditorAdditionalExtensionsWithoutProps } from "@/extensions/core/wi
 import { AttachmentExtensionConfig } from "./attachment/extension-config";
 import { CustomCalloutExtensionConfig } from "./callout/extension-config";
 import { CustomCodeBlockExtensionWithoutProps } from "./code/without-props";
+import { ColumnExtensionConfig, ColumnListExtensionConfig } from "./columns/extension-config";
 import { CustomCodeInlineExtension } from "./code-inline";
 import { CommentMarkExtensionConfig } from "./comment-mark/extension-config";
 import { CustomColorExtension } from "./custom-color";
@@ -28,6 +29,7 @@ import { PageEmbedExtensionConfig } from "./page-embed/extension-config";
 import { CustomQuoteExtension } from "./quote";
 import { CustomStarterKitExtension } from "./starter-kit";
 import { TableHeader, TableCell, TableRow, Table } from "./table";
+import { TabExtensionConfig, TabsExtensionConfig } from "./tabs/extension-config";
 import { CustomTextAlignExtension } from "./text-align";
 import { WorkItemEmbedExtensionConfig } from "./work-item-embed/extension-config";
 
@@ -73,4 +75,8 @@ export const DocumentEditorExtensionsWithoutProps = [
   WorkItemEmbedExtensionConfig,
   PageEmbedExtensionConfig,
   CommentMarkExtensionConfig,
+  ColumnListExtensionConfig,
+  ColumnExtensionConfig,
+  TabsExtensionConfig,
+  TabExtensionConfig,
 ];
