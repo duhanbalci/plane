@@ -54,13 +54,14 @@ domains = [
 command = ["sh", "-c", "python manage.py migrate && exec ./bin/docker-entrypoint-api.sh"]
 # Ilk kurulumda migrate dakikalar surer; saglik penceresi genis (15 s x 60).
 health = { http = "/api/instances/", interval = "15s", retries = 60 }
-resources = { memory = "1G" }
+# 2 worker'da paralel istekler (proje acilisinda ~12) kuyruga giriyor; sayfa 10 sn gec geliyordu.
+resources = { memory = "2G" }
 
 [services.api.env]
 DEBUG = "0"
 SECRET_KEY = { secret = true }
 LIVE_SERVER_SECRET_KEY = { secret = true }
-GUNICORN_WORKERS = "2"
+GUNICORN_WORKERS = "6"
 WEB_URL = "https://plane.duploy.dev"
 CORS_ALLOWED_ORIGINS = "https://plane.duploy.dev"
 APP_BASE_URL = "https://plane.duploy.dev"
