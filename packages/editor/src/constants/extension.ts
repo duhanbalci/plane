@@ -57,6 +57,11 @@ export enum CORE_EXTENSIONS {
   COLUMN = "column",
   TABS = "tabs",
   TAB = "tab",
+  DETAILS = "details",
+  DETAILS_SUMMARY = "detailsSummary",
+  DETAILS_CONTENT = "detailsContent",
+  INLINE_DATE = "inlineDate",
+  INLINE_STATUS = "inlineStatus",
 }
 
 export const BLOCK_NODE_TYPES = [
@@ -91,4 +96,9 @@ export const BLOCK_NODE_TYPES = [
   CORE_EXTENSIONS.COLUMN,
   CORE_EXTENSIONS.TABS,
   CORE_EXTENSIONS.TAB,
+  CORE_EXTENSIONS.DETAILS,
+
+  // Inline nodes that also carry a persisted data-id
+  CORE_EXTENSIONS.INLINE_DATE,
+  CORE_EXTENSIONS.INLINE_STATUS,
 ];

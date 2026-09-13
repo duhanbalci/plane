@@ -41,6 +41,37 @@
 }
 /* end text background colors */
 
+/* inline status chip colors */
+[data-theme*="light"] {
+  --editor-status-gray-background: #d6d6d8;
+  --editor-status-gray-text: #4b4e52;
+  --editor-status-green-background: #c3f0de;
+  --editor-status-green-text: #0b7a55;
+  --editor-status-red-background: #ffd5d7;
+  --editor-status-red-text: #c1393a;
+  --editor-status-yellow-background: #fbeac0;
+  --editor-status-yellow-text: #8a6508;
+  --editor-status-blue-background: #c9dafb;
+  --editor-status-blue-text: #1d55c9;
+  --editor-status-purple-background: #e3d8fd;
+  --editor-status-purple-text: #6740c9;
+}
+[data-theme*="dark"] {
+  --editor-status-gray-background: #404144;
+  --editor-status-gray-text: #b9bbbe;
+  --editor-status-green-background: #1d4a3b;
+  --editor-status-green-text: #6fd9ae;
+  --editor-status-red-background: #4e2727;
+  --editor-status-red-text: #f08b8b;
+  --editor-status-yellow-background: #4b3c11;
+  --editor-status-yellow-text: #e6c25e;
+  --editor-status-blue-background: #223558;
+  --editor-status-blue-text: #8fb4f5;
+  --editor-status-purple-background: #3d325a;
+  --editor-status-purple-text: #b79bf7;
+}
+/* end inline status chip colors */
+
 /* font size and style */
 .editor-container {
   --color-placeholder: --alpha(var(--text-color-primary) / 50%);

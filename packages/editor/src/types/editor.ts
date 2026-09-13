@@ -77,6 +77,9 @@ export type TEditorCommands =
   | "tabs-vertical"
   | "mermaid"
   | "video"
+  | "toggle"
+  | "date"
+  | "status"
   | TExtendedEditorCommands;
 
 export type TCommandExtraProps = {

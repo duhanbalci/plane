@@ -14,10 +14,11 @@ let mermaidPromise: Promise<TMermaidApi> | undefined;
  */
 const loadMermaid = async (): Promise<TMermaidApi> => {
   mermaidPromise ??= import("mermaid").then(({ default: mermaid }) => {
+    // uygulama temasi html[data-theme] ile geliyor; gercek Plane'de diyagram koyu temada koyu
+    const isDark = /dark/.test(document.documentElement.getAttribute("data-theme") ?? "");
     mermaid.initialize({
       startOnLoad: false,
-      // editör teması CSS değişkenlerinden geliyor, mermaid'i nötr bırakıyoruz
-      theme: "default",
+      theme: isDark ? "dark" : "default",
       securityLevel: "strict",
       fontFamily: "inherit",
     });

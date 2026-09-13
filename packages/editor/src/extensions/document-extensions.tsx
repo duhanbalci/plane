@@ -11,6 +11,12 @@ import { SlashCommands } from "@/extensions";
 import { ColumnExtension, ColumnListExtension } from "./columns/extension";
 import { columnSlashCommandOptions } from "./columns/slash-command";
 import { CommentMarkExtension } from "./comment-mark/extension";
+import { DetailsContentExtension, DetailsExtension, DetailsSummaryExtension } from "./details/extension";
+import { detailsSlashCommandOption } from "./details/slash-command";
+import { InlineDateExtension } from "./inline-date/extension";
+import { inlineDateSlashCommandOption } from "./inline-date/slash-command";
+import { InlineStatusExtension } from "./inline-status/extension";
+import { inlineStatusSlashCommandOption } from "./inline-status/slash-command";
 import { PageEmbedExtension } from "./page-embed/extension";
 import { pageEmbedSlashCommandOption } from "./page-embed/slash-command";
 import { TabExtension, TabsExtension } from "./tabs/extension";
@@ -44,10 +50,14 @@ const extensionRegistry: TDocumentEditorAdditionalExtensionsRegistry[] = [
       SlashCommands({
         disabledExtensions,
         flaggedExtensions,
+        // sira onemli: her secenek `pushAfter`'a gore siraya sokulur
         additionalOptions: [
           ...(pageEmbedConfig ? [pageEmbedSlashCommandOption(pageEmbedConfig)] : []),
           ...columnSlashCommandOptions,
           ...tabsSlashCommandOptions,
+          detailsSlashCommandOption,
+          inlineDateSlashCommandOption,
+          inlineStatusSlashCommandOption,
         ],
       }),
   },
@@ -78,6 +88,29 @@ const extensionRegistry: TDocumentEditorAdditionalExtensionsRegistry[] = [
   {
     isEnabled: () => true,
     getExtension: () => TabExtension,
+  },
+  {
+    // toggle (details/summary/content); schema-only twins live in core-without-props
+    isEnabled: () => true,
+    getExtension: () => DetailsExtension,
+  },
+  {
+    isEnabled: () => true,
+    getExtension: () => DetailsSummaryExtension,
+  },
+  {
+    isEnabled: () => true,
+    getExtension: () => DetailsContentExtension,
+  },
+  {
+    // inline date chip
+    isEnabled: () => true,
+    getExtension: () => InlineDateExtension,
+  },
+  {
+    // inline status chip
+    isEnabled: () => true,
+    getExtension: () => InlineStatusExtension,
   },
 ];
 
