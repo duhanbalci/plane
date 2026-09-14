@@ -65,6 +65,21 @@
       "title": "Prepojenia",
       "heading": "Prepojenia",
       "description": "Spravujte nastavenia prepojení svojho pracovného priestoru."
+    },
+    "connected_apps": {
+      "title": "Pripojené aplikácie",
+      "description": "Aplikácie, ktorým ste udelili prístup k svojmu účtu Plane. Odobratie prístupu platí okamžite.",
+      "permissions": "Oprávnenia",
+      "revoke": "Odobrať prístup",
+      "revoke_confirm_title": "Odobrať prístup?",
+      "revoke_confirm_description": "Aplikácia {name} okamžite stratí prístup k vášmu účtu Plane. Môže o prístup požiadať znova.",
+      "unverified": "Táto aplikácia sa zaregistrovala sama a nebola overená službou Plane.",
+      "last_used": "Naposledy použité {time}",
+      "never_used": "Zatiaľ nepoužité",
+      "empty_title": "Žiadne pripojené aplikácie",
+      "empty_description": "Aplikácie, ktorým udelíte oprávnenie, napríklad vzdialený klient MCP, sa zobrazia tu.",
+      "revoke_success": "Prístup odobratý",
+      "revoke_error": "Prístup sa nepodarilo odobrať"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Predvoľby",
       "notifications": "Oznámenia",
       "api-tokens": "Osobné prístupové tokeny",
-      "connections": "Pripojenia"
+      "connections": "Pripojenia",
+      "connected-apps": "Pripojené aplikácie"
     },
     "tabs": {
       "summary": "Zhrnutie",

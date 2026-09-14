@@ -65,6 +65,21 @@
       "title": "Bağlantılar",
       "heading": "Bağlantılar",
       "description": "Çalışma alanı bağlantı ayarlarınızı yönetin."
+    },
+    "connected_apps": {
+      "title": "Bağlı uygulamalar",
+      "description": "Plane hesabınıza erişim verdiğiniz uygulamalar. Erişimi kaldırmanız anında geçerli olur.",
+      "permissions": "İzinler",
+      "revoke": "Erişimi kaldır",
+      "revoke_confirm_title": "Erişim kaldırılsın mı?",
+      "revoke_confirm_description": "{name} uygulaması Plane hesabınıza erişimini anında kaybeder. Yeniden erişim isteyebilir.",
+      "unverified": "Bu uygulama kendini kaydetti ve Plane tarafından incelenmedi.",
+      "last_used": "Son kullanım {time}",
+      "never_used": "Henüz kullanılmadı",
+      "empty_title": "Bağlı uygulama yok",
+      "empty_description": "Yetki verdiğiniz uygulamalar, örneğin uzak bir MCP istemcisi, burada görünür.",
+      "revoke_success": "Erişim kaldırıldı",
+      "revoke_error": "Erişim kaldırılamadı"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Tercihler",
       "notifications": "Bildirimler",
       "api-tokens": "Kişisel Erişim Tokenları",
-      "connections": "Bağlantılar"
+      "connections": "Bağlantılar",
+      "connected-apps": "Bağlı uygulamalar"
     },
     "tabs": {
       "summary": "Özet",

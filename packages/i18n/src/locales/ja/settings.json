@@ -65,6 +65,21 @@
       "title": "接続",
       "heading": "接続",
       "description": "ワークスペースの接続設定を管理します。"
+    },
+    "connected_apps": {
+      "title": "連携アプリ",
+      "description": "Plane アカウントへのアクセスを許可したアプリです。アクセスの取り消しは即座に反映されます。",
+      "permissions": "権限",
+      "revoke": "アクセスを取り消す",
+      "revoke_confirm_title": "アクセスを取り消しますか？",
+      "revoke_confirm_description": "{name} は Plane アカウントへのアクセスをただちに失います。再度アクセスを要求できます。",
+      "unverified": "このアプリは自己登録されたもので、Plane による確認は行われていません。",
+      "last_used": "最終利用 {time}",
+      "never_used": "未使用",
+      "empty_title": "連携アプリはありません",
+      "empty_description": "許可したアプリ（リモート MCP クライアントなど）がここに表示されます。",
+      "revoke_success": "アクセスを取り消しました",
+      "revoke_error": "アクセスを取り消せませんでした"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "環境設定",
       "notifications": "通知",
       "api-tokens": "個人アクセストークン",
-      "connections": "接続"
+      "connections": "接続",
+      "connected-apps": "連携アプリ"
     },
     "tabs": {
       "summary": "サマリー",

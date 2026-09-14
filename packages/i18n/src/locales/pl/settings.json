@@ -65,6 +65,21 @@
       "title": "Połączenia",
       "heading": "Połączenia",
       "description": "Zarządzaj ustawieniami połączeń przestrzeni roboczej."
+    },
+    "connected_apps": {
+      "title": "Połączone aplikacje",
+      "description": "Aplikacje, którym przyznano dostęp do konta Plane. Cofnięcie dostępu działa natychmiast.",
+      "permissions": "Uprawnienia",
+      "revoke": "Cofnij dostęp",
+      "revoke_confirm_title": "Cofnąć dostęp?",
+      "revoke_confirm_description": "Aplikacja {name} natychmiast utraci dostęp do konta Plane. Może ponownie poprosić o dostęp.",
+      "unverified": "Ta aplikacja zarejestrowała się samodzielnie i nie została zweryfikowana przez Plane.",
+      "last_used": "Ostatnie użycie {time}",
+      "never_used": "Jeszcze nieużywana",
+      "empty_title": "Brak połączonych aplikacji",
+      "empty_description": "Autoryzowane aplikacje, na przykład zdalny klient MCP, pojawią się tutaj.",
+      "revoke_success": "Dostęp cofnięty",
+      "revoke_error": "Nie udało się cofnąć dostępu"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Preferencje",
       "notifications": "Powiadomienia",
       "api-tokens": "Osobiste tokeny dostępu",
-      "connections": "Połączenia"
+      "connections": "Połączenia",
+      "connected-apps": "Połączone aplikacje"
     },
     "tabs": {
       "summary": "Podsumowanie",

@@ -65,6 +65,21 @@
       "title": "連接",
       "heading": "連接",
       "description": "管理您的工作區連接設定。"
+    },
+    "connected_apps": {
+      "title": "已連線的應用程式",
+      "description": "您已授予其存取 Plane 帳戶權限的應用程式。撤銷後立即生效。",
+      "permissions": "權限",
+      "revoke": "撤銷存取權限",
+      "revoke_confirm_title": "撤銷存取權限？",
+      "revoke_confirm_description": "{name} 將立即失去對您 Plane 帳戶的存取權限。它可以再次請求授權。",
+      "unverified": "此應用程式為自行註冊，未經 Plane 審核。",
+      "last_used": "最近使用 {time}",
+      "never_used": "尚未使用",
+      "empty_title": "尚無已連線的應用程式",
+      "empty_description": "您授權的應用程式（例如遠端 MCP 用戶端）將顯示於此處。",
+      "revoke_success": "已撤銷存取權限",
+      "revoke_error": "無法撤銷存取權限"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "偏好設定",
       "notifications": "通知",
       "api-tokens": "個人存取權杖",
-      "connections": "連接"
+      "connections": "連接",
+      "connected-apps": "已連線的應用程式"
     },
     "tabs": {
       "summary": "摘要",

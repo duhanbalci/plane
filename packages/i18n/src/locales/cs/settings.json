@@ -65,6 +65,21 @@
       "title": "Spojení",
       "heading": "Spojení",
       "description": "Spravujte nastavení spojení vašeho pracovního prostoru."
+    },
+    "connected_apps": {
+      "title": "Připojené aplikace",
+      "description": "Aplikace, kterým jste udělili přístup ke svému účtu Plane. Odebrání přístupu platí okamžitě.",
+      "permissions": "Oprávnění",
+      "revoke": "Odebrat přístup",
+      "revoke_confirm_title": "Odebrat přístup?",
+      "revoke_confirm_description": "Aplikace {name} okamžitě ztratí přístup k vašemu účtu Plane. Může o přístup požádat znovu.",
+      "unverified": "Tato aplikace se zaregistrovala sama a nebyla ověřena službou Plane.",
+      "last_used": "Naposledy použito {time}",
+      "never_used": "Zatím nepoužito",
+      "empty_title": "Žádné připojené aplikace",
+      "empty_description": "Aplikace, kterým udělíte oprávnění, například vzdálený klient MCP, se zobrazí zde.",
+      "revoke_success": "Přístup odebrán",
+      "revoke_error": "Přístup se nepodařilo odebrat"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Předvolby",
       "notifications": "Oznámení",
       "api-tokens": "Osobní přístupové tokeny",
-      "connections": "Spojení"
+      "connections": "Spojení",
+      "connected-apps": "Připojené aplikace"
     },
     "tabs": {
       "summary": "Shrnutí",

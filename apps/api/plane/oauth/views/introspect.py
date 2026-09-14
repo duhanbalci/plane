@@ -5,10 +5,12 @@
 # Python imports
 import calendar
 import hashlib
+from datetime import timedelta
 
 # Django imports
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
+from django.utils import timezone
 
 # Third party imports
 from oauth2_provider.models import get_access_token_model
@@ -22,6 +24,20 @@ class PlaneIntrospectTokenView(IntrospectTokenView):
     the token was minted for (so a token issued for another resource server
     cannot be replayed against /mcp).
     """
+
+    # How stale application.last_used_at may get. Introspection runs on every
+    # MCP request that misses the resource server's cache, so writing it every
+    # time would be a needless write per request for a field the account screen
+    # only shows to the minute.
+    LAST_USED_RESOLUTION = timedelta(minutes=5)
+
+    @classmethod
+    def touch_last_used(cls, application):
+        now = timezone.now()
+        if application.last_used_at and now - application.last_used_at < cls.LAST_USED_RESOLUTION:
+            return
+        application.last_used_at = now
+        application.save(update_fields=["last_used_at"])
 
     @staticmethod
     def get_token_response(token_value=None):
@@ -53,6 +69,7 @@ class PlaneIntrospectTokenView(IntrospectTokenView):
         if token.application:
             data["client_id"] = token.application.client_id
             data["client_name"] = token.application.name
+            PlaneIntrospectTokenView.touch_last_used(token.application)
         if token.resource:
             data["aud"] = token.resource
 

@@ -65,6 +65,21 @@
       "title": "Connexions",
       "heading": "Connexions",
       "description": "Gérez les paramètres de connexion de votre espace de travail."
+    },
+    "connected_apps": {
+      "title": "Applications connectées",
+      "description": "Applications auxquelles vous avez donné accès à votre compte Plane. La révocation prend effet immédiatement.",
+      "permissions": "Autorisations",
+      "revoke": "Révoquer l’accès",
+      "revoke_confirm_title": "Révoquer l’accès ?",
+      "revoke_confirm_description": "{name} perdra immédiatement l’accès à votre compte Plane. L’application pourra redemander l’accès.",
+      "unverified": "Cette application s’est enregistrée elle-même et n’a pas été vérifiée par Plane.",
+      "last_used": "Dernière utilisation {time}",
+      "never_used": "Jamais utilisée",
+      "empty_title": "Aucune application connectée",
+      "empty_description": "Les applications que vous autorisez, comme un client MCP distant, apparaissent ici.",
+      "revoke_success": "Accès révoqué",
+      "revoke_error": "Impossible de révoquer l’accès"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Préférences",
       "notifications": "Notifications",
       "api-tokens": "Jetons d’accès personnel",
-      "connections": "Connexions"
+      "connections": "Connexions",
+      "connected-apps": "Applications connectées"
     },
     "tabs": {
       "summary": "Résumé",

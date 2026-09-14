@@ -65,6 +65,21 @@
       "title": "连接",
       "heading": "连接",
       "description": "管理您的工作区连接设置。"
+    },
+    "connected_apps": {
+      "title": "已连接的应用",
+      "description": "您已授予其访问 Plane 账户权限的应用。撤销后立即生效。",
+      "permissions": "权限",
+      "revoke": "撤销访问权限",
+      "revoke_confirm_title": "撤销访问权限？",
+      "revoke_confirm_description": "{name} 将立即失去对您 Plane 账户的访问权限。它可以再次请求授权。",
+      "unverified": "此应用为自行注册，未经 Plane 审核。",
+      "last_used": "最近使用 {time}",
+      "never_used": "尚未使用",
+      "empty_title": "暂无已连接的应用",
+      "empty_description": "您授权的应用（例如远程 MCP 客户端）将显示在此处。",
+      "revoke_success": "已撤销访问权限",
+      "revoke_error": "无法撤销访问权限"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "偏好设置",
       "notifications": "通知",
       "api-tokens": "个人访问令牌",
-      "connections": "连接"
+      "connections": "连接",
+      "connected-apps": "已连接的应用"
     },
     "tabs": {
       "summary": "摘要",

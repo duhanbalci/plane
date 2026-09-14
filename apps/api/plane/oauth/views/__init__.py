@@ -3,12 +3,15 @@
 # See the LICENSE file for details.
 
 from .authorize import AuthorizationInfoEndpoint, PlaneAuthorizationView
+from .connected_apps import ConnectedApplicationDetailEndpoint, ConnectedApplicationsEndpoint
 from .introspect import PlaneIntrospectTokenView
 from .metadata import AuthorizationServerMetadataView
 from .register import DynamicClientRegistrationEndpoint
 
 __all__ = [
     "AuthorizationInfoEndpoint",
+    "ConnectedApplicationDetailEndpoint",
+    "ConnectedApplicationsEndpoint",
     "AuthorizationServerMetadataView",
     "DynamicClientRegistrationEndpoint",
     "PlaneAuthorizationView",

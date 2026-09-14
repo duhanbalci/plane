@@ -8,6 +8,7 @@ export * from "./activity";
 export * from "./ai";
 export * from "./analytics";
 export * from "./api_token";
+export * from "./oauth";
 export * from "./auth";
 export * from "./calendar";
 export * from "./charts";

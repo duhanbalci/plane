@@ -65,6 +65,21 @@
       "title": "Koneksi",
       "heading": "Koneksi",
       "description": "Kelola pengaturan koneksi ruang kerja Anda."
+    },
+    "connected_apps": {
+      "title": "Aplikasi terhubung",
+      "description": "Aplikasi yang Anda beri akses ke akun Plane. Pencabutan berlaku seketika.",
+      "permissions": "Izin",
+      "revoke": "Cabut akses",
+      "revoke_confirm_title": "Cabut akses?",
+      "revoke_confirm_description": "{name} akan langsung kehilangan akses ke akun Plane Anda. Aplikasi dapat meminta akses lagi.",
+      "unverified": "Aplikasi ini mendaftar sendiri dan belum ditinjau oleh Plane.",
+      "last_used": "Terakhir digunakan {time}",
+      "never_used": "Belum digunakan",
+      "empty_title": "Tidak ada aplikasi terhubung",
+      "empty_description": "Aplikasi yang Anda izinkan, seperti klien MCP jarak jauh, akan muncul di sini.",
+      "revoke_success": "Akses dicabut",
+      "revoke_error": "Tidak dapat mencabut akses"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Preferensi",
       "notifications": "Notifikasi",
       "api-tokens": "Token Akses Personal",
-      "connections": "Koneksi"
+      "connections": "Koneksi",
+      "connected-apps": "Aplikasi terhubung"
     },
     "tabs": {
       "summary": "Ringkasan",

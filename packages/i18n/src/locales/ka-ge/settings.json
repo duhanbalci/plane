@@ -65,6 +65,21 @@
       "title": "Connections",
       "heading": "Connections",
       "description": "Manage your workspace connections settings."
+    },
+    "connected_apps": {
+      "title": "დაკავშირებული აპლიკაციები",
+      "description": "აპლიკაციები, რომლებსაც მიეცათ წვდომა თქვენს Plane ანგარიშზე. წვდომის გაუქმება ძალაში შედის მყისიერად.",
+      "permissions": "ნებართვები",
+      "revoke": "წვდომის გაუქმება",
+      "revoke_confirm_title": "გაუქმდეს წვდომა?",
+      "revoke_confirm_description": "{name} მყისიერად დაკარგავს წვდომას თქვენს Plane ანგარიშზე. მას შეუძლია ხელახლა მოითხოვოს წვდომა.",
+      "unverified": "ეს აპლიკაცია თავად დარეგისტრირდა და არ შემოწმებულა Plane-ის მიერ.",
+      "last_used": "ბოლო გამოყენება {time}",
+      "never_used": "ჯერ არ გამოყენებულა",
+      "empty_title": "დაკავშირებული აპლიკაციები არ არის",
+      "empty_description": "აპლიკაციები, რომლებსაც ნებართვას მისცემთ, მაგალითად დისტანციური MCP კლიენტი, აქ გამოჩნდება.",
+      "revoke_success": "წვდომა გაუქმდა",
+      "revoke_error": "წვდომის გაუქმება ვერ მოხერხდა"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "პრეფერენციები",
       "notifications": "შეტყობინებები",
       "api-tokens": "პერსონალური წვდომის ტოკენები",
-      "connections": "Connections"
+      "connections": "Connections",
+      "connected-apps": "დაკავშირებული აპლიკაციები"
     },
     "tabs": {
       "summary": "შეჯამება",

@@ -65,6 +65,21 @@
       "title": "Conexiuni",
       "heading": "Conexiuni",
       "description": "Gestionează setările conexiunilor spațiului tău de lucru."
+    },
+    "connected_apps": {
+      "title": "Aplicații conectate",
+      "description": "Aplicațiile cărora le-ați acordat acces la contul dumneavoastră Plane. Revocarea are efect imediat.",
+      "permissions": "Permisiuni",
+      "revoke": "Revocă accesul",
+      "revoke_confirm_title": "Revocați accesul?",
+      "revoke_confirm_description": "{name} va pierde imediat accesul la contul dumneavoastră Plane. Poate solicita din nou accesul.",
+      "unverified": "Această aplicație s-a înregistrat singură și nu a fost verificată de Plane.",
+      "last_used": "Ultima utilizare {time}",
+      "never_used": "Neutilizată încă",
+      "empty_title": "Nicio aplicație conectată",
+      "empty_description": "Aplicațiile pe care le autorizați, precum un client MCP la distanță, apar aici.",
+      "revoke_success": "Acces revocat",
+      "revoke_error": "Accesul nu a putut fi revocat"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Preferințe",
       "notifications": "Notificări",
       "api-tokens": "Tokenuri de acces personale",
-      "connections": "Conexiuni"
+      "connections": "Conexiuni",
+      "connected-apps": "Aplicații conectate"
     },
     "tabs": {
       "summary": "Sumar",

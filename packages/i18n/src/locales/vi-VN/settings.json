@@ -65,6 +65,21 @@
       "title": "Kết nối",
       "heading": "Kết nối",
       "description": "Quản lý cài đặt kết nối không gian làm việc của bạn."
+    },
+    "connected_apps": {
+      "title": "Ứng dụng đã kết nối",
+      "description": "Các ứng dụng bạn đã cấp quyền truy cập vào tài khoản Plane. Việc thu hồi có hiệu lực ngay lập tức.",
+      "permissions": "Quyền",
+      "revoke": "Thu hồi quyền truy cập",
+      "revoke_confirm_title": "Thu hồi quyền truy cập?",
+      "revoke_confirm_description": "{name} sẽ mất quyền truy cập vào tài khoản Plane của bạn ngay lập tức. Ứng dụng có thể yêu cầu lại quyền truy cập.",
+      "unverified": "Ứng dụng này tự đăng ký và chưa được Plane xem xét.",
+      "last_used": "Sử dụng lần cuối {time}",
+      "never_used": "Chưa sử dụng",
+      "empty_title": "Chưa có ứng dụng nào được kết nối",
+      "empty_description": "Các ứng dụng bạn cấp quyền, chẳng hạn như một client MCP từ xa, sẽ xuất hiện ở đây.",
+      "revoke_success": "Đã thu hồi quyền truy cập",
+      "revoke_error": "Không thể thu hồi quyền truy cập"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Tùy chọn",
       "notifications": "Thông báo",
       "api-tokens": "Mã truy cập cá nhân",
-      "connections": "Kết nối"
+      "connections": "Kết nối",
+      "connected-apps": "Ứng dụng đã kết nối"
     },
     "tabs": {
       "summary": "Tóm tắt",

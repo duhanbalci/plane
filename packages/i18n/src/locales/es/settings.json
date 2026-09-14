@@ -65,6 +65,21 @@
       "title": "Conexiones",
       "heading": "Conexiones",
       "description": "Administra la configuración de conexiones de tu espacio de trabajo."
+    },
+    "connected_apps": {
+      "title": "Aplicaciones conectadas",
+      "description": "Aplicaciones a las que ha dado acceso a su cuenta de Plane. La revocación surte efecto de inmediato.",
+      "permissions": "Permisos",
+      "revoke": "Revocar acceso",
+      "revoke_confirm_title": "¿Revocar el acceso?",
+      "revoke_confirm_description": "{name} perderá el acceso a su cuenta de Plane de inmediato. Podrá solicitar acceso de nuevo.",
+      "unverified": "Esta aplicación se registró por sí misma y Plane no la ha revisado.",
+      "last_used": "Último uso {time}",
+      "never_used": "Aún sin usar",
+      "empty_title": "No hay aplicaciones conectadas",
+      "empty_description": "Las aplicaciones que autorice, como un cliente MCP remoto, aparecerán aquí.",
+      "revoke_success": "Acceso revocado",
+      "revoke_error": "No se pudo revocar el acceso"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Preferencias",
       "notifications": "Notificaciones",
       "api-tokens": "Tokens de acceso personal",
-      "connections": "Conexiones"
+      "connections": "Conexiones",
+      "connected-apps": "Aplicaciones conectadas"
     },
     "tabs": {
       "summary": "Resumen",

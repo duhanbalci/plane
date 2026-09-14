@@ -65,6 +65,21 @@
       "title": "Conexões",
       "heading": "Conexões",
       "description": "Gerencie as configurações de conexões do seu espaço de trabalho."
+    },
+    "connected_apps": {
+      "title": "Aplicativos conectados",
+      "description": "Aplicativos aos quais você deu acesso à sua conta Plane. A revogação tem efeito imediato.",
+      "permissions": "Permissões",
+      "revoke": "Revogar acesso",
+      "revoke_confirm_title": "Revogar o acesso?",
+      "revoke_confirm_description": "{name} perderá o acesso à sua conta Plane imediatamente. Poderá solicitar acesso novamente.",
+      "unverified": "Este aplicativo se registrou sozinho e não foi revisado pela Plane.",
+      "last_used": "Último uso {time}",
+      "never_used": "Ainda não utilizado",
+      "empty_title": "Nenhum aplicativo conectado",
+      "empty_description": "Os aplicativos que você autorizar, como um cliente MCP remoto, aparecem aqui.",
+      "revoke_success": "Acesso revogado",
+      "revoke_error": "Não foi possível revogar o acesso"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Preferências",
       "notifications": "Notificações",
       "api-tokens": "Tokens de Acesso Pessoal",
-      "connections": "Conexões"
+      "connections": "Conexões",
+      "connected-apps": "Aplicativos conectados"
     },
     "tabs": {
       "summary": "Resumo",

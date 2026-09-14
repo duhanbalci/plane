@@ -65,6 +65,21 @@
       "title": "Verbindungen",
       "heading": "Verbindungen",
       "description": "Verwalten Sie Ihre Arbeitsbereich-Verbindungseinstellungen."
+    },
+    "connected_apps": {
+      "title": "Verbundene Apps",
+      "description": "Apps, denen Sie Zugriff auf Ihr Plane-Konto gewährt haben. Ein Entzug wirkt sofort.",
+      "permissions": "Berechtigungen",
+      "revoke": "Zugriff entziehen",
+      "revoke_confirm_title": "Zugriff entziehen?",
+      "revoke_confirm_description": "{name} verliert sofort den Zugriff auf Ihr Plane-Konto. Die App kann erneut Zugriff anfordern.",
+      "unverified": "Diese App hat sich selbst registriert und wurde von Plane nicht geprüft.",
+      "last_used": "Zuletzt verwendet {time}",
+      "never_used": "Noch nicht verwendet",
+      "empty_title": "Keine verbundenen Apps",
+      "empty_description": "Apps, die Sie autorisieren, etwa ein entfernter MCP-Client, erscheinen hier.",
+      "revoke_success": "Zugriff entzogen",
+      "revoke_error": "Zugriff konnte nicht entzogen werden"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Einstellungen",
       "notifications": "Benachrichtigungen",
       "api-tokens": "Persönliche Zugriffstoken",
-      "connections": "Verbindungen"
+      "connections": "Verbindungen",
+      "connected-apps": "Verbundene Apps"
     },
     "tabs": {
       "summary": "Zusammenfassung",

@@ -7,6 +7,8 @@ from oauth2_provider.views import RevokeTokenView, TokenView
 
 from plane.oauth.views import (
     AuthorizationInfoEndpoint,
+    ConnectedApplicationDetailEndpoint,
+    ConnectedApplicationsEndpoint,
     DynamicClientRegistrationEndpoint,
     PlaneAuthorizationView,
     PlaneIntrospectTokenView,
@@ -22,4 +24,11 @@ urlpatterns = [
     path("revoke/", RevokeTokenView.as_view(), name="revoke-token"),
     path("introspect/", PlaneIntrospectTokenView.as_view(), name="introspect"),
     path("register/", DynamicClientRegistrationEndpoint.as_view(), name="register"),
+    # The account screen that lists and revokes granted applications.
+    path("applications/", ConnectedApplicationsEndpoint.as_view(), name="connected-applications"),
+    path(
+        "applications/<uuid:pk>/",
+        ConnectedApplicationDetailEndpoint.as_view(),
+        name="connected-application-detail",
+    ),
 ]

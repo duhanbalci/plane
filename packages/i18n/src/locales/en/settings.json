@@ -65,6 +65,21 @@
       "title": "Connections",
       "heading": "Connections",
       "description": "Manage your workspace connections settings."
+    },
+    "connected_apps": {
+      "title": "Connected apps",
+      "description": "Apps you have given access to your Plane account. Revoking access takes effect immediately.",
+      "permissions": "Permissions",
+      "revoke": "Revoke access",
+      "revoke_confirm_title": "Revoke access?",
+      "revoke_confirm_description": "{name} will lose access to your Plane account immediately. It can request access again.",
+      "unverified": "This app registered itself and has not been reviewed by Plane.",
+      "last_used": "Last used {time}",
+      "never_used": "Not used yet",
+      "empty_title": "No connected apps",
+      "empty_description": "Apps you authorize, such as a remote MCP client, appear here.",
+      "revoke_success": "Access revoked",
+      "revoke_error": "Could not revoke access"
     }
   },
   "profile": {
@@ -103,7 +118,8 @@
       "preferences": "Preferences",
       "notifications": "Notifications",
       "api-tokens": "Personal Access Tokens",
-      "connections": "Connections"
+      "connections": "Connections",
+      "connected-apps": "Connected apps"
     },
     "tabs": {
       "summary": "Summary",
