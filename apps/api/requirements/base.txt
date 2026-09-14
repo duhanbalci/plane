@@ -63,6 +63,8 @@ zxcvbn==4.4.28
 pytz==2024.1
 # jwt
 PyJWT==2.13.0
+# oauth 2.1 authorization server (MCP remote server auth)
+django-oauth-toolkit==3.0.1
 # OpenTelemetry
 opentelemetry-api==1.28.1
 opentelemetry-sdk==1.28.1

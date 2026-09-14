@@ -111,10 +111,12 @@ INSTALLED_APPS = [
     "plane.license",
     "plane.api",
     "plane.authentication",
+    "plane.oauth",
     # Third-party things
     "rest_framework",
     "corsheaders",
     "django_celery_beat",
+    "oauth2_provider",
 ]
 
 # Middlewares
@@ -149,6 +151,37 @@ REST_FRAMEWORK = {
     # Preserve original Django URL parameter names (pk) instead of converting to 'id'
     "SCHEMA_COERCE_PATH_PK": False,
 }
+
+# OAuth 2.1 authorization server
+# Plane issues its own tokens for remote MCP clients; see plane/oauth/.
+from plane.oauth.scopes import DEFAULT_SCOPES, SCOPES  # noqa: E402
+
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth.Application"
+OAUTH2_PROVIDER_GRANT_MODEL = "oauth.Grant"
+OAUTH2_PROVIDER_ACCESS_TOKEN_MODEL = "oauth.AccessToken"
+OAUTH2_PROVIDER_REFRESH_TOKEN_MODEL = "oauth.RefreshToken"
+OAUTH2_PROVIDER_ID_TOKEN_MODEL = "oauth.IDToken"
+
+OAUTH2_PROVIDER = {
+    "OAUTH2_VALIDATOR_CLASS": "plane.oauth.validators.PlaneOAuth2Validator",
+    "OAUTH2_BACKEND_CLASS": "oauth2_provider.oauth2_backends.OAuthLibCore",
+    "SCOPES": SCOPES,
+    "DEFAULT_SCOPES": DEFAULT_SCOPES,
+    # OAuth 2.1 mandates PKCE for every authorization code request.
+    "PKCE_REQUIRED": True,
+    "ALLOWED_SCHEMES": ["https"],
+    "ACCESS_TOKEN_EXPIRE_SECONDS": int(os.environ.get("OAUTH_ACCESS_TOKEN_EXPIRY", 60 * 60)),
+    "REFRESH_TOKEN_EXPIRE_SECONDS": int(os.environ.get("OAUTH_REFRESH_TOKEN_EXPIRY", 60 * 60 * 24 * 30)),
+    "AUTHORIZATION_CODE_EXPIRE_SECONDS": 60,
+    "ROTATE_REFRESH_TOKEN": True,
+    # Always show the consent screen; MCP clients are third parties even when
+    # they run on the user's own machine.
+    "REQUEST_APPROVAL_PROMPT": "force",
+}
+
+# Loopback redirects are how desktop MCP clients receive the authorization
+# code (RFC 8252); everything else must be https.
+OAUTH2_PROVIDER["ALLOWED_SCHEMES"] = ["https", "http"] if DEBUG else ["https"]
 
 # API key throttle rate (DRF SimpleRateThrottle format, e.g. "60/minute")
 API_KEY_RATE_LIMIT = os.environ.get("API_KEY_RATE_LIMIT", "60/minute")

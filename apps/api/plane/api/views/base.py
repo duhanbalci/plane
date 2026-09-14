@@ -22,8 +22,12 @@ from rest_framework.exceptions import APIException
 from rest_framework.generics import GenericAPIView
 
 # Module imports
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+
 from plane.api.middleware.api_authentication import APIKeyAuthentication
 from plane.api.rate_limit import ApiKeyRateThrottle
+from plane.oauth.permissions import OAuthScopePermission
+from plane.oauth.throttles import OAuthTokenRateThrottle
 from plane.utils.exception_logger import log_exception
 from plane.utils.paginator import BasePaginator
 from plane.utils.core.mixins import ReadReplicaControlMixin
@@ -47,11 +51,23 @@ class TimezoneMixin:
 
 
 class BaseAPIView(TimezoneMixin, GenericAPIView, ReadReplicaControlMixin, BasePaginator):
-    authentication_classes = [APIKeyAuthentication]
+    # API keys stay the primary credential; OAuth tokens are what remote MCP
+    # clients present after the consent flow in plane/oauth/.
+    authentication_classes = [APIKeyAuthentication, OAuth2Authentication]
 
     permission_classes = [IsAuthenticated]
 
     use_read_replica = False
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        # Enforced here rather than through permission_classes: almost every
+        # endpoint replaces permission_classes (and a few replace
+        # get_permissions) with its own workspace/project rules, which would
+        # silently drop the scope check and let a read-only token write.
+        scope_permission = OAuthScopePermission()
+        if not scope_permission.has_permission(request, self):
+            self.permission_denied(request, message=scope_permission.message)
 
     def filter_queryset(self, queryset):
         for backend in list(self.filter_backends):
@@ -59,7 +75,7 @@ class BaseAPIView(TimezoneMixin, GenericAPIView, ReadReplicaControlMixin, BasePa
         return queryset
 
     def get_throttles(self):
-        return [ApiKeyRateThrottle()]
+        return [ApiKeyRateThrottle(), OAuthTokenRateThrottle()]
 
     def handle_exception(self, exc):
         """

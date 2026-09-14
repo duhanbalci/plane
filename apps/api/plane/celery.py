@@ -68,6 +68,14 @@ app.conf.beat_schedule = {
         "task": "plane.bgtasks.file_asset_task.delete_unuploaded_file_asset",
         "schedule": crontab(hour=2, minute=0),  # UTC 02:00
     },
+    "check-every-hour-to-delete-expired-oauth-grants": {
+        "task": "plane.bgtasks.oauth_cleanup_task.delete_expired_oauth_grants",
+        "schedule": crontab(minute=15),  # Hourly at :15
+    },
+    "check-every-day-to-delete-abandoned-oauth-clients": {
+        "task": "plane.bgtasks.oauth_cleanup_task.delete_abandoned_oauth_clients",
+        "schedule": crontab(hour=3, minute=15),  # UTC 03:15
+    },
     "check-every-day-to-delete-api-logs": {
         "task": "plane.bgtasks.cleanup_task.delete_api_logs",
         "schedule": crontab(hour=2, minute=30),  # UTC 02:30

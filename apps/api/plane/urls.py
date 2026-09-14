@@ -7,6 +7,7 @@
 from django.apps import apps
 from django.conf import settings
 from django.urls import include, path, re_path
+from plane.oauth.views import AuthorizationServerMetadataView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -21,6 +22,14 @@ urlpatterns = [
     path("api/instances/", include("plane.license.urls")),
     path("api/v1/", include("plane.api.urls")),
     path("auth/", include("plane.authentication.urls")),
+    path("auth/o/", include("plane.oauth.urls")),
+    # RFC 8414 — MCP clients discover the authorization server here after
+    # reading the resource server's RFC 9728 document.
+    re_path(
+        r"^\.well-known/oauth-authorization-server/?$",
+        AuthorizationServerMetadataView.as_view(),
+        name="oauth-authorization-server-metadata",
+    ),
     path("", include("plane.web.urls")),
 ]
 
