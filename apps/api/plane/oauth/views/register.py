@@ -13,7 +13,6 @@ restricted to the authorization code grant.
 
 # Python imports
 import secrets
-from urllib.parse import urlparse
 
 # Django imports
 from django.utils import timezone
@@ -27,44 +26,14 @@ from rest_framework.views import APIView
 # Module imports
 from plane.oauth.models import Application
 from plane.oauth.rate_limit import DynamicClientRegistrationThrottle
+from plane.oauth.redirect_uris import validate_redirect_uri
 
 MAX_REDIRECT_URIS = 10
 MAX_CLIENT_NAME_LENGTH = 255
 
-# Loopback redirects are how desktop MCP clients receive the code, and RFC 8252
-# allows http there. Everything else must be https or a private-use scheme.
-LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
-
 
 def _error(code, description, http_status=status.HTTP_400_BAD_REQUEST):
     return Response({"error": code, "error_description": description}, status=http_status)
-
-
-def validate_redirect_uri(uri):
-    """Return an error string, or None when the URI is acceptable."""
-    try:
-        parsed = urlparse(uri)
-    except ValueError:
-        return f"{uri} is not a valid URI"
-
-    if not parsed.scheme:
-        return f"{uri} must be absolute"
-
-    if parsed.scheme == "https":
-        return None
-
-    if parsed.scheme == "http":
-        if parsed.hostname in LOOPBACK_HOSTS:
-            return None
-        return f"{uri} must use https unless it is a loopback address"
-
-    # Private-use URI scheme (com.example.app:/callback) — allowed for native
-    # clients, but it must be a reverse-domain scheme rather than a bare word,
-    # so it cannot collide with a well-known scheme.
-    if "." in parsed.scheme:
-        return None
-
-    return f"{uri} uses an unsupported scheme"
 
 
 class DynamicClientRegistrationEndpoint(APIView):

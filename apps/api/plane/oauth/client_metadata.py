@@ -27,6 +27,7 @@ from django.utils import timezone
 import requests
 
 # Module imports
+from plane.oauth.redirect_uris import validate_redirect_uri
 from plane.utils.url_security import pinned_fetch
 
 logger = logging.getLogger("plane.oauth")
@@ -61,6 +62,15 @@ def _validate_document(document, client_id):
         raise ClientMetadataError("Client metadata document must list at least one redirect_uri")
     if not all(isinstance(uri, str) and uri for uri in redirect_uris):
         raise ClientMetadataError("redirect_uris must be a list of strings")
+
+    # The document is fetched from a URL an unauthenticated caller chose, so it
+    # gets the same scheme policy as dynamic registration. Without this a
+    # document could register a plain-http redirect on a public host and have
+    # the authorization code delivered in cleartext.
+    for uri in redirect_uris:
+        failure = validate_redirect_uri(uri)
+        if failure:
+            raise ClientMetadataError(failure)
 
     grant_types = document.get("grant_types") or ["authorization_code"]
     if "authorization_code" not in grant_types:

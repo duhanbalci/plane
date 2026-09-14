@@ -17,6 +17,9 @@ from oauth2_provider.models import (
     AbstractRefreshToken,
 )
 
+# Module imports
+from plane.oauth.redirect_uris import loopback_uri_matches
+
 # django-oauth-toolkit's models reference each other through the swappable
 # settings, so all five are swapped together — swapping only ``Application``
 # leaves the token models pointing at the stock one.
@@ -51,6 +54,17 @@ class Application(AbstractApplication):
         db_table = "oauth_applications"
         verbose_name = "OAuth Application"
         verbose_name_plural = "OAuth Applications"
+
+    def redirect_uri_allowed(self, uri):
+        if super().redirect_uri_allowed(uri):
+            return True
+
+        # django-oauth-toolkit applies RFC 8252's any-port loopback rule only to
+        # the "127.0.0.1" and "::1" spellings. Clients that register
+        # "http://localhost/callback" and then listen on an ephemeral port —
+        # Claude Code does exactly this — fall through to an exact-string
+        # comparison and are rejected over the port alone.
+        return any(loopback_uri_matches(uri, allowed) for allowed in self.redirect_uris.split())
 
     def __str__(self):
         return self.name or self.client_id

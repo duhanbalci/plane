@@ -187,3 +187,98 @@ class TestAuthorizeWithMetadataDocumentClient:
         )
 
         assert response.status_code == 400
+
+
+class TestClaudeCodeShapedFlow:
+    """
+    Regression for the shape that failed in production: a metadata document
+    listing portless loopback redirects, then an authorization request on an
+    ephemeral port. django-oauth-toolkit's exact-match comparison rejected it
+    with "Mismatching redirect URI".
+    """
+
+    CLAUDE_DOCUMENT_URL = "https://claude.ai/oauth/claude-code-client-metadata"
+
+    def claude_document(self):
+        return {
+            "client_id": self.CLAUDE_DOCUMENT_URL,
+            "client_name": "Claude Code",
+            "redirect_uris": ["http://localhost/callback", "http://127.0.0.1/callback"],
+            "grant_types": ["authorization_code", "refresh_token"],
+            "response_types": ["code"],
+            "token_endpoint_auth_method": "none",
+        }
+
+    def authorize(self, client, redirect_uri):
+        return client.get(
+            "/auth/o/authorize/",
+            {
+                "response_type": "code",
+                "client_id": self.CLAUDE_DOCUMENT_URL,
+                "code_challenge": "5hKaW5SL6DgyqEWCoCAA3KlMnPlBm8Jnt_KUWmCDr5w",
+                "code_challenge_method": "S256",
+                "redirect_uri": redirect_uri,
+                "state": "_v29yzrT38duv4rykqjecl4-qQxmnyoSMvp0PwQsqXI",
+                "scope": "mcp:read mcp:write",
+                "resource": "https://plane.example.com/mcp",
+            },
+        )
+
+    def test_ephemeral_port_reaches_the_consent_screen(self, browser_client, fetcher, settings, db):
+        cache.clear()
+        settings.WEB_URL = "https://plane.example.com"
+        fetcher.return_value = FakeResponse(self.claude_document())
+
+        response = self.authorize(browser_client, "http://localhost:58091/callback")
+
+        assert response.status_code == 302
+        assert response["Location"].startswith("https://plane.example.com/oauth/authorize")
+
+    def test_consent_then_token_issues_a_code_to_the_ephemeral_port(self, browser_client, fetcher, settings, db):
+        from urllib.parse import parse_qs, urlparse
+
+        cache.clear()
+        fetcher.return_value = FakeResponse(self.claude_document())
+        redirect_uri = "http://localhost:58091/callback"
+        # Register the client the way the authorization hop does.
+        self.authorize(browser_client, redirect_uri)
+
+        response = browser_client.post(
+            "/auth/o/authorize/",
+            {
+                "allow": "True",
+                "client_id": self.CLAUDE_DOCUMENT_URL,
+                "redirect_uri": redirect_uri,
+                "response_type": "code",
+                "scope": "mcp:read mcp:write",
+                "state": "opaque",
+                "code_challenge": "5hKaW5SL6DgyqEWCoCAA3KlMnPlBm8Jnt_KUWmCDr5w",
+                "code_challenge_method": "S256",
+                "resource": "https://plane.example.com/mcp",
+            },
+        )
+
+        assert response.status_code == 302, response.content
+        location = urlparse(response["Location"])
+        assert f"{location.scheme}://{location.netloc}{location.path}" == redirect_uri
+        assert parse_qs(location.query)["code"]
+
+    def test_a_different_path_on_the_loopback_port_is_still_rejected(self, browser_client, fetcher, settings, db):
+        cache.clear()
+        fetcher.return_value = FakeResponse(self.claude_document())
+
+        response = self.authorize(browser_client, "http://localhost:58091/stolen")
+
+        assert response.status_code == 400
+
+    def test_a_document_with_a_public_http_redirect_is_refused(self, browser_client, fetcher, settings, db):
+        cache.clear()
+        fetcher.return_value = FakeResponse(
+            self.claude_document() | {"redirect_uris": ["http://evil.example.net/callback"]}
+        )
+
+        response = self.authorize(browser_client, "http://evil.example.net/callback")
+
+        # The document itself is invalid, so no client is registered at all.
+        assert response.status_code == 400
+        assert not Application.objects.filter(client_id=self.CLAUDE_DOCUMENT_URL).exists()
