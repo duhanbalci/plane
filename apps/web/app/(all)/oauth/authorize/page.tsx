@@ -150,7 +150,16 @@ export default function OAuthAuthorizePage() {
         at any time from your account settings.
       </p>
 
-      <form method="post" action="/auth/o/authorize/" className="mt-6 flex gap-3" onSubmit={() => setSubmitting(true)}>
+      {/* Guard a double submit by making the form inert, never by disabling the
+          buttons: a submit button disabled before the browser serialises the
+          form is left out of the form data, which drops `allow` and turns an
+          approval into a denial. */}
+      <form
+        method="post"
+        action="/auth/o/authorize/"
+        className={`mt-6 flex gap-3${submitting ? " pointer-events-none opacity-60" : ""}`}
+        onSubmit={() => setSubmitting(true)}
+      >
         <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
         {AUTHORIZATION_PARAMS.map((param) => {
           const value = searchParams.get(param);
@@ -159,10 +168,10 @@ export default function OAuthAuthorizePage() {
 
         {/* Django's AllowForm reads consent from the presence of `allow`; the
             deny button submits the same form without it. */}
-        <Button type="submit" name="allow" value="True" disabled={submitting} className="flex-1">
+        <Button type="submit" name="allow" value="True" className="flex-1">
           Authorize
         </Button>
-        <Button type="submit" variant="secondary" disabled={submitting} className="flex-1">
+        <Button type="submit" variant="secondary" className="flex-1">
           Cancel
         </Button>
       </form>
