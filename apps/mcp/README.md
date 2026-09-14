@@ -114,6 +114,18 @@ OAuth 2.1 permits plain HTTP only for loopback redirects. A Plane deployment ser
 | `list_projects`, `get_project`, `list_project_states`, `list_project_labels`, `list_project_members`, `list_cycles`, `list_modules` | `mcp:read`  |
 | `list_work_items`, `get_work_item`, `search_work_items`, `list_work_item_comments`                                                  | `mcp:read`  |
 | `create_work_item`, `update_work_item`, `add_work_item_comment`                                                                     | `mcp:write` |
+| `delete_work_item`, `delete_work_item_comment`                                                                                      | `mcp:write` |
+
+Every tool carries MCP behaviour annotations, so a client can confirm a deletion with the
+user while letting reads through. The annotations are hints; the token's scope is what
+actually gates a write.
+
+## Revoking access
+
+A user can see and revoke every application holding a grant on their account from
+**Settings → Connected apps** in the web app. Revoking deletes the access tokens, refresh
+tokens and any unredeemed authorization codes, so the client is cut off at once — save for
+the resource server's token cache, which is why `TOKEN_CACHE_TTL` is short.
 
 ## Development
 

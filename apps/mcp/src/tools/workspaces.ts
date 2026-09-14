@@ -5,7 +5,7 @@
  */
 
 import { z } from "zod";
-import { handler, text, type ToolRegistrar } from "./context";
+import { READ_ONLY, handler, text, type ToolRegistrar } from "./context";
 
 export const registerWorkspaceTools: ToolRegistrar = (server) => {
   server.registerTool(
@@ -16,6 +16,7 @@ export const registerWorkspaceTools: ToolRegistrar = (server) => {
         "List every Plane workspace you belong to, with the role you hold in each. " +
         "Start here: every other tool needs a workspace_slug from this list.",
       inputSchema: z.object({}),
+      annotations: READ_ONLY,
     },
     handler(async (_args, client) => text(await client.request("/users/me/workspaces/")))
   );
@@ -26,6 +27,7 @@ export const registerWorkspaceTools: ToolRegistrar = (server) => {
       title: "Get the signed-in user",
       description: "Return the Plane account this session is acting as.",
       inputSchema: z.object({}),
+      annotations: READ_ONLY,
     },
     handler(async (_args, client) => text(await client.request("/users/me/")))
   );
@@ -38,6 +40,7 @@ export const registerWorkspaceTools: ToolRegistrar = (server) => {
       inputSchema: z.object({
         workspace_slug: z.string().describe("Workspace slug, from list_workspaces"),
       }),
+      annotations: READ_ONLY,
     },
     handler(async ({ workspace_slug }, client) => text(await client.request(`/workspaces/${workspace_slug}/members/`)))
   );

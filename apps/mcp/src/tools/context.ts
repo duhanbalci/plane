@@ -55,4 +55,27 @@ export function handler<Args>(
   };
 }
 
+/**
+ * Behaviour hints clients use to decide what to confirm with the user. They are
+ * hints, not enforcement — the token's scope is what actually gates a write.
+ * openWorldHint is false throughout: every tool talks to this one Plane
+ * instance, not to an open-ended external world.
+ */
+export const READ_ONLY = { readOnlyHint: true, openWorldHint: false } as const;
+
+export const MUTATES = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+  openWorldHint: false,
+} as const;
+
+export const DESTRUCTIVE = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  // Deleting something already deleted changes nothing further.
+  idempotentHint: true,
+  openWorldHint: false,
+} as const;
+
 export type ToolRegistrar = (server: McpServer) => void;

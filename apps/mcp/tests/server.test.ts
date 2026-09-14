@@ -14,6 +14,20 @@ const json = async (response: Response) => (await response.json()) as Record<str
 
 const jsonRpc = (method: string) => JSON.stringify({ jsonrpc: "2.0", id: 1, method, params: {} });
 
+/** An introspection response for a live token carrying both scopes. */
+const validIntrospection = () =>
+  new Response(
+    JSON.stringify({
+      active: true,
+      scope: "mcp:read mcp:write",
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      sub: "user-1",
+      aud: "https://plane.example.com/mcp",
+      client_id: "claude",
+    }),
+    { status: 200 }
+  );
+
 beforeAll(async () => {
   server = new Server();
   server.initialize();
@@ -122,6 +136,56 @@ describe("authentication on /mcp", () => {
     });
 
     expect(response.status).toBe(403);
+  });
+
+  const listTools = async () => {
+    const response = await call("/mcp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+        Authorization: "Bearer good-token",
+      },
+      body: jsonRpc("tools/list"),
+    });
+    const body = await response.text();
+    // The transport answers either as plain JSON or as an SSE stream whose
+    // frames look like "event: message\ndata: {...}".
+    const dataLine = body
+      .split("\n")
+      .map((line) => line.trim())
+      .findLast((line) => line.startsWith("data:"));
+    const payload = dataLine ? dataLine.slice("data:".length).trim() : body;
+    return JSON.parse(payload).result.tools as {
+      name: string;
+      annotations?: Record<string, boolean>;
+    }[];
+  };
+
+  it("marks deleting tools as destructive so clients can confirm them", async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(validIntrospection()));
+
+    const tools = await listTools();
+    const byName = Object.fromEntries(tools.map((tool) => [tool.name, tool]));
+
+    expect(byName["delete_work_item"].annotations?.destructiveHint).toBe(true);
+    expect(byName["delete_work_item_comment"].annotations?.destructiveHint).toBe(true);
+    // A create is a write but not destructive — conflating the two trains
+    // users to click through the confirmation that matters.
+    expect(byName["create_work_item"].annotations?.destructiveHint).toBe(false);
+    expect(byName["list_work_items"].annotations?.readOnlyHint).toBe(true);
+  });
+
+  it("annotates every tool", async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(validIntrospection()));
+
+    const tools = await listTools();
+
+    expect(tools.length).toBeGreaterThan(0);
+    for (const tool of tools) {
+      expect(tool.annotations, `${tool.name} has no annotations`).toBeDefined();
+      expect(typeof tool.annotations?.readOnlyHint).toBe("boolean");
+    }
   });
 
   it("lists the tools once a valid token is presented", async () => {

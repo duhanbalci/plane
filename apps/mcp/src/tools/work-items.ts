@@ -5,7 +5,7 @@
  */
 
 import { z } from "zod";
-import { handler, text, type ToolRegistrar } from "./context";
+import { DESTRUCTIVE, MUTATES, READ_ONLY, handler, text, type ToolRegistrar } from "./context";
 
 const workspaceSlug = z.string().describe("Workspace slug, from list_workspaces");
 const projectId = z.string().describe("Project id, from list_projects");
@@ -29,6 +29,7 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         cursor: z.string().optional().describe("Pagination cursor from a previous response"),
         per_page: z.number().int().min(1).max(100).optional(),
       }),
+      annotations: READ_ONLY,
     },
     handler(async ({ workspace_slug, project_id, ...query }, client) =>
       text(await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/issues/`, { query }))
@@ -45,6 +46,7 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         project_id: projectId,
         work_item_id: workItemId,
       }),
+      annotations: READ_ONLY,
     },
     handler(async ({ workspace_slug, project_id, work_item_id }, client) =>
       text(await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/issues/${work_item_id}/`))
@@ -61,6 +63,7 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         query: z.string().min(1).describe("Search text"),
         project_id: z.string().optional().describe("Restrict the search to one project"),
       }),
+      annotations: READ_ONLY,
     },
     handler(async ({ workspace_slug, query, project_id }, client) =>
       text(
@@ -87,6 +90,7 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         labels: z.array(z.string()).optional().describe("Label ids, from list_project_labels"),
         target_date: z.string().optional().describe("Due date, YYYY-MM-DD"),
       }),
+      annotations: MUTATES,
     },
     handler(async ({ workspace_slug, project_id, ...body }, client) =>
       text(
@@ -117,6 +121,7 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         labels: z.array(z.string()).optional(),
         target_date: z.string().optional().describe("Due date, YYYY-MM-DD"),
       }),
+      annotations: MUTATES,
     },
     handler(async ({ workspace_slug, project_id, work_item_id, ...body }, client) =>
       text(
@@ -138,12 +143,58 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         project_id: projectId,
         work_item_id: workItemId,
       }),
+      annotations: READ_ONLY,
     },
     handler(async ({ workspace_slug, project_id, work_item_id }, client) =>
       text(
         await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/issues/${work_item_id}/comments/`)
       )
     )
+  );
+
+  server.registerTool(
+    "delete_work_item",
+    {
+      title: "Delete a work item",
+      description:
+        "Permanently delete a work item. Only its creator or a project admin may do this, and it cannot be " +
+        "undone from here. Requires a token with the mcp:write scope.",
+      inputSchema: z.object({
+        workspace_slug: workspaceSlug,
+        project_id: projectId,
+        work_item_id: workItemId,
+      }),
+      annotations: DESTRUCTIVE,
+    },
+    handler(async ({ workspace_slug, project_id, work_item_id }, client) => {
+      await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/issues/${work_item_id}/`, {
+        method: "DELETE",
+      });
+      // A 204 carries no body, so report the outcome rather than echoing null.
+      return text(`Deleted work item ${work_item_id}.`);
+    })
+  );
+
+  server.registerTool(
+    "delete_work_item_comment",
+    {
+      title: "Delete a work item comment",
+      description: "Permanently delete a comment from a work item. Requires a token with the mcp:write scope.",
+      inputSchema: z.object({
+        workspace_slug: workspaceSlug,
+        project_id: projectId,
+        work_item_id: workItemId,
+        comment_id: z.string().describe("Comment id, from list_work_item_comments"),
+      }),
+      annotations: DESTRUCTIVE,
+    },
+    handler(async ({ workspace_slug, project_id, work_item_id, comment_id }, client) => {
+      await client.request(
+        `/workspaces/${workspace_slug}/projects/${project_id}/issues/${work_item_id}/comments/${comment_id}/`,
+        { method: "DELETE" }
+      );
+      return text(`Deleted comment ${comment_id}.`);
+    })
   );
 
   server.registerTool(
@@ -157,6 +208,7 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         work_item_id: workItemId,
         comment_html: z.string().min(1).describe("Comment body as HTML"),
       }),
+      annotations: MUTATES,
     },
     handler(async ({ workspace_slug, project_id, work_item_id, comment_html }, client) =>
       text(
