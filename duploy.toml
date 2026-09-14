@@ -2,10 +2,19 @@ version = 1
 
 # Plane (community) Duploy uzerinde. Tek host, path bazli yonlendirme
 # (upstream Caddy proxy'sinin karsiligi): /spaces -> space, /god-mode -> admin,
-# /live -> live, /api, /auth, /static -> api, /uploads -> minio, geri kalani -> web.
+# /live -> live, /mcp -> mcp, /api, /auth, /static -> api, /uploads -> minio,
+# geri kalani -> web.
+#
+# OAuth kesif dokumanlari ikiye ayrilir: /.well-known/oauth-protected-resource
+# kaynak sunucununki (mcp), /.well-known/oauth-authorization-server yetki
+# sunucununki (api). Ikisi ayni host'ta oldugu icin path ile ayrildi.
+#
 # Secret'lar: duploy secret set api SECRET_KEY=… LIVE_SERVER_SECRET_KEY=…
 #             duploy secret set minio MINIO_ROOT_USER=… MINIO_ROOT_PASSWORD=…
 #             duploy secret set mq RABBITMQ_DEFAULT_PASS=…
+#             duploy secret set mcp MCP_INTROSPECTION_CLIENT_ID=… MCP_INTROSPECTION_CLIENT_SECRET=…
+#
+# mcp secret'lari api icinde uretilir (bkz. asagidaki [services.mcp] notu).
 
 # ----------------------------------------------------------------- web
 
@@ -40,6 +49,35 @@ CORS_ALLOWED_ORIGINS = "https://plane.duploy.dev"
 LIVE_SERVER_SECRET_KEY = { from_service = "api", key = "LIVE_SERVER_SECRET_KEY" }
 REDIS_URL = { from_database = "redis", property = "url" }
 
+# ----------------------------------------------------------------- mcp
+
+# Uzak MCP sunucusu. OAuth 2.1 kaynak sunucusu; yetki sunucusu api.
+# Ilk kurulumda tanitici ciftini api uretir, sonra secret olarak yazilir:
+#   duploy service exec api -- python manage.py create_mcp_resource_server_client
+#   duploy secret set mcp MCP_INTROSPECTION_CLIENT_ID=… MCP_INTROSPECTION_CLIENT_SECRET=…
+# Secret yazilana kadar servis acilista env dogrulamasindan duser; beklenen durum.
+[services.mcp]
+source = { path = ".", dockerfile = "apps/mcp/Dockerfile.mcp" }
+port = 3000
+domains = [
+  { host = "plane.duploy.dev", path = "/mcp" },
+  { host = "plane.duploy.dev", path = "/.well-known/oauth-protected-resource" },
+]
+health = { http = "/health" }
+
+[services.mcp.env]
+# Kesif dokumanlarinda issuer olarak yayinlanir; tarayicinin gordugu origin ile
+# birebir ayni olmak zorunda, yoksa istemci token'i reddeder.
+APP_BASE_URL = "https://plane.duploy.dev"
+API_INTERNAL_URL = "http://api:8000"
+MCP_BASE_PATH = "/mcp"
+# Token dogrulama sonucu burada paylasilir; replika sayisi artarsa her biri ayni
+# onbellegi gorur. TTL kadar sure iptal edilmis token calismaya devam eder.
+REDIS_URL = { from_database = "redis", property = "url" }
+TOKEN_CACHE_TTL = "45"
+MCP_INTROSPECTION_CLIENT_ID = { secret = true }
+MCP_INTROSPECTION_CLIENT_SECRET = { secret = true }
+
 # ----------------------------------------------------------------- api
 
 [services.api]
@@ -49,6 +87,8 @@ domains = [
   { host = "plane.duploy.dev", path = "/api" },
   { host = "plane.duploy.dev", path = "/auth" },
   { host = "plane.duploy.dev", path = "/static" },
+  # RFC 8414: yetki sunucusu metadata'si. Kaynak sunucununki mcp'de.
+  { host = "plane.duploy.dev", path = "/.well-known/oauth-authorization-server" },
 ]
 # Ayri migrator container'i yok: migrasyon api acilisinda kosar (tek replika).
 command = ["sh", "-c", "python manage.py migrate && exec ./bin/docker-entrypoint-api.sh"]

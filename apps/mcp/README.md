@@ -41,6 +41,8 @@ Scopes:
 
 ## Setup
 
+### docker compose
+
 1. Generate the credentials this service introspects with, on the API:
 
    ```bash
@@ -59,6 +61,30 @@ Scopes:
    `/.well-known/oauth-protected-resource*` here.
 
 4. Point a client at `https://<your-plane>/mcp`. Discovery and registration are automatic.
+
+### Duploy
+
+`duploy.toml` already declares the service and its routes. The credentials do not exist
+until the API has run once, so the first deploy is a two-step:
+
+```bash
+# 1. Ship the new API (it runs the migrations that create the OAuth tables)
+duploy deploy
+
+# 2. Mint the resource server credentials inside the API container
+duploy service exec api -- python manage.py create_mcp_resource_server_client
+
+# 3. Store them, which is what the mcp service reads
+duploy secret set mcp MCP_INTROSPECTION_CLIENT_ID=… MCP_INTROSPECTION_CLIENT_SECRET=…
+
+# 4. Redeploy so mcp picks the secrets up
+duploy deploy
+```
+
+Between steps 1 and 4 the `mcp` service fails its env validation on boot and stays
+unhealthy. That is expected — nothing else is affected.
+
+Rotating later is steps 2–4 again with `--rotate`.
 
 ### HTTPS is required
 
