@@ -51,12 +51,8 @@ def user_token(db, public_application, create_user):
 class TestIntrospection:
     url = "/auth/o/introspect/"
 
-    def test_returns_the_claims_the_mcp_server_needs(
-        self, client, basic_auth, user_token, create_user
-    ):
-        response = client.post(
-            self.url, {"token": user_token.token}, HTTP_AUTHORIZATION=basic_auth
-        )
+    def test_returns_the_claims_the_mcp_server_needs(self, client, basic_auth, user_token, create_user):
+        response = client.post(self.url, {"token": user_token.token}, HTTP_AUTHORIZATION=basic_auth)
 
         assert response.status_code == 200
         body = response.json()
@@ -70,30 +66,22 @@ class TestIntrospection:
         user_token.expires = timezone.now() - timedelta(seconds=1)
         user_token.save(update_fields=["expires"])
 
-        response = client.post(
-            self.url, {"token": user_token.token}, HTTP_AUTHORIZATION=basic_auth
-        )
+        response = client.post(self.url, {"token": user_token.token}, HTTP_AUTHORIZATION=basic_auth)
 
         assert response.json() == {"active": False}
 
-    def test_token_of_a_deactivated_user_is_inactive(
-        self, client, basic_auth, user_token, create_user
-    ):
+    def test_token_of_a_deactivated_user_is_inactive(self, client, basic_auth, user_token, create_user):
         create_user.is_active = False
         create_user.save(update_fields=["is_active"])
 
-        response = client.post(
-            self.url, {"token": user_token.token}, HTTP_AUTHORIZATION=basic_auth
-        )
+        response = client.post(self.url, {"token": user_token.token}, HTTP_AUTHORIZATION=basic_auth)
 
         # Deactivating a user has to cut off their MCP sessions too, not just
         # their browser sessions.
         assert response.json() == {"active": False}
 
     def test_unknown_token_is_inactive(self, client, basic_auth):
-        response = client.post(
-            self.url, {"token": "not-a-real-token"}, HTTP_AUTHORIZATION=basic_auth
-        )
+        response = client.post(self.url, {"token": "not-a-real-token"}, HTTP_AUTHORIZATION=basic_auth)
 
         assert response.json() == {"active": False}
 

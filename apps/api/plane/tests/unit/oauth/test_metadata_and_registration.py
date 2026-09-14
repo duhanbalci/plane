@@ -28,9 +28,7 @@ class TestAuthorizationServerMetadata:
     def test_ignores_a_forged_host_header(self, api_client, settings):
         settings.APP_BASE_URL = "https://plane.example.com"
 
-        response = api_client.get(
-            "/.well-known/oauth-authorization-server", HTTP_HOST="evil.example.net"
-        )
+        response = api_client.get("/.well-known/oauth-authorization-server", HTTP_HOST="evil.example.net")
 
         assert response.json()["issuer"] == "https://plane.example.com"
 
@@ -80,9 +78,7 @@ class TestDynamicClientRegistration:
         assert response.status_code == 201
 
     def test_rejects_a_bare_word_scheme(self, api_client, db):
-        response = api_client.post(
-            self.url, {"redirect_uris": ["myapp:/callback"]}, format="json"
-        )
+        response = api_client.post(self.url, {"redirect_uris": ["myapp:/callback"]}, format="json")
 
         assert response.status_code == 400
 

@@ -120,9 +120,7 @@ class AuthorizationInfoEndpoint(PlaneAuthorizationView):
                 "is_dynamically_registered": application.is_dynamically_registered,
                 "redirect_uri": credentials["redirect_uri"],
                 "resource": request.GET.get("resource"),
-                "scopes": [
-                    {"key": scope, "description": all_scopes.get(scope, scope)} for scope in scopes
-                ],
+                "scopes": [{"key": scope, "description": all_scopes.get(scope, scope)} for scope in scopes],
                 "user": {
                     "id": str(request.user.id),
                     "email": request.user.email,

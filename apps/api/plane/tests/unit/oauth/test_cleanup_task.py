@@ -27,9 +27,7 @@ def make_client(created_days_ago=0, dynamic=True):
         user=None,
     )
     if created_days_ago:
-        Application.objects.filter(pk=application.pk).update(
-            created=timezone.now() - timedelta(days=created_days_ago)
-        )
+        Application.objects.filter(pk=application.pk).update(created=timezone.now() - timedelta(days=created_days_ago))
     return application
 
 

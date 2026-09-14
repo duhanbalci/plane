@@ -42,9 +42,7 @@ class TestAuthorizationEndpoint:
         settings.WEB_URL = "https://plane.example.com"
         _, challenge = pkce_pair()
 
-        response = api_client.get(
-            "/auth/o/authorize/", authorize_params(public_application, redirect_uri, challenge)
-        )
+        response = api_client.get("/auth/o/authorize/", authorize_params(public_application, redirect_uri, challenge))
 
         assert response.status_code == 302
         location = urlparse(response["Location"])
@@ -70,9 +68,7 @@ class TestAuthorizationEndpoint:
         assert response.status_code == 302
         assert urlparse(response["Location"]).path == "/oauth/authorize"
 
-    def test_request_without_pkce_is_rejected(
-        self, browser_client, public_application, redirect_uri
-    ):
+    def test_request_without_pkce_is_rejected(self, browser_client, public_application, redirect_uri):
         params = authorize_params(public_application, redirect_uri, challenge="")
         params.pop("code_challenge")
         params.pop("code_challenge_method")
@@ -83,9 +79,7 @@ class TestAuthorizationEndpoint:
         error = parse_qs(urlparse(response["Location"]).query).get("error")
         assert error == ["invalid_request"]
 
-    def test_unknown_redirect_uri_is_rejected(
-        self, browser_client, public_application, redirect_uri
-    ):
+    def test_unknown_redirect_uri_is_rejected(self, browser_client, public_application, redirect_uri):
         _, challenge = pkce_pair()
         params = authorize_params(public_application, redirect_uri, challenge)
         params["redirect_uri"] = "http://127.0.0.1:9999/stolen"
@@ -97,9 +91,7 @@ class TestAuthorizationEndpoint:
 
 
 class TestAuthorizationInfoEndpoint:
-    def test_describes_the_pending_request(
-        self, browser_client, public_application, redirect_uri, create_user
-    ):
+    def test_describes_the_pending_request(self, browser_client, public_application, redirect_uri, create_user):
         _, challenge = pkce_pair()
 
         response = browser_client.get(
@@ -174,9 +166,7 @@ class TestTokenExchange:
         # so the MCP server can refuse tokens minted for another resource.
         assert token.resource == RESOURCE
 
-    def test_wrong_code_verifier_is_rejected(
-        self, browser_client, api_client, public_application, redirect_uri
-    ):
+    def test_wrong_code_verifier_is_rejected(self, browser_client, api_client, public_application, redirect_uri):
         _, challenge = pkce_pair()
         code = complete_authorization(browser_client, public_application, redirect_uri, challenge)
 
@@ -194,9 +184,7 @@ class TestTokenExchange:
         assert response.status_code == 400
         assert not AccessToken.objects.exists()
 
-    def test_authorization_code_is_single_use(
-        self, browser_client, api_client, public_application, redirect_uri
-    ):
+    def test_authorization_code_is_single_use(self, browser_client, api_client, public_application, redirect_uri):
         verifier, challenge = pkce_pair()
         code = complete_authorization(browser_client, public_application, redirect_uri, challenge)
         payload = {
@@ -210,9 +198,7 @@ class TestTokenExchange:
         assert api_client.post("/auth/o/token/", payload).status_code == 200
         assert api_client.post("/auth/o/token/", payload).status_code == 400
 
-    def test_denying_consent_issues_no_grant(
-        self, browser_client, public_application, redirect_uri
-    ):
+    def test_denying_consent_issues_no_grant(self, browser_client, public_application, redirect_uri):
         _, challenge = pkce_pair()
         params = authorize_params(public_application, redirect_uri, challenge)
 
@@ -222,9 +208,7 @@ class TestTokenExchange:
         assert parse_qs(urlparse(response["Location"]).query)["error"] == ["access_denied"]
         assert not Grant.objects.exists()
 
-    def test_refresh_keeps_the_original_audience(
-        self, browser_client, api_client, public_application, redirect_uri
-    ):
+    def test_refresh_keeps_the_original_audience(self, browser_client, api_client, public_application, redirect_uri):
         verifier, challenge = pkce_pair()
         code = complete_authorization(browser_client, public_application, redirect_uri, challenge)
         first = api_client.post(

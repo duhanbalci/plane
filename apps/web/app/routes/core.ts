@@ -43,6 +43,9 @@ export const coreRoutes: RouteConfigEntry[] = [
     route("workspace-invitations", "./(all)/workspace-invitations/page.tsx"),
   ]),
 
+  // OAuth consent screen for remote MCP clients
+  layout("./(all)/oauth/authorize/layout.tsx", [route("oauth/authorize", "./(all)/oauth/authorize/page.tsx")]),
+
   // ========================================================================
   // ALL APP ROUTES
   // ========================================================================

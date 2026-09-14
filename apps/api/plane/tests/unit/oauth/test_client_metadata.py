@@ -141,9 +141,7 @@ class TestApplicationBacking:
         get_or_create_application(DOCUMENT_URL)
 
         cache.clear()
-        fetcher.return_value = FakeResponse(
-            valid_document(redirect_uris=["http://127.0.0.1:4000/callback"])
-        )
+        fetcher.return_value = FakeResponse(valid_document(redirect_uris=["http://127.0.0.1:4000/callback"]))
         application = get_or_create_application(DOCUMENT_URL)
 
         assert Application.objects.count() == 1
@@ -151,9 +149,7 @@ class TestApplicationBacking:
 
 
 class TestAuthorizeWithMetadataDocumentClient:
-    def test_authorization_request_registers_the_client_on_the_fly(
-        self, browser_client, fetcher, settings, db
-    ):
+    def test_authorization_request_registers_the_client_on_the_fly(self, browser_client, fetcher, settings, db):
         cache.clear()
         settings.WEB_URL = "https://plane.example.com"
         fetcher.return_value = FakeResponse(valid_document())
@@ -174,9 +170,7 @@ class TestAuthorizeWithMetadataDocumentClient:
         assert response["Location"].startswith("https://plane.example.com/oauth/authorize")
         assert Application.objects.filter(client_id=DOCUMENT_URL).exists()
 
-    def test_redirect_uri_outside_the_document_is_rejected(
-        self, browser_client, fetcher, settings, db
-    ):
+    def test_redirect_uri_outside_the_document_is_rejected(self, browser_client, fetcher, settings, db):
         cache.clear()
         fetcher.return_value = FakeResponse(valid_document())
 

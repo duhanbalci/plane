@@ -114,9 +114,7 @@ class PlaneOAuth2Validator(OAuth2Validator):
         return super().get_original_scopes(refresh_token, request, *args, **kwargs)
 
     def _create_access_token(self, expires, request, token, source_refresh_token=None):
-        access_token = super()._create_access_token(
-            expires, request, token, source_refresh_token=source_refresh_token
-        )
+        access_token = super()._create_access_token(expires, request, token, source_refresh_token=source_refresh_token)
         resource = getattr(request, "_plane_resource", None) or self._requested_resource(request)
         if resource:
             access_token.resource = resource

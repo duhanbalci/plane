@@ -105,6 +105,26 @@ services:
         DOCKER_BUILDKIT: 1
     restart: always
 
+  mcp:
+    container_name: plane-mcp
+    build:
+      context: .
+      dockerfile: ./apps/mcp/Dockerfile.mcp
+      args:
+        DOCKER_BUILDKIT: 1
+    restart: always
+    env_file:
+      - .env
+    environment:
+      APP_BASE_URL: ${APP_BASE_URL}
+      API_INTERNAL_URL: http://api:8000
+      REDIS_URL: redis://plane-redis:6379/
+      MCP_INTROSPECTION_CLIENT_ID: ${MCP_INTROSPECTION_CLIENT_ID}
+      MCP_INTROSPECTION_CLIENT_SECRET: ${MCP_INTROSPECTION_CLIENT_SECRET}
+    depends_on:
+      - api
+      - plane-redis
+
   plane-db:
     container_name: plane-db
     image: postgres:15.7-alpine

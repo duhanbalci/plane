@@ -11,6 +11,13 @@
 	
 	reverse_proxy /live/* live:3000
 
+	# Remote MCP server, and the RFC 9728 document clients read to discover
+	# the authorization server. The RFC 8414 document below is served by the
+	# API, which is the authorization server itself.
+	reverse_proxy /mcp mcp:3000
+	reverse_proxy /.well-known/oauth-protected-resource* mcp:3000
+	reverse_proxy /.well-known/oauth-authorization-server* api:8000
+
 	reverse_proxy /api/* api:8000
 
 	reverse_proxy /auth/* api:8000
