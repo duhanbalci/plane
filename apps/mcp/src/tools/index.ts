@@ -7,6 +7,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { registerPlanningTools } from "./planning";
 import { registerProjectTools } from "./projects";
+import { registerWikiTools } from "./wiki";
 import { registerWorkItemTools } from "./work-items";
 import { registerWorkspaceTools } from "./workspaces";
 
@@ -15,4 +16,5 @@ export function registerTools(server: McpServer): void {
   registerProjectTools(server);
   registerWorkItemTools(server);
   registerPlanningTools(server);
+  registerWikiTools(server);
 }

@@ -118,6 +118,10 @@ OAuth 2.1 permits plain HTTP only for loopback redirects. A Plane deployment ser
 | `create_label`, `join_project`, `add_project_member`                                                                                | `mcp:write` |
 | `create_cycle`, `update_cycle`, `remove_work_item_from_cycle`, `remove_work_item_from_module`                                       | `mcp:write` |
 | `delete_work_item`, `delete_work_item_comment`                                                                                      | `mcp:write` |
+| `list_wiki_collections`, `list_wiki_pages`, `get_wiki_page`                                                                         | `mcp:read`  |
+| `create_wiki_collection`, `update_wiki_collection`, `delete_wiki_collection`                                                        | `mcp:write` |
+| `create_wiki_page`, `update_wiki_page`, `update_wiki_page_content`, `move_wiki_page`, `archive_wiki_page`, `lock_wiki_page`         | `mcp:write` |
+| `duplicate_wiki_page`, `delete_wiki_page`                                                                                           | `mcp:write` |
 
 `create_work_item` and `update_work_item` also take `cycle_id` and `module_id`. Plane links
 those through separate endpoints, so they run after the create or update; if a link fails,
@@ -127,6 +131,11 @@ client does not retry and create the item twice.
 Project calls, reads included, need project membership, even for a workspace admin.
 `join_project` adds the caller the way the web app's "Join project" does; `add_project_member`
 adds someone else and needs a project admin.
+
+The wiki tools use `/api/v1/workspaces/<slug>/wiki/`, which reuses the web app's wiki
+permissions. A page body is written as HTML with `update_wiki_page_content`; the editor's
+collaborative document is dropped and rebuilt from that HTML when the page is next opened,
+so a session that has the page open at that moment can still overwrite the change.
 
 `list_work_items` returns a compact set of fields without `description_html` unless `fields`
 asks for more; `get_work_item` returns one item in full.

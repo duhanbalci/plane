@@ -17,7 +17,7 @@ export class PlaneApiError extends Error {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
 };
