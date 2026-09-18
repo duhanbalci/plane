@@ -12,6 +12,16 @@ import { DESTRUCTIVE, MUTATES, READ_ONLY, handler, text, withWarnings, type Tool
 const workspaceSlug = z.string().describe("Workspace slug, from list_workspaces");
 const projectId = z.string().describe("Project id, from list_projects");
 const workItemId = z.string().describe("Work item id");
+const RELATION_TYPE = z.enum([
+  "blocking",
+  "blocked_by",
+  "duplicate",
+  "relates_to",
+  "start_before",
+  "start_after",
+  "finish_before",
+  "finish_after",
+]);
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 
 /**
@@ -48,7 +58,10 @@ const workItemFields = {
   cycle_id: z
     .string()
     .optional()
-    .describe("Cycle id, from list_cycles. Adds the work item to it, moving it out of any other cycle."),
+    .describe(
+      "Cycle id, from list_cycles. Adds the work item to it, moving it out of any other cycle. " +
+        "To take it out of a cycle without a new one, use remove_work_item_from_cycle."
+    ),
   module_id: z
     .string()
     .optional()
@@ -236,6 +249,80 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
         ? await client.request(path, { method: "PATCH", body })
         : await client.request(path);
       return withWarnings(workItem, await attach(client, base, work_item_id, { cycle_id, module_id }));
+    })
+  );
+
+  server.registerTool(
+    "list_work_item_relations",
+    {
+      title: "List work item relations",
+      description:
+        "List a work item's relations to other work items, grouped by type: blocking, blocked_by, duplicate, " +
+        "relates_to, start_before, start_after, finish_before, finish_after.",
+      inputSchema: z.object({
+        workspace_slug: workspaceSlug,
+        project_id: projectId,
+        work_item_id: workItemId,
+      }),
+      annotations: READ_ONLY,
+    },
+    handler(async ({ workspace_slug, project_id, work_item_id }, client) =>
+      text(
+        await client.request(
+          `/workspaces/${workspace_slug}/projects/${project_id}/work-items/${work_item_id}/relations/`
+        )
+      )
+    )
+  );
+
+  server.registerTool(
+    "add_work_item_relation",
+    {
+      title: "Relate work items",
+      description:
+        "Relate a work item to one or more others. The type reads from this work item's side: " +
+        '"blocking" means this work item blocks the others, "blocked_by" that they block it. Related work ' +
+        "items may be in other projects of the same workspace. Requires a token with the mcp:write scope.",
+      inputSchema: z.object({
+        workspace_slug: workspaceSlug,
+        project_id: projectId,
+        work_item_id: workItemId,
+        relation_type: RELATION_TYPE,
+        related_work_item_ids: z.array(z.string()).min(1).describe("Ids of the work items to relate to"),
+      }),
+      annotations: { ...MUTATES, idempotentHint: true },
+    },
+    handler(async ({ workspace_slug, project_id, work_item_id, relation_type, related_work_item_ids }, client) =>
+      text(
+        await client.request(
+          `/workspaces/${workspace_slug}/projects/${project_id}/work-items/${work_item_id}/relations/`,
+          { method: "POST", body: { relation_type, issues: related_work_item_ids } }
+        )
+      )
+    )
+  );
+
+  server.registerTool(
+    "remove_work_item_relation",
+    {
+      title: "Remove a work item relation",
+      description:
+        "Remove the relation between two work items, whatever its type and whichever side it was added from. " +
+        "Neither work item is deleted. Requires a token with the mcp:write scope.",
+      inputSchema: z.object({
+        workspace_slug: workspaceSlug,
+        project_id: projectId,
+        work_item_id: workItemId,
+        related_work_item_id: z.string().describe("Id of the related work item"),
+      }),
+      annotations: { ...MUTATES, idempotentHint: true },
+    },
+    handler(async ({ workspace_slug, project_id, work_item_id, related_work_item_id }, client) => {
+      await client.request(
+        `/workspaces/${workspace_slug}/projects/${project_id}/work-items/${work_item_id}/relations/remove/`,
+        { method: "POST", body: { related_issue: related_work_item_id } }
+      );
+      return text(`Removed the relation between ${work_item_id} and ${related_work_item_id}.`);
     })
   );
 

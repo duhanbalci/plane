@@ -355,3 +355,209 @@ describe("permission errors", () => {
     expect(allText(result)).toContain("read-only");
   });
 });
+
+describe("project membership", () => {
+  it("joins a project through the v1 join endpoint", async () => {
+    replies[`POST ${BASE}/join/`] = { status: 201, body: { id: "pm-1", member: "user-1", role: 20 } };
+
+    const result = await callTool("join_project", { workspace_slug: "korz", project_id: "p1" });
+
+    expect(result.isError).toBeFalsy();
+    expect(apiCalls).toEqual([{ method: "POST", path: `${BASE}/join/`, query: {}, body: undefined }]);
+  });
+
+  it("adds a member with Plane's numeric role, defaulting to member", async () => {
+    await callTool("add_project_member", { workspace_slug: "korz", project_id: "p1", member: "user-2" });
+    await callTool("add_project_member", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      member: "user-3",
+      role: "admin",
+    });
+
+    expect(apiCalls.map((call) => call.body)).toEqual([
+      { member: "user-2", role: 15 },
+      { member: "user-3", role: 20 },
+    ]);
+    expect(apiCalls.every((call) => call.path === `${BASE}/members/`)).toBe(true);
+  });
+});
+
+describe("work item relations", () => {
+  const relations = `/api/v1/workspaces/korz/projects/p1/work-items/wi-1/relations/`;
+
+  it("relates work items, sending Plane's field names", async () => {
+    await callTool("add_work_item_relation", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      work_item_id: "wi-1",
+      relation_type: "blocking",
+      related_work_item_ids: ["wi-2", "wi-3"],
+    });
+
+    expect(apiCalls).toEqual([
+      { method: "POST", path: relations, query: {}, body: { relation_type: "blocking", issues: ["wi-2", "wi-3"] } },
+    ]);
+  });
+
+  it("rejects an unknown relation type before calling Plane", async () => {
+    const result = await callTool("add_work_item_relation", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      work_item_id: "wi-1",
+      relation_type: "depends_on",
+      related_work_item_ids: ["wi-2"],
+    });
+
+    expect(result.isError).toBe(true);
+    expect(apiCalls).toEqual([]);
+  });
+
+  it("removes a relation and reports it despite the empty 204", async () => {
+    replies[`POST ${relations}remove/`] = { status: 204 };
+
+    const result = await callTool("remove_work_item_relation", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      work_item_id: "wi-1",
+      related_work_item_id: "wi-2",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(apiCalls).toEqual([
+      { method: "POST", path: `${relations}remove/`, query: {}, body: { related_issue: "wi-2" } },
+    ]);
+    expect(allText(result)).toContain("Removed the relation between wi-1 and wi-2");
+  });
+
+  it("lists relations", async () => {
+    await callTool("list_work_item_relations", { workspace_slug: "korz", project_id: "p1", work_item_id: "wi-1" });
+
+    expect(apiCalls).toEqual([{ method: "GET", path: relations, query: {}, body: undefined }]);
+  });
+});
+
+describe("cycles", () => {
+  it("creates a scheduled cycle", async () => {
+    replies[`POST ${BASE}/cycles/`] = { status: 201, body: { id: "c1" } };
+
+    const result = await callTool("create_cycle", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      name: "Sprint 1",
+      start_date: "2026-09-21",
+      end_date: "2026-10-04",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(apiCalls).toEqual([
+      {
+        method: "POST",
+        path: `${BASE}/cycles/`,
+        query: {},
+        body: { name: "Sprint 1", start_date: "2026-09-21", end_date: "2026-10-04" },
+      },
+    ]);
+  });
+
+  it("creates a draft cycle without dates", async () => {
+    await callTool("create_cycle", { workspace_slug: "korz", project_id: "p1", name: "Someday" });
+
+    expect(apiCalls[0].body).toEqual({ name: "Someday" });
+  });
+
+  it.each(["create_cycle", "update_cycle"])(
+    "%s refuses one date without the other, which Plane would reject",
+    async (tool) => {
+      const result = await callTool(tool, {
+        workspace_slug: "korz",
+        project_id: "p1",
+        cycle_id: "c1",
+        name: "Sprint 1",
+        start_date: "2026-09-21",
+      });
+
+      expect(result.isError).toBe(true);
+      expect(apiCalls).toEqual([]);
+    }
+  );
+
+  it("patches only the fields passed to update_cycle", async () => {
+    await callTool("update_cycle", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      cycle_id: "c1",
+      name: "Sprint 1b",
+    });
+
+    expect(apiCalls).toEqual([{ method: "PATCH", path: `${BASE}/cycles/c1/`, query: {}, body: { name: "Sprint 1b" } }]);
+  });
+
+  it("surfaces Plane's refusal to edit a completed cycle", async () => {
+    replies[`PATCH ${BASE}/cycles/c-old/`] = {
+      status: 400,
+      body: { error: "The Cycle has already been completed so it cannot be edited" },
+    };
+
+    const result = await callTool("update_cycle", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      cycle_id: "c-old",
+      name: "Renamed",
+    });
+
+    expect(result.isError).toBe(true);
+    expect(allText(result)).toContain("already been completed");
+  });
+
+  it("lists a cycle's work items in the compact shape", async () => {
+    await callTool("list_cycle_work_items", { workspace_slug: "korz", project_id: "p1", cycle_id: "c1" });
+
+    expect(apiCalls[0].path).toBe(`${BASE}/cycles/c1/cycle-issues/`);
+    expect(apiCalls[0].query.fields.split(",")).not.toContain("description_html");
+  });
+
+  it("removes a work item from a cycle", async () => {
+    replies[`DELETE ${BASE}/cycles/c1/cycle-issues/wi-1/`] = { status: 204 };
+
+    const result = await callTool("remove_work_item_from_cycle", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      cycle_id: "c1",
+      work_item_id: "wi-1",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(apiCalls).toEqual([
+      { method: "DELETE", path: `${BASE}/cycles/c1/cycle-issues/wi-1/`, query: {}, body: undefined },
+    ]);
+  });
+});
+
+describe("modules", () => {
+  it("lists a module's work items in the compact shape", async () => {
+    await callTool("list_module_work_items", { workspace_slug: "korz", project_id: "p1", module_id: "m1" });
+
+    expect(apiCalls[0].path).toBe(`${BASE}/modules/m1/module-issues/`);
+    expect(apiCalls[0].query.fields.split(",")).not.toContain("description_html");
+  });
+
+  it("removes a work item from a module", async () => {
+    replies[`DELETE ${BASE}/modules/m1/module-issues/wi-1/`] = { status: 204 };
+
+    const result = await callTool("remove_work_item_from_module", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      module_id: "m1",
+      work_item_id: "wi-1",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(apiCalls[0]).toEqual({
+      method: "DELETE",
+      path: `${BASE}/modules/m1/module-issues/wi-1/`,
+      query: {},
+      body: undefined,
+    });
+  });
+});

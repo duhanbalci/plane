@@ -37,6 +37,7 @@ describe("describeError", () => {
     const message = describeError(403, roleDenial, "GET");
 
     expect(message).toContain("project membership");
+    expect(message).toContain("call join_project");
     expect(message).toContain("ask a project admin to add you");
     expect(message).not.toContain("mcp:write");
     expect(message).toContain("does not allow this read");

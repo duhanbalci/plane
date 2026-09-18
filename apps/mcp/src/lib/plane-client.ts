@@ -101,7 +101,7 @@ export function describeError(status: number, payload: unknown, method: string =
       return (
         `Not permitted: ${detail}. Your role in this workspace or project does not allow this ` +
         `${isWrite ? "change" : "read"}. Project calls, reads included, need project membership even ` +
-        `for workspace admins: if you are not a member, ask a project admin to add you.`
+        `for workspace admins: if you are not a member, call join_project, or ask a project admin to add you.`
       );
     case 404:
       return `Not found: ${detail}`;

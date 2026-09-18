@@ -112,14 +112,21 @@ OAuth 2.1 permits plain HTTP only for loopback redirects. A Plane deployment ser
 | ----------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | `list_workspaces`, `get_current_user`, `list_workspace_members`                                                                     | `mcp:read`  |
 | `list_projects`, `get_project`, `list_project_states`, `list_project_labels`, `list_project_members`, `list_cycles`, `list_modules` | `mcp:read`  |
-| `list_work_items`, `get_work_item`, `search_work_items`, `list_work_item_comments`                                                  | `mcp:read`  |
-| `create_work_item`, `update_work_item`, `add_work_item_comment`, `create_label`                                                     | `mcp:write` |
+| `list_work_items`, `get_work_item`, `search_work_items`, `list_work_item_comments`, `list_work_item_relations`                      | `mcp:read`  |
+| `list_cycle_work_items`, `list_module_work_items`                                                                                   | `mcp:read`  |
+| `create_work_item`, `update_work_item`, `add_work_item_comment`, `add_work_item_relation`, `remove_work_item_relation`              | `mcp:write` |
+| `create_label`, `join_project`, `add_project_member`                                                                                | `mcp:write` |
+| `create_cycle`, `update_cycle`, `remove_work_item_from_cycle`, `remove_work_item_from_module`                                       | `mcp:write` |
 | `delete_work_item`, `delete_work_item_comment`                                                                                      | `mcp:write` |
 
 `create_work_item` and `update_work_item` also take `cycle_id` and `module_id`. Plane links
 those through separate endpoints, so they run after the create or update; if a link fails,
 the work item is still saved and the result carries a warning rather than an error, so a
 client does not retry and create the item twice.
+
+Project calls, reads included, need project membership, even for a workspace admin.
+`join_project` adds the caller the way the web app's "Join project" does; `add_project_member`
+adds someone else and needs a project admin.
 
 `list_work_items` returns a compact set of fields without `description_html` unless `fields`
 asks for more; `get_work_item` returns one item in full.

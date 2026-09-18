@@ -10,6 +10,9 @@ import { MUTATES, READ_ONLY, handler, text, type ToolRegistrar } from "./context
 const workspaceSlug = z.string().describe("Workspace slug, from list_workspaces");
 const projectId = z.string().describe("Project id, from list_projects");
 
+/** Plane stores roles as numbers. */
+const PROJECT_ROLES = { admin: 20, member: 15, guest: 5 } as const;
+
 export const registerProjectTools: ToolRegistrar = (server) => {
   server.registerTool(
     "list_projects",
@@ -93,6 +96,52 @@ export const registerProjectTools: ToolRegistrar = (server) => {
         await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/labels/`, {
           method: "POST",
           body,
+        })
+      )
+    )
+  );
+
+  server.registerTool(
+    "join_project",
+    {
+      title: "Join a project",
+      description:
+        "Add yourself to a project. Project calls, reads included, need project membership even for " +
+        'workspace admins, so join first when they answer "Not permitted". Workspace admins and members ' +
+        "can join public projects; only workspace admins can join private ones. Your project role matches " +
+        "your workspace role. Requires a token with the mcp:write scope.",
+      inputSchema: z.object({ workspace_slug: workspaceSlug, project_id: projectId }),
+      annotations: { ...MUTATES, idempotentHint: true },
+    },
+    handler(async ({ workspace_slug, project_id }, client) =>
+      text(
+        await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/join/`, {
+          method: "POST",
+        })
+      )
+    )
+  );
+
+  server.registerTool(
+    "add_project_member",
+    {
+      title: "Add a project member",
+      description:
+        "Add someone from the workspace to a project. Only project admins can do this; to add yourself, " +
+        "use join_project. Requires a token with the mcp:write scope.",
+      inputSchema: z.object({
+        workspace_slug: workspaceSlug,
+        project_id: projectId,
+        member: z.string().describe("User id, from list_workspace_members"),
+        role: z.enum(["admin", "member", "guest"]).default("member"),
+      }),
+      annotations: MUTATES,
+    },
+    handler(async ({ workspace_slug, project_id, member, role }, client) =>
+      text(
+        await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/members/`, {
+          method: "POST",
+          body: { member, role: PROJECT_ROLES[role] },
         })
       )
     )
