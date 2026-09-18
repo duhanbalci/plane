@@ -6,22 +6,16 @@
 
 // hocuspocus
 import type { Extension, Hocuspocus, Document } from "@hocuspocus/server";
-import { TiptapTransformer } from "@hocuspocus/transformer";
-import type { AnyExtension, JSONContent } from "@tiptap/core";
 import type * as Y from "yjs";
 // editor extensions
-import {
-  TITLE_EDITOR_EXTENSIONS,
-  createRealtimeEvent,
-  extractTextFromHTML,
-  generateTitleProsemirrorJson,
-} from "@plane/editor";
+import { createRealtimeEvent, extractTextFromHTML } from "@plane/editor";
 import { logger } from "@plane/logger";
 import { AppError } from "@/lib/errors";
 // helpers
 import { getPageService } from "@/services/page/handler";
 import type { HocusPocusServerContext, OnLoadDocumentPayloadWithContext } from "@/types";
 import { broadcastMessageToPage } from "@/utils/broadcast-message";
+import { syncTitleWithName } from "./title-update/sync-title";
 import { TitleUpdateManager } from "./title-update/title-update-manager";
 
 /**
@@ -43,21 +37,16 @@ export class TitleSyncExtension implements Extension {
   > = new Map();
 
   /**
-   * Handle document loading - migrate old titles if needed
+   * Handle document loading: make the title field match the page's stored name
    */
   async onLoadDocument({ context, document, documentName }: OnLoadDocumentPayloadWithContext) {
     try {
-      // initially for on demand migration of old titles to a new title field
-      // in the yjs binary
-      if (document.isEmpty("title")) {
-        const service = getPageService(context.documentType, context);
-        const pageDetails = await service.fetchDetails(documentName);
-        const title = pageDetails.name;
-        if (title == null) return;
-        const titleJson = (generateTitleProsemirrorJson as (text: string) => JSONContent)(title);
-        const titleField = TiptapTransformer.toYdoc(titleJson, "title", TITLE_EDITOR_EXTENSIONS as AnyExtension[]);
-        document.merge(titleField);
-      }
+      // Covers both the migration of old documents with no title field and a
+      // page renamed outside the editor while its document was unloaded.
+      const service = getPageService(context.documentType, context);
+      const pageDetails = await service.fetchDetails(documentName);
+      if (pageDetails.name == null) return;
+      syncTitleWithName(document, pageDetails.name);
     } catch (error) {
       const appError = new AppError(error, {
         context: { operation: "onLoadDocument", documentName },
