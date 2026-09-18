@@ -5,7 +5,7 @@
  */
 
 import { z } from "zod";
-import { READ_ONLY, handler, text, type ToolRegistrar } from "./context";
+import { MUTATES, READ_ONLY, handler, text, type ToolRegistrar } from "./context";
 
 const workspaceSlug = z.string().describe("Workspace slug, from list_workspaces");
 const projectId = z.string().describe("Project id, from list_projects");
@@ -64,6 +64,37 @@ export const registerProjectTools: ToolRegistrar = (server) => {
     },
     handler(async ({ workspace_slug, project_id }, client) =>
       text(await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/labels/`))
+    )
+  );
+
+  server.registerTool(
+    "create_label",
+    {
+      title: "Create a label",
+      description:
+        "Create a label in a project, so work items can be tagged with it. Check list_project_labels first: " +
+        "names are unique per project. Requires a token with the mcp:write scope.",
+      inputSchema: z.object({
+        workspace_slug: workspaceSlug,
+        project_id: projectId,
+        name: z.string().min(1).describe("Label name"),
+        color: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour such as #3A86FF")
+          .optional()
+          .describe("Hex colour, e.g. #3A86FF"),
+        description: z.string().optional(),
+        parent: z.string().optional().describe("Parent label id, to nest this label under another"),
+      }),
+      annotations: MUTATES,
+    },
+    handler(async ({ workspace_slug, project_id, ...body }, client) =>
+      text(
+        await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/labels/`, {
+          method: "POST",
+          body,
+        })
+      )
     )
   );
 

@@ -66,27 +66,43 @@ export class PlaneClient {
     }
 
     if (!response.ok) {
-      throw new PlaneApiError(response.status, describeError(response.status, payload));
+      throw new PlaneApiError(response.status, describeError(response.status, payload, options.method ?? "GET"));
     }
 
     return payload as T;
   }
 }
 
-function describeError(status: number, payload: unknown): string {
-  const detail =
+/** Plane's OAuthScopePermission message, raised before any role check runs. */
+const SCOPE_DENIAL = /\bscope\b/i;
+
+export function describeError(status: number, payload: unknown, method: string = "GET"): string {
+  const raw =
     typeof payload === "string"
       ? payload
       : ((payload as { error?: string; detail?: string } | null)?.error ??
         (payload as { detail?: string } | null)?.detail ??
         JSON.stringify(payload));
+  // Plane's messages end in a full stop; drop it so the sentences below read cleanly.
+  const detail = raw.trim().replace(/[.\s]+$/, "");
+  const isWrite = method !== "GET";
 
   switch (status) {
     case 401:
       return "The access token is no longer valid. Sign in to Plane again.";
     case 403:
-      // Two very different causes, and the caller can act on either.
-      return `Not permitted: ${detail}. Either this token lacks the mcp:write scope, or you do not have the required role in this workspace or project.`;
+      // The scope check and the role check fail with different messages, and the
+      // caller fixes them in different places, so name the one that fired.
+      if (SCOPE_DENIAL.test(detail)) {
+        return isWrite
+          ? "Not permitted: this token is read-only. Reconnect the MCP client and approve the mcp:write scope to make changes."
+          : "Not permitted: this token lacks the mcp:read scope. Reconnect the MCP client and approve it.";
+      }
+      return (
+        `Not permitted: ${detail}. Your role in this workspace or project does not allow this ` +
+        `${isWrite ? "change" : "read"}. Project calls, reads included, need project membership even ` +
+        `for workspace admins: if you are not a member, ask a project admin to add you.`
+      );
     case 404:
       return `Not found: ${detail}`;
     case 429:

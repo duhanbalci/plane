@@ -19,6 +19,17 @@ export const text = (value: unknown): ToolResult => ({
   content: [{ type: "text", text: typeof value === "string" ? value : JSON.stringify(value, null, 2) }],
 });
 
+/**
+ * A result whose main write succeeded but a follow-up did not. Not an error:
+ * reporting one would invite a retry that creates the work item twice.
+ */
+export const withWarnings = (value: unknown, warnings: string[]): ToolResult => ({
+  content: [
+    ...text(value).content,
+    ...warnings.map((warning) => ({ type: "text" as const, text: `Warning: ${warning}` })),
+  ],
+});
+
 export const failure = (message: string): ToolResult => ({
   content: [{ type: "text", text: message }],
   isError: true,
