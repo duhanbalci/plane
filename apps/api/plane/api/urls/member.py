@@ -8,6 +8,7 @@ from plane.api.views import (
     ProjectMemberListCreateAPIEndpoint,
     ProjectMemberDetailAPIEndpoint,
     ProjectMemberLiteAPIEndpoint,
+    ProjectJoinAPIEndpoint,
     WorkspaceMemberAPIEndpoint,
     WorkspaceMemberLiteAPIEndpoint,
 )
@@ -23,6 +24,11 @@ urlpatterns = [
         "workspaces/<str:slug>/projects/<uuid:project_id>/members/<uuid:pk>/",
         ProjectMemberDetailAPIEndpoint.as_view(http_method_names=["patch", "delete", "get"]),
         name="project-member",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/join/",
+        ProjectJoinAPIEndpoint.as_view(http_method_names=["post"]),
+        name="project-join",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/project-members/",

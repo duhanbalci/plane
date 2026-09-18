@@ -31,6 +31,7 @@ from .issue import (
     IssueAttachmentDetailAPIEndpoint,
     IssueSearchEndpoint,
     IssueRelationListCreateAPIEndpoint,
+    IssueRelationRemoveAPIEndpoint,
 )
 
 from .cycle import (
@@ -56,6 +57,7 @@ from .member import (
     ProjectMemberListCreateAPIEndpoint,
     ProjectMemberDetailAPIEndpoint,
     ProjectMemberLiteAPIEndpoint,
+    ProjectJoinAPIEndpoint,
     WorkspaceMemberAPIEndpoint,
     WorkspaceMemberLiteAPIEndpoint,
 )

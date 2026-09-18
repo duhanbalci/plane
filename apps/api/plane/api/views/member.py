@@ -19,8 +19,15 @@ from plane.api.serializers import (
     WorkspaceMemberLiteAPISerializer,
     ProjectMemberLiteAPISerializer,
 )
-from plane.db.models import User, Workspace, WorkspaceMember, Project, ProjectMember
-from plane.utils.permissions import ProjectMemberPermission, WorkSpaceAdminPermission, ProjectAdminPermission
+from plane.app.permissions import ROLE
+from plane.db.models import User, Workspace, WorkspaceMember, Project, ProjectMember, ProjectUserProperty
+from plane.db.models.project import ProjectNetwork
+from plane.utils.permissions import (
+    ProjectMemberPermission,
+    WorkSpaceAdminPermission,
+    ProjectAdminPermission,
+    WorkspaceUserPermission,
+)
 from plane.utils.openapi import (
     WORKSPACE_SLUG_PARAMETER,
     PROJECT_ID_PARAMETER,
@@ -330,3 +337,83 @@ class ProjectMemberLiteAPIEndpoint(BaseAPIView):
             queryset=project_members,
             on_results=lambda members: ProjectMemberLiteAPISerializer(members, many=True).data,
         )
+
+
+class ProjectJoinAPIEndpoint(BaseAPIView):
+    """
+    Let the caller join a project in their workspace.
+
+    The v1 counterpart of the web app's "Join project" button. Adding a member
+    through ``/members/`` needs a project admin, which leaves a workspace admin
+    who is not yet in a project with no way in over the API. The rules are the
+    app's: workspace admins and members may join public projects, only
+    workspace admins may join secret ones, and the project role mirrors the
+    workspace role.
+    """
+
+    permission_classes = [WorkspaceUserPermission]
+
+    @extend_schema(
+        operation_id="join_project",
+        summary="Join project",
+        description="Add the authenticated user to a project in the workspace.",
+        tags=["Members"],
+        parameters=[WORKSPACE_SLUG_PARAMETER, PROJECT_ID_PARAMETER],
+        request=None,
+        responses={
+            200: OpenApiResponse(description="Already a member", response=ProjectMemberSerializer),
+            201: OpenApiResponse(description="Joined the project", response=ProjectMemberSerializer),
+            401: UNAUTHORIZED_RESPONSE,
+            403: FORBIDDEN_RESPONSE,
+            404: PROJECT_NOT_FOUND_RESPONSE,
+        },
+    )
+    def post(self, request, slug, project_id):
+        """Join project
+
+        Add the authenticated user to the project with a role matching their
+        workspace role. Joining a project you already belong to is a no-op.
+        """
+        workspace_member = WorkspaceMember.objects.get(member=request.user, workspace__slug=slug, is_active=True)
+        # Guests are invited to projects one by one; they never join on their own.
+        if workspace_member.role not in [ROLE.ADMIN.value, ROLE.MEMBER.value]:
+            return Response(
+                {"error": "Workspace guests cannot join projects themselves"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        project = Project.objects.filter(pk=project_id, workspace__slug=slug, archived_at__isnull=True).first()
+        if project is None:
+            return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if project.network == ProjectNetwork.SECRET.value and workspace_member.role != ROLE.ADMIN.value:
+            return Response(
+                {"error": "Only workspace admins can join a private project"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        project_member = ProjectMember.objects.filter(project=project, member=request.user).first()
+        if project_member is not None and project_member.is_active:
+            return Response(ProjectMemberSerializer(project_member).data, status=status.HTTP_200_OK)
+
+        if project_member is None:
+            # save() also creates the member's ProjectUserProperty.
+            project_member = ProjectMember.objects.create(
+                project=project,
+                member=request.user,
+                role=workspace_member.role,
+                workspace=project.workspace,
+                created_by=request.user,
+            )
+        else:
+            # A former member rejoining keeps the row; restore it at their current workspace role.
+            project_member.is_active = True
+            project_member.role = workspace_member.role
+            project_member.save(update_fields=["is_active", "role", "updated_at"])
+            ProjectUserProperty.objects.get_or_create(
+                project=project,
+                user=request.user,
+                defaults={"workspace": project.workspace, "created_by": request.user},
+            )
+
+        return Response(ProjectMemberSerializer(project_member).data, status=status.HTTP_201_CREATED)
