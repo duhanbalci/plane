@@ -74,3 +74,10 @@ from .user import UserEndpoint, UserWorkspacesEndpoint
 from .invite import WorkspaceInvitationsViewset
 
 from .sticky import StickyViewSet
+
+from .wiki import (
+    WikiCollectionViewSet,
+    WikiPageContentAPIEndpoint,
+    WikiPageDuplicateAPIEndpoint,
+    WikiPageViewSet,
+)

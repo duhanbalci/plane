@@ -50,14 +50,18 @@ class TimezoneMixin:
             timezone.deactivate()
 
 
-class BaseAPIView(TimezoneMixin, GenericAPIView, ReadReplicaControlMixin, BasePaginator):
+class ExternalAPIAuthMixin:
+    """
+    How the public v1 API authenticates, for any view class.
+
+    BaseAPIView uses it, and so do the v1 views that reuse an app viewset
+    (whose own authentication is the browser session) so both surfaces share
+    one set of rules instead of a copy that can drift.
+    """
+
     # API keys stay the primary credential; OAuth tokens are what remote MCP
     # clients present after the consent flow in plane/oauth/.
     authentication_classes = [APIKeyAuthentication, OAuth2Authentication]
-
-    permission_classes = [IsAuthenticated]
-
-    use_read_replica = False
 
     def check_permissions(self, request):
         super().check_permissions(request)
@@ -69,13 +73,19 @@ class BaseAPIView(TimezoneMixin, GenericAPIView, ReadReplicaControlMixin, BasePa
         if not scope_permission.has_permission(request, self):
             self.permission_denied(request, message=scope_permission.message)
 
+    def get_throttles(self):
+        return [ApiKeyRateThrottle(), OAuthTokenRateThrottle()]
+
+
+class BaseAPIView(ExternalAPIAuthMixin, TimezoneMixin, GenericAPIView, ReadReplicaControlMixin, BasePaginator):
+    permission_classes = [IsAuthenticated]
+
+    use_read_replica = False
+
     def filter_queryset(self, queryset):
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, self)
         return queryset
-
-    def get_throttles(self):
-        return [ApiKeyRateThrottle(), OAuthTokenRateThrottle()]
 
     def handle_exception(self, exc):
         """
