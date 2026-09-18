@@ -133,8 +133,7 @@ export const IssueTypeDropdown = observer(function IssueTypeDropdown(props: Prop
         variant={buttonVariant}
         renderToolTipByDefault={renderByDefault}
       >
-        {!hideIcon &&
-          <WorkItemTypeLogo type={selectedType} size={12} />}
+        {!hideIcon && <WorkItemTypeLogo type={selectedType} size={12} />}
         {(selectedType || placeholder) && BUTTON_VARIANTS_WITH_TEXT.includes(buttonVariant) && (
           <span className="truncate">
             {selectedType ? selectedType.name : <span className="text-placeholder">{placeholder}</span>}
@@ -161,7 +160,7 @@ export const IssueTypeDropdown = observer(function IssueTypeDropdown(props: Prop
       renderByDefault={renderByDefault}
     >
       {isOpen && (
-        <Combobox.Options as="ul" className="fixed z-10" static>
+        <Combobox.Options as="ul" modal={false} className="fixed z-10" static>
           <div
             className="my-1 w-48 rounded-sm border-[0.5px] border-strong bg-surface-1 px-2 py-2.5 text-11 shadow-raised-200 focus:outline-none"
             ref={setPopperElement}
