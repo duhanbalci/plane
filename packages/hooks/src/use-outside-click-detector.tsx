@@ -13,10 +13,13 @@ export const useOutsideClickDetector = (
   useCapture = false
 ) => {
   const handleClick = (event: MouseEvent) => {
-    if (ref.current && !ref.current.contains(event.target as any)) {
+    // Walk the path captured at dispatch: a Combobox option selects on mousedown and may be
+    // unmounted before this listener runs, leaving event.target detached from the tree.
+    const path = event.composedPath();
+    if (ref.current && !path.includes(ref.current)) {
       // check for the closest element with attribute name data-prevent-outside-click
-      const preventOutsideClickElement = (event.target as unknown as HTMLElement | undefined)?.closest(
-        "[data-prevent-outside-click]"
+      const preventOutsideClickElement = path.find(
+        (node) => node instanceof HTMLElement && node.hasAttribute("data-prevent-outside-click")
       );
       // if the closest element with attribute name data-prevent-outside-click is found, return
       if (preventOutsideClickElement) {

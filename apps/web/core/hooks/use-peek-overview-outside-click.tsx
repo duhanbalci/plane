@@ -16,9 +16,12 @@ const usePeekOverviewOutsideClickDetector = (
   const handleClick = useCallback(
     (event: MouseEvent) => {
       if (!(event.target instanceof HTMLElement)) return;
-      if (ref.current && !ref.current.contains(event.target)) {
+      // Walk the path captured at dispatch: a Combobox option selects on mousedown and may be
+      // unmounted before this listener runs, leaving event.target detached from the tree.
+      const path = event.composedPath().filter((node): node is HTMLElement => node instanceof HTMLElement);
+      if (ref.current && !path.includes(ref.current)) {
         // check for the closest element with attribute name data-prevent-outside-click
-        const preventOutsideClickElement = event.target.closest("[data-prevent-outside-click]");
+        const preventOutsideClickElement = path.find((el) => el.hasAttribute("data-prevent-outside-click"));
         // if the closest element with attribute name data-prevent-outside-click is found
         if (preventOutsideClickElement) {
           // Check if this element's ID is in the exclusion list
@@ -33,15 +36,8 @@ const usePeekOverviewOutsideClickDetector = (
           }
         }
         // check if the click target is the current issue element or its children
-        let targetElement: HTMLElement | null = event.target;
-        while (targetElement) {
-          if (targetElement.id === `issue-${issueId}`) {
-            // if the click target is the current issue element, return
-            return;
-          }
-          targetElement = targetElement.parentElement;
-        }
-        const delayOutsideClickElement = event.target.closest("[data-delay-outside-click]");
+        if (path.some((el) => el.id === `issue-${issueId}`)) return;
+        const delayOutsideClickElement = path.find((el) => el.hasAttribute("data-delay-outside-click"));
         if (delayOutsideClickElement) {
           // if the click target is the closest element with attribute name data-delay-outside-click, delay the callback
           setTimeout(() => {
