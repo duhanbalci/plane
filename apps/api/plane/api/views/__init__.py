@@ -10,6 +10,11 @@ from .project import (
     ProjectSummaryAPIEndpoint,
 )
 
+from .work_item_type import (
+    WorkItemPropertyValueAPIEndpoint,
+    WorkItemTypeListAPIEndpoint,
+)
+
 from .state import (
     StateListCreateAPIEndpoint,
     StateDetailAPIEndpoint,

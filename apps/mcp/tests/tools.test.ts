@@ -561,3 +561,109 @@ describe("modules", () => {
     });
   });
 });
+
+describe("work item types and custom properties", () => {
+  const types = [
+    {
+      id: "type-bug",
+      name: "Bug",
+      is_default: false,
+      properties: [{ id: "prop-verified", display_name: "Bug Verified", property_type: "BOOLEAN", is_required: true }],
+    },
+  ];
+
+  it("returns the project's work item types alongside the project", async () => {
+    replies[`GET ${BASE}/`] = { body: { id: "p1", name: "Product" } };
+    replies[`GET ${BASE}/work-item-types/`] = { body: types };
+
+    const result = await callTool("get_project", { workspace_slug: "korz", project_id: "p1" });
+
+    expect(result.isError).toBeFalsy();
+    const project = JSON.parse(result.content[0].text);
+    expect(project.name).toBe("Product");
+    expect(project.work_item_types).toEqual(types);
+  });
+
+  it("still returns the project when the work item types cannot be read", async () => {
+    replies[`GET ${BASE}/`] = { body: { id: "p1", name: "Product" } };
+    replies[`GET ${BASE}/work-item-types/`] = { status: 403, body: { error: "Not allowed" } };
+
+    const result = await callTool("get_project", { workspace_slug: "korz", project_id: "p1" });
+
+    expect(result.isError).toBeFalsy();
+    const project = JSON.parse(result.content[0].text);
+    expect(project.name).toBe("Product");
+    expect(project.work_item_types.error).toContain("Could not read the work item types");
+  });
+
+  it("writes custom property values through their own endpoint on create", async () => {
+    replies[`POST ${BASE}/issues/`] = { status: 201, body: { id: "wi-1", name: "Crash on save" } };
+
+    const result = await callTool("create_work_item", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      name: "Crash on save",
+      type_id: "type-bug",
+      properties: { "prop-verified": true },
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(apiCalls.map(({ method, path, body }) => ({ method, path, body }))).toEqual([
+      // properties is not a work item field; it must not leak into the create.
+      { method: "POST", path: `${BASE}/issues/`, body: { name: "Crash on save", type_id: "type-bug" } },
+      { method: "PATCH", path: `${BASE}/issues/wi-1/property-values/`, body: { "prop-verified": true } },
+    ]);
+  });
+
+  it("reports rejected property values as a warning, so the client does not create the item twice", async () => {
+    replies[`POST ${BASE}/issues/`] = { status: 201, body: { id: "wi-1" } };
+    replies[`PATCH ${BASE}/issues/wi-1/property-values/`] = {
+      status: 400,
+      body: { error: "Required properties are missing: Bug Verified" },
+    };
+
+    const result = await callTool("create_work_item", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      name: "Crash on save",
+      type_id: "type-bug",
+      properties: { "prop-verified": [] },
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(allText(result)).toContain("Warning: the work item was saved, but its custom property values were not");
+    expect(allText(result)).toContain("Bug Verified");
+  });
+
+  it("sets property values on an update that changes nothing else, without patching the work item", async () => {
+    const result = await callTool("update_work_item", {
+      workspace_slug: "korz",
+      project_id: "p1",
+      work_item_id: "wi-1",
+      properties: { "prop-verified": false },
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(apiCalls.map(({ method, path }) => ({ method, path }))).toEqual([
+      { method: "GET", path: `${BASE}/issues/wi-1/` },
+      { method: "PATCH", path: `${BASE}/issues/wi-1/property-values/` },
+    ]);
+  });
+
+  it("returns the property values of a typed work item", async () => {
+    replies[`GET ${BASE}/issues/wi-1/`] = { body: { id: "wi-1", type_id: "type-bug" } };
+    replies[`GET ${BASE}/issues/wi-1/property-values/`] = { body: { "prop-verified": [true] } };
+
+    const result = await callTool("get_work_item", { workspace_slug: "korz", project_id: "p1", work_item_id: "wi-1" });
+
+    expect(JSON.parse(result.content[0].text).property_values).toEqual({ "prop-verified": [true] });
+  });
+
+  it("does not look for property values on a work item without a type", async () => {
+    replies[`GET ${BASE}/issues/wi-2/`] = { body: { id: "wi-2", type_id: null } };
+
+    await callTool("get_work_item", { workspace_slug: "korz", project_id: "p1", work_item_id: "wi-2" });
+
+    expect(apiCalls.map((call) => call.path)).toEqual([`${BASE}/issues/wi-2/`]);
+  });
+});

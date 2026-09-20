@@ -54,7 +54,19 @@ const workItemFields = {
   state: z.string().optional().describe("State id, from list_project_states"),
   assignees: z.array(z.string()).optional().describe("User ids, from list_project_members"),
   labels: z.array(z.string()).optional().describe("Label ids, from list_project_labels or create_label"),
-  type_id: z.string().optional().describe("Work item type id, when the project has work item types enabled"),
+  type_id: z
+    .string()
+    .optional()
+    .describe("Work item type id, from the work_item_types in get_project, e.g. the id of Bug"),
+  properties: z
+    .record(z.string(), z.unknown())
+    .optional()
+    .describe(
+      "Custom property values of the work item type, keyed by property id from the work_item_types in " +
+        'get_project: { "<property_id>": value }. A value may be a single value or an array for multi-value ' +
+        "properties; booleans take true or false, option properties take option ids, dates take YYYY-MM-DD. " +
+        "A type's required properties must be set for the work item to be complete."
+    ),
   cycle_id: z
     .string()
     .optional()
@@ -69,6 +81,30 @@ const workItemFields = {
 };
 
 type Attachments = { cycle_id?: string; module_id?: string };
+
+type PropertyValues = Record<string, unknown>;
+
+/**
+ * Write the custom property values of a work item. They live in their own
+ * table behind a separate endpoint, so like the cycle and module links they
+ * cannot ride along on the create or update, and a failure here is returned
+ * as a warning rather than undoing the write that already happened.
+ */
+async function setProperties(
+  client: PlaneClient,
+  base: string,
+  id: string,
+  properties: PropertyValues | undefined
+): Promise<string[]> {
+  if (!properties || Object.keys(properties).length === 0) return [];
+  try {
+    await client.request(`${base}/issues/${id}/property-values/`, { method: "PATCH", body: properties });
+    return [];
+  } catch (error) {
+    if (!(error instanceof PlaneApiError)) throw error;
+    return [`the work item was saved, but its custom property values were not: ${error.detail}`];
+  }
+}
 
 /**
  * Link a work item to a cycle and a module. Plane keeps these in their own
@@ -100,6 +136,16 @@ async function attach(
     })
   );
   return outcomes.filter((warning) => warning !== null);
+}
+
+/** The custom property values of a work item, or the reason they could not be read. */
+async function propertyValues(client: PlaneClient, base: string, id: string): Promise<unknown> {
+  try {
+    return await client.request(`${base}/issues/${id}/property-values/`);
+  } catch (error) {
+    if (!(error instanceof PlaneApiError)) throw error;
+    return { error: `Could not read the custom property values: ${error.detail}` };
+  }
 }
 
 /** Drop undefined keys and repair an entity-encoded body. */
@@ -157,7 +203,9 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
     "get_work_item",
     {
       title: "Get a work item",
-      description: "Retrieve one work item in full.",
+      description:
+        "Retrieve one work item in full, including property_values: the work item type's custom properties, " +
+        "keyed by property id. get_project names those properties.",
       inputSchema: z.object({
         workspace_slug: workspaceSlug,
         project_id: projectId,
@@ -165,9 +213,13 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
       }),
       annotations: READ_ONLY,
     },
-    handler(async ({ workspace_slug, project_id, work_item_id }, client) =>
-      text(await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/issues/${work_item_id}/`))
-    )
+    handler(async ({ workspace_slug, project_id, work_item_id }, client) => {
+      const base = `/workspaces/${workspace_slug}/projects/${project_id}`;
+      const workItem = await client.request<Record<string, unknown>>(`${base}/issues/${work_item_id}/`);
+      // Only typed work items can carry property values, so skip the call otherwise.
+      if (!workItem.type_id) return text(workItem);
+      return text({ ...workItem, property_values: await propertyValues(client, base, work_item_id) });
+    })
   );
 
   server.registerTool(
@@ -196,8 +248,8 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
     {
       title: "Create a work item",
       description:
-        "Create a work item in a project. Can also place it in a cycle and a module in the same call. " +
-        "Requires a token with the mcp:write scope.",
+        "Create a work item in a project. Can also give it a work item type with its custom property values, " +
+        "and place it in a cycle and a module, in the same call. Requires a token with the mcp:write scope.",
       inputSchema: z.object({
         workspace_slug: workspaceSlug,
         project_id: projectId,
@@ -210,13 +262,17 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
       }),
       annotations: MUTATES,
     },
-    handler(async ({ workspace_slug, project_id, cycle_id, module_id, ...fields }, client) => {
+    handler(async ({ workspace_slug, project_id, cycle_id, module_id, properties, ...fields }, client) => {
       const base = `/workspaces/${workspace_slug}/projects/${project_id}`;
       const workItem = await client.request<{ id: string }>(`${base}/issues/`, {
         method: "POST",
         body: toBody(fields),
       });
-      return withWarnings(workItem, await attach(client, base, workItem.id, { cycle_id, module_id }));
+      const warnings = [
+        ...(await setProperties(client, base, workItem.id, properties)),
+        ...(await attach(client, base, workItem.id, { cycle_id, module_id })),
+      ];
+      return withWarnings(workItem, warnings);
     })
   );
 
@@ -240,16 +296,23 @@ export const registerWorkItemTools: ToolRegistrar = (server) => {
       }),
       annotations: MUTATES,
     },
-    handler(async ({ workspace_slug, project_id, work_item_id, cycle_id, module_id, ...fields }, client) => {
-      const base = `/workspaces/${workspace_slug}/projects/${project_id}`;
-      const path = `${base}/issues/${work_item_id}/`;
-      const body = toBody(fields);
-      // A call that only moves the item between cycles or modules has nothing to PATCH.
-      const workItem = Object.keys(body).length
-        ? await client.request(path, { method: "PATCH", body })
-        : await client.request(path);
-      return withWarnings(workItem, await attach(client, base, work_item_id, { cycle_id, module_id }));
-    })
+    handler(
+      async ({ workspace_slug, project_id, work_item_id, cycle_id, module_id, properties, ...fields }, client) => {
+        const base = `/workspaces/${workspace_slug}/projects/${project_id}`;
+        const path = `${base}/issues/${work_item_id}/`;
+        const body = toBody(fields);
+        // A call that only moves the item between cycles or modules, or only sets
+        // custom property values, has nothing to PATCH on the work item itself.
+        const workItem = Object.keys(body).length
+          ? await client.request(path, { method: "PATCH", body })
+          : await client.request(path);
+        const warnings = [
+          ...(await setProperties(client, base, work_item_id, properties)),
+          ...(await attach(client, base, work_item_id, { cycle_id, module_id })),
+        ];
+        return withWarnings(workItem, warnings);
+      }
+    )
   );
 
   server.registerTool(

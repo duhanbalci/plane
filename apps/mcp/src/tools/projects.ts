@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { PlaneApiError, type PlaneClient } from "@/lib/plane-client";
 import { MUTATES, READ_ONLY, handler, text, type ToolRegistrar } from "./context";
 
 const workspaceSlug = z.string().describe("Workspace slug, from list_workspaces");
@@ -12,6 +13,23 @@ const projectId = z.string().describe("Project id, from list_projects");
 
 /** Plane stores roles as numbers. */
 const PROJECT_ROLES = { admin: 20, member: 15, guest: 5 } as const;
+
+/**
+ * The project's work item types, with the custom properties each one carries.
+ *
+ * Rides along on get_project because a caller that is about to write a work
+ * item needs the type id and the property ids together, and has no other way
+ * to learn them. Projects without work item types return an empty list; a
+ * failure here is reported in place rather than failing the whole read.
+ */
+async function workItemTypes(client: PlaneClient, slug: string, project: string): Promise<unknown> {
+  try {
+    return await client.request(`/workspaces/${slug}/projects/${project}/work-item-types/`);
+  } catch (error) {
+    if (!(error instanceof PlaneApiError)) throw error;
+    return { error: `Could not read the work item types: ${error.detail}` };
+  }
+}
 
 export const registerProjectTools: ToolRegistrar = (server) => {
   server.registerTool(
@@ -34,13 +52,20 @@ export const registerProjectTools: ToolRegistrar = (server) => {
     "get_project",
     {
       title: "Get a project",
-      description: "Retrieve a single project by id.",
+      description:
+        "Retrieve a single project by id, along with its work item types (Bug, Task, ...) and the custom " +
+        "properties each type carries. Those ids are what create_work_item and update_work_item take as " +
+        "type_id and in properties.",
       inputSchema: z.object({ workspace_slug: workspaceSlug, project_id: projectId }),
       annotations: READ_ONLY,
     },
-    handler(async ({ workspace_slug, project_id }, client) =>
-      text(await client.request(`/workspaces/${workspace_slug}/projects/${project_id}/`))
-    )
+    handler(async ({ workspace_slug, project_id }, client) => {
+      const [project, work_item_types] = await Promise.all([
+        client.request<Record<string, unknown>>(`/workspaces/${workspace_slug}/projects/${project_id}/`),
+        workItemTypes(client, workspace_slug, project_id),
+      ]);
+      return text({ ...project, work_item_types });
+    })
   );
 
   server.registerTool(

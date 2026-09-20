@@ -123,10 +123,14 @@ OAuth 2.1 permits plain HTTP only for loopback redirects. A Plane deployment ser
 | `create_wiki_page`, `update_wiki_page`, `update_wiki_page_content`, `move_wiki_page`, `archive_wiki_page`, `lock_wiki_page`         | `mcp:write` |
 | `duplicate_wiki_page`, `delete_wiki_page`                                                                                           | `mcp:write` |
 
-`create_work_item` and `update_work_item` also take `cycle_id` and `module_id`. Plane links
-those through separate endpoints, so they run after the create or update; if a link fails,
-the work item is still saved and the result carries a warning rather than an error, so a
-client does not retry and create the item twice.
+`create_work_item` and `update_work_item` also take `cycle_id`, `module_id` and `properties`.
+Plane keeps all three outside the work item row, behind their own endpoints, so they run
+after the create or update; if one fails, the work item is still saved and the result carries
+a warning rather than an error, so a client does not retry and create the item twice.
+
+Work item types and their custom properties come back from `get_project`, as `work_item_types`.
+That is where `type_id` and the property ids in `properties` come from, and `get_work_item`
+returns a typed item's values as `property_values`.
 
 Project calls, reads included, need project membership, even for a workspace admin.
 `join_project` adds the caller the way the web app's "Join project" does; `add_project_member`
