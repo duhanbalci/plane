@@ -95,7 +95,8 @@ command = ["sh", "-c", "python manage.py migrate && exec ./bin/docker-entrypoint
 # Ilk kurulumda migrate dakikalar surer; saglik penceresi genis (15 s x 60).
 health = { http = "/api/instances/", interval = "15s", retries = 60 }
 # 2 worker'da paralel istekler (proje acilisinda ~12) kuyruga giriyor; sayfa 10 sn gec geliyordu.
-resources = { memory = "2G" }
+# cpu acikca verilmezse plan varsayilani 0.5 cekirdek; 6 worker orada bogulur.
+resources = { cpu = 4.0, memory = "2G" }
 
 [services.api.env]
 DEBUG = "0"
@@ -127,7 +128,7 @@ AWS_ACCESS_KEY_ID = { from_service = "minio", key = "MINIO_ROOT_USER" }
 AWS_SECRET_ACCESS_KEY = { from_service = "minio", key = "MINIO_ROOT_PASSWORD" }
 FILE_SIZE_LIMIT = "5242880"
 MINIO_ENDPOINT_SSL = "0"
-API_KEY_RATE_LIMIT = "60/minute"
+API_KEY_RATE_LIMIT = "600/minute"
 HARD_DELETE_AFTER_DAYS = "60"
 
 [services.worker]
