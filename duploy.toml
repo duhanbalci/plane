@@ -157,7 +157,7 @@ type = "worker"
 source = { image = "rabbitmq:3.13-alpine" }
 health = { cmd = ["rabbitmq-diagnostics", "-q", "ping"], interval = "15s", retries = 10 }
 # 256M'de watermark ~100M'ye dusuyor, RabbitMQ publish'leri bloklamaya basliyor.
-resources = { memory = "512M" }
+resources = { memory = "1G" }
 
 [services.mq.env]
 RABBITMQ_DEFAULT_USER = "plane"
@@ -173,6 +173,7 @@ port = 9000
 domains = [{ host = "plane.duploy.dev", path = "/uploads" }]
 command = ["minio", "server", "/export"]
 health = { http = "/minio/health/live" }
+resources = { memory = "1G" }
 
 [services.minio.env]
 MINIO_ROOT_USER = { secret = true }
@@ -186,7 +187,7 @@ data = { path = "/export", size = "20G" }
 [databases.db]
 engine = "postgres"
 version = "18"
-resources = { cpu = 2.0, memory = "1G" }
+resources = { cpu = 2.0, memory = "2G" }
 
 [databases.db.backup]
 schedule = "0 3 * * *"
