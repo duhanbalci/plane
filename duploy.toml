@@ -156,6 +156,8 @@ resources = { memory = "512M" }
 type = "worker"
 source = { image = "rabbitmq:3.13-alpine" }
 health = { cmd = ["rabbitmq-diagnostics", "-q", "ping"], interval = "15s", retries = 10 }
+# 256M'de watermark ~100M'ye dusuyor, RabbitMQ publish'leri bloklamaya basliyor.
+resources = { memory = "512M" }
 
 [services.mq.env]
 RABBITMQ_DEFAULT_USER = "plane"
@@ -184,6 +186,7 @@ data = { path = "/export", size = "20G" }
 [databases.db]
 engine = "postgres"
 version = "18"
+resources = { cpu = 2.0, memory = "1G" }
 
 [databases.db.backup]
 schedule = "0 3 * * *"
