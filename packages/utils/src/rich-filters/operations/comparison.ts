@@ -32,6 +32,7 @@ const createConditionComparable = <P extends TFilterProperty>(condition: TFilter
   type: condition.type,
   property: condition.property,
   operator: condition.operator,
+  isNegation: !!condition.isNegation,
   value: Array.isArray(condition.value) ? condition.value : [condition.value],
 });
 

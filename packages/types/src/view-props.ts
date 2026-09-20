@@ -121,12 +121,24 @@ export type TWorkItemFilterConditionData = Partial<{
 }>;
 
 export type TWorkItemFilterAndGroup = {
-  [LOGICAL_OPERATOR.AND]: TWorkItemFilterConditionData[];
+  [LOGICAL_OPERATOR.AND]: TWorkItemFilterExpressionData[];
 };
 
 export type TWorkItemFilterGroup = TWorkItemFilterAndGroup;
 
-export type TWorkItemFilterExpressionData = TWorkItemFilterConditionData | TWorkItemFilterGroup;
+/**
+ * Key used to negate a single condition in the external filter payload.
+ */
+export const WORK_ITEM_FILTER_NEGATION_KEY = "not";
+
+export type TWorkItemFilterNotGroup = {
+  [WORK_ITEM_FILTER_NEGATION_KEY]: TWorkItemFilterConditionData;
+};
+
+export type TWorkItemFilterExpressionData =
+  | TWorkItemFilterConditionData
+  | TWorkItemFilterNotGroup
+  | TWorkItemFilterGroup;
 
 export type TWorkItemFilterExpression = CompleteOrEmpty<TWorkItemFilterExpressionData>;
 

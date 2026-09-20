@@ -4,7 +4,12 @@
  * See the LICENSE file for details.
  */
 
-import type { TExtendedSupportedOperators } from "@plane/types";
+import type {
+  TExtendedSupportedOperators,
+  TNegatedOperator,
+  TSupportedDateFilterOperators,
+  TSupportedOperators,
+} from "@plane/types";
 
 /**
  * Extended operator labels
@@ -19,9 +24,16 @@ export const EXTENDED_DATE_OPERATOR_LABELS_MAP: Record<TExtendedSupportedOperato
 /**
  * Negated operator labels for all operators
  */
-export const NEGATED_OPERATOR_LABELS_MAP: Record<never, string> = {} as const;
+export const NEGATED_OPERATOR_LABELS_MAP: Record<TNegatedOperator<TSupportedOperators>, string> = {
+  not_exact: "is not",
+  not_in: "is none of",
+  not_range: "not between",
+} as const;
 
 /**
  * Negated date operator labels for all date operators
  */
-export const NEGATED_DATE_OPERATOR_LABELS_MAP: Record<never, string> = {} as const;
+export const NEGATED_DATE_OPERATOR_LABELS_MAP: Record<TNegatedOperator<TSupportedDateFilterOperators>, string> = {
+  not_exact: "is not",
+  not_range: "not between",
+} as const;

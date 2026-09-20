@@ -15,9 +15,15 @@ import type {
   TWorkItemFilterConditionKey,
   TWorkItemFilterExpression,
   TWorkItemFilterExpressionData,
+  TWorkItemFilterNotGroup,
   TWorkItemFilterProperty,
 } from "@plane/types";
-import { LOGICAL_OPERATOR, MULTI_VALUE_OPERATORS, WORK_ITEM_FILTER_PROPERTY_KEYS } from "@plane/types";
+import {
+  LOGICAL_OPERATOR,
+  MULTI_VALUE_OPERATORS,
+  WORK_ITEM_FILTER_NEGATION_KEY,
+  WORK_ITEM_FILTER_PROPERTY_KEYS,
+} from "@plane/types";
 import { createConditionNode, createAndGroupNode, isAndGroupNode, isConditionNode } from "@plane/utils";
 // local imports
 import { FilterAdapter } from "../rich-filters/adapter";
@@ -51,19 +57,14 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
       throw new Error("Invalid expression: empty or null data");
     }
 
+    // Check if it's a negated condition (e.g. { not: { state_id__in: "..." } })
+    if (this._isWorkItemFilterNotGroup(expression)) {
+      return this._createConditionNodeFromData(expression[WORK_ITEM_FILTER_NEGATION_KEY], true);
+    }
+
     // Check if it's a simple condition (has field property)
     if (this._isWorkItemFilterConditionData(expression)) {
-      const conditionResult = this._extractWorkItemFilterConditionData(expression);
-      if (!conditionResult) {
-        throw new Error("Failed to extract condition data");
-      }
-
-      const [property, operator, value] = conditionResult;
-      return createConditionNode({
-        property,
-        operator,
-        value,
-      });
+      return this._createConditionNodeFromData(expression, false);
     }
 
     // It's a logical group - check which type
@@ -111,7 +112,13 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
     expression: TFilterExpression<TWorkItemFilterProperty>
   ): TWorkItemFilterExpressionData {
     if (isConditionNode(expression)) {
-      return this._createWorkItemFilterConditionData(expression.property, expression.operator, expression.value);
+      const conditionData = this._createWorkItemFilterConditionData(
+        expression.property,
+        expression.operator,
+        expression.value
+      );
+
+      return expression.isNegation ? { [WORK_ITEM_FILTER_NEGATION_KEY]: conditionData } : conditionData;
     }
 
     // It's a group node
@@ -137,11 +144,48 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
     if (keys.length === 0) return false;
 
     // Check if any key contains logical operators (would indicate it's a group)
-    const hasLogicalOperators = keys.some((key) => key === LOGICAL_OPERATOR.AND);
+    const hasLogicalOperators = keys.some(
+      (key) => key === LOGICAL_OPERATOR.AND || key === WORK_ITEM_FILTER_NEGATION_KEY
+    );
     if (hasLogicalOperators) return false;
 
     // All keys must match the work item filter condition key pattern
     return keys.every((key) => this._isValidWorkItemFilterConditionKey(key));
+  };
+
+  /**
+   * Type guard to check if data is a negated condition group
+   * @param data - The data to check
+   * @returns True if data is a negated condition group, false otherwise
+   */
+  private _isWorkItemFilterNotGroup = (data: TWorkItemFilterExpressionData): data is TWorkItemFilterNotGroup => {
+    if (!data || typeof data !== "object") return false;
+
+    const keys = Object.keys(data);
+    if (keys.length !== 1 || keys[0] !== WORK_ITEM_FILTER_NEGATION_KEY) return false;
+
+    return this._isWorkItemFilterConditionData((data as TWorkItemFilterNotGroup)[WORK_ITEM_FILTER_NEGATION_KEY]);
+  };
+
+  /**
+   * Creates an internal condition node from external condition data
+   * @param data - The external condition data
+   * @param isNegation - Whether the condition is negated
+   * @returns The internal condition node
+   */
+  private _createConditionNodeFromData = (data: TWorkItemFilterConditionData, isNegation: boolean) => {
+    const conditionResult = this._extractWorkItemFilterConditionData(data);
+    if (!conditionResult) {
+      throw new Error("Failed to extract condition data");
+    }
+
+    const [property, operator, value] = conditionResult;
+    return createConditionNode({
+      property,
+      operator,
+      value,
+      isNegation,
+    });
   };
 
   /**
