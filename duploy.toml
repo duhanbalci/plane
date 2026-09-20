@@ -41,6 +41,8 @@ source = { path = ".", dockerfile = "apps/live/Dockerfile.live" }
 port = 3000
 domains = [{ host = "plane.duploy.dev", path = "/live" }]
 health = { http = "/live/health" }
+# Acik Yjs dokumanlari bellekte durur; plan varsayilani 0.5 cpu / 256M yetmiyor.
+resources = { cpu = 2.0, memory = "2G" }
 
 [services.live.env]
 API_BASE_URL = "http://api:8000"
@@ -64,6 +66,7 @@ domains = [
   { host = "plane.duploy.dev", path = "/.well-known/oauth-protected-resource" },
 ]
 health = { http = "/health" }
+resources = { cpu = 2.0, memory = "1G" }
 
 [services.mcp.env]
 # Kesif dokumanlarinda issuer olarak yayinlanir; tarayicinin gordugu origin ile
