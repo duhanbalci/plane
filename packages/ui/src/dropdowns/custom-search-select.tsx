@@ -6,7 +6,7 @@
 
 import { Combobox } from "@headlessui/react";
 import { ChevronDownOutline, InfoOutline, SearchOutline, TickOutline } from "@makeplane/propel/icons";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePopper } from "react-popper";
 import { useOutsideClickDetector } from "@plane/hooks";
@@ -49,6 +49,13 @@ export function CustomSearchSelect(props: ICustomSearchSelectProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   // refs
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // focus the search input whenever the dropdown opens, headless ui only manages
+  // focus for its own open state which this dropdown drives manually
+  useEffect(() => {
+    if (isOpen) inputRef.current?.focus();
+  }, [isOpen]);
 
   const { styles, attributes } = usePopper(referenceElement, popperElement, {
     placement: placement ?? "bottom-start",
@@ -73,7 +80,7 @@ export function CustomSearchSelect(props: ICustomSearchSelectProps) {
 
   const closeDropdown = () => {
     setIsOpen(false);
-    onClose && onClose();
+    onClose?.();
   };
 
   const handleKeyDown = useDropdownKeyDown(openDropdown, closeDropdown, isOpen);
@@ -85,6 +92,7 @@ export function CustomSearchSelect(props: ICustomSearchSelectProps) {
   };
 
   return (
+    // oxlint-disable-next-line jsx_a11y/no-static-element-interactions
     <Combobox
       as="div"
       ref={dropdownRef}
@@ -155,6 +163,10 @@ export function CustomSearchSelect(props: ICustomSearchSelectProps) {
                     <div className="mx-2 flex items-center gap-1.5 rounded-sm border border-subtle px-2">
                       <SearchOutline className="h-3.5 w-3.5 text-placeholder" />
                       <Combobox.Input
+                        ref={inputRef}
+                        // Combobox.Options prevents the default mousedown behaviour, which would stop
+                        // the search input from receiving focus on click
+                        onMouseDown={(e) => e.stopPropagation()}
                         className="w-full bg-transparent py-1 text-11 text-secondary placeholder:text-placeholder focus:outline-none"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -175,6 +187,7 @@ export function CustomSearchSelect(props: ICustomSearchSelectProps) {
                       {filteredOptions ? (
                         filteredOptions.length > 0 ? (
                           filteredOptions.map((option) => (
+                            // oxlint-disable-next-line jsx_a11y/click-events-have-key-events
                             <Combobox.Option
                               as="li"
                               key={option.value}
