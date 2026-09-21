@@ -155,7 +155,9 @@ resources = { memory = "512M" }
 [services.mq]
 type = "worker"
 source = { image = "rabbitmq:3.13-alpine" }
-health = { cmd = ["rabbitmq-diagnostics", "-q", "ping"], interval = "15s", retries = 10 }
+# Her ping sifirdan bir Erlang VM acar (~1.5 sn CPU); 15 sn'de bir kosunca
+# kotanin cogunu healthcheck yiyor ve broker'i da throttle ediyordu.
+health = { cmd = ["rabbitmq-diagnostics", "-q", "ping"], interval = "60s", retries = 10 }
 # 256M'de watermark ~100M'ye dusuyor, RabbitMQ publish'leri bloklamaya basliyor.
 resources = { memory = "1G" }
 
