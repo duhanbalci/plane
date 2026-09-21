@@ -163,6 +163,13 @@ resources = { memory = "1G" }
 RABBITMQ_DEFAULT_USER = "plane"
 RABBITMQ_DEFAULT_PASS = { secret = true }
 RABBITMQ_DEFAULT_VHOST = "plane"
+# Scheduler busy-wait'i tek basina yarim cekirdeklik kotayi yakiyor (cpu throttle).
+RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS = "+sbwt none +sbwtdcpu none +sbwtdio none"
+
+# RabbitMQ /proc/meminfo'dan host'un bellegini goruyor; watermark (0.4) container
+# limitinden hesaplansin. Env karsiligi 3.9'dan beri yok, dosya sart.
+[services.mq.files]
+"/etc/rabbitmq/conf.d/20-limits.conf" = "total_memory_available_override_value = ${DUPLOY_MEMORY_BYTES}\n"
 
 [services.mq.volumes]
 data = { path = "/var/lib/rabbitmq" }
